@@ -1,11 +1,12 @@
-wheelHeight = 3.5;
-wheelRadius = 12;
+include <train.base.scad>;
 
-module wheel()
-{    
-    $fn = 100;
+// Modul-Übergreifende Variablen dieser Komponente
+$fn = 100;
+_wheelHeight = 3.5;
+_wheelRadius = 10;
 
-    // Private variables
+module wheel(wheelRadius = _wheelRadius, wheelHeight = _wheelHeight)
+{            
     wallThickness = 1.3;
     axisRadius = 1.65;
     axisNotchCenterOffset = 1.2;
@@ -42,10 +43,8 @@ module wheel()
     }
 }
 
-module wheelCase(gap=0)
+module wheelCase(gap=0, wheelRadius = _wheelRadius, wheelHeight = _wheelHeight)
 {
-    $fn = 100;
-    
     translate([0, 0, -wheelHeight/2-gap])
     union()
     {
@@ -59,4 +58,4 @@ module wheelCase(gap=0)
 
 // Render if not main
 if ($main != 1)
-wheelCase();
+    wheel();

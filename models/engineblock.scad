@@ -1,4 +1,8 @@
-// Public variables
+include <train.base.scad>;
+
+// Modul-Übergreifende Variablen dieser Komponente
+$fn = 100;
+
 engineLength = 34.4;
 engineWidth = 10;
 engineHeight = 12;
@@ -8,25 +12,23 @@ axisXOffset = 4;
 axisZOffset = 6;
 axisLength = 30;
 
-engineEndCylinderLength = 1.3; // Shoule be private...
-engineBlockLength = engineLength - engineEndCylinderLength;
+// Public Getters
+function getEngineSize(gap) = [engineLength+2*gap, engineWidth+2*gap, engineHeight];
+function getAxisOffset(gap) = [axisXOffset + gap, 0, axisZOffset + gap];
+function getAxisRadius(gap) = axisRadius + gap;
+function getAxisLength(gap) = axisLength + 2*gap;
 
 module engineBlock()
-{
-    $fn = 100;
- 
-    // Private variables
-    axisLength = 30;
-
+{    
     connectorLength = 2.0;
     connectorWidth = 1.5;
     connectorHeight = 0.4;
     connectorCenterOffset = 3.5;
-        
+
+    engineEndCylinderLength = 1.3;
+    engineBlockLength = engineLength - engineEndCylinderLength;        
     engineEndCylinderRadius = 2.5;
     engineEndCylinderZOffset = 6;
-    
-    engineBlockLength = engineLength - engineEndCylinderLength;    
     
     // Block
     translate([0, -engineWidth / 2, 0])

@@ -1,11 +1,17 @@
-wallThickness = 1.3;
-trainWidth = 30; // fixed due to engine size
+include <train.base.scad>;
+
+// Modul-Übergreifende Variablen dieser Komponente
+$fn = 100;
+
+_trainWidth = 30;
 
 sensorLength = 20.5;
 sensorWidth = 20.5;
 sensorThickness = 1.6;
 
-module colorSensor(gap = 0)
+// TODO: Public Getters
+
+module colorSensor(gap = 0, wallThickness = _thi0, trainWidth = _trainWidth)
 {
 
     $fn = 100;
@@ -36,15 +42,15 @@ module colorSensor(gap = 0)
     }
 }
 
-module colorSensorPocket()
+module colorSensorPocket(wallThickness = _thi0, trainWidth = _trainWidth)
 {
     difference()
     {
         translate([-wallThickness, -trainWidth/2, 0])
         cube([sensorLength + 2*wallThickness, trainWidth, 3]);
         
-        translate([0,0,-0.01])
-        colorSensor(0.1);
+        translate([0,0,-_eps])
+        colorSensor(_gap);
     }
 }
 
