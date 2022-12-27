@@ -6,14 +6,16 @@ $assembly = 1;
 // - Halter für AußenHalterungen --> woher kommt die differenz von 0.4 ???
 // - Löcher für nicht angetriebene Achsen (Außen und Innen) ✅
 
-
-// - Löcher in Außenhalterungen größer (nicht tiefer) machen
-// - Dorn in Antriebsloser Achse unnötig (oder sollte zumindest nach außen hin spitzer werden)
-// - Mehr Spiel auf beiden Seiten der antriebslosen Räder, um sie drehbarer zu machen 
-// ---> Angetriebene Räder Dicker machen als antriebslose
+// - Räder-Abstand vergrößern, um Bodenfreiheit zu gewinnen ✅
+// - Löcher in Außenhalterungen größer (und tiefer) machen ✅
+// - Dorn in Antriebsloser Achse unnötig (oder sollte zumindest nach außen hin spitzer werden) ✅
 // - Nochmal Räder mit passendem (kleineren) Radius drucken
+
+// - Mehr Spiel auf beiden Seiten der antriebslosen Räder, um sie drehbarer zu machen ✅
+// ---> Angetriebene Räder Dicker machen als antriebslose ✅
+// - Antriebslose Räder + Achsen designen (mit Wiggle-Room) ✅
+
 // - Deckel-Verschluss (Wie Batteriefach mit einer/ohne Schrauben??) designen
-// - Antriebslose Räder + Achsen designen (mit Wiggle-Room)
 
 
 // Idee: Austauschbare und drehbare Drehgestelle für die Räder
@@ -29,7 +31,7 @@ use<wheel.scad>;
 // Modul-Übergreifende Variablen dieser Komponente
 $fn = 50;
 
-outerBarThickness = 1.6;
+outerBarThickness = 1.8;
 outerBarHolderLength = 3;
 outerBarHolderWidth = getWheelHeight(_gap) + outerBarThickness;
 
@@ -83,41 +85,53 @@ module outerBars()
         }
         
         // Angetriebene Achse
-        translate([-axisCenter.x, getAxisLength() / 2, -axisCenter.z])
+        translate([-axisCenter.x, getAxisLength(_gap) / 2, -axisCenter.z])
         rotate([90, 0, 0])
-        cylinder(h = getAxisLength(), r = getAxisRadius());        
+        cylinder(h = getAxisLength(_gap), r = getAxisRadius(_gap));        
     }
 }
 
-nonDrivenAxisThornLength = 3;
-nonDrivenAxisThornRadius = 1;
+//nonDrivenAxisThornLength = 3;
+//nonDrivenAxisThornRadius = 1;
+
+passiveAxisHeadSize = getPassiveAxisHeadSize();
 
 difference()
-{
+{    
     union()
     {
         engineBox();
-        outerBars();
+        outerBars();                
     }
     
-    // Nicht angetriebene Achse: Ausschnit
+    // Nicht angetriebene Achse: Ausschnitt
     translate([axisCenter.x, -getEngineSize().y/2 - _thi2, -axisCenter.z])
-    rotate([90, 0, 0])
-    cylinder(h = 100, r = getAxisRadius());
-    
+    rotate([90, 0, 0])    
+    cylinder(h = 100, r = getPassiveAxisRadius());
+
     translate([axisCenter.x, getEngineSize().y/2 + _thi2, -axisCenter.z])
     rotate([-90, 0, 0])
-    cylinder(h = 100, r = getAxisRadius());
+    cylinder(h = 100, r = getPassiveAxisRadius());    
+        
+    // Axis head    
+    translate([axisCenter.x, -drehgestellWidth/2 + _thi0 - _eps, -axisCenter.z])        
+    rotate([90, 0, 0])    
+    cylinder(h = passiveAxisHeadSize[1], r = passiveAxisHeadSize[0]); // 1: Soviel ist der Axis head größer als die Achse
+    
+    // Axis head
+    translate([axisCenter.x, drehgestellWidth/2 + -_thi0 + _eps, -axisCenter.z])        
+    rotate([-90, 0, 0])    
+    cylinder(h = passiveAxisHeadSize[1], r = passiveAxisHeadSize[0]);    
 }
 
 // Nicht angetriebene Achse: Dorn
-translate([axisCenter.x, -getEngineSize().y/2 - _thi2, -axisCenter.z])
+/*translate([axisCenter.x, -getEngineSize().y/2 - _thi2, -axisCenter.z])
 rotate([90, 0, 0])
 cylinder(h = nonDrivenAxisThornLength, r = nonDrivenAxisThornRadius);
 
 translate([axisCenter.x, getEngineSize().y/2 + _thi2, -axisCenter.z])
 rotate([-90, 0, 0])
-cylinder(h = nonDrivenAxisThornLength, r = nonDrivenAxisThornRadius);
+cylinder(h = nonDrivenAxisThornLength, r = nonDrivenAxisThornRadius);*/
 
 
 color("red")

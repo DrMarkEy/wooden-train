@@ -20,12 +20,12 @@ use<wheel.scad>;
 $fn = 50;
 
 spurweite = _spurweite;
-wheelDistance = 24;
+wheelDistance = 26;
 
 engineBottomHolderThickness = _thi0;
 engineSize = getEngineSize(_gap);   
 
-engineBoxLength = getEngineSize(_gap).x + 6; // -> 6 länger als der Motor passt ganz gut
+engineBoxLength = getEngineSize(_gap).x + 8; // -> 6 länger als der Motor passt ganz gut
 engineBoxWidth = spurweite - getWheelHeight(_gap);
 engineBoxHeight = getEngineSize(_gap).z + engineBottomHolderThickness; 
 
@@ -132,7 +132,7 @@ module rectangleEngineBox()
 
 module axisCenteredEngineBox()
 {
-    notchDepth = 2.5;
+    notchDepth = 3;
     
     difference()
     {
@@ -185,7 +185,7 @@ module engineBoxAssembly()
     translateOriginFromAxisToCenter()
     if($assembly == 1)
     {    
-        wheelRadius = 10;
+        wheelRadius = 11;
         
         translate(-getAxisOffset())
         engineBlock();
