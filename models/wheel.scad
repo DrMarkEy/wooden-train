@@ -3,12 +3,12 @@ include <train.base.scad>;
 // Modul-Übergreifende Variablen dieser Komponente
 $fn = 100;
 _wheelHeight = 3.5;
-_wheelRadius = 11;
+_wheelRadius = 10.5;
 axisRadius = 1.65;
 
-passiveWheelSideWiggleRoom = 1;
+passiveWheelSideWiggleRoom = 0.2;
 passiveWheelAxisWiggleRoom = 0.6;
-passiveWheelExtraRadius = 0.5;
+passiveWheelExtraRadius = 0.3;
 passiveAxisRadius = 2.1;
 passiveAxisHeadRadius = passiveAxisRadius + 1;
 passiveAxisHeadHeight = _thi0;
@@ -80,9 +80,12 @@ module passiveWheel(wheelRadius = _wheelRadius + passiveWheelExtraRadius, wheelH
     }
 }
 
-module passiveAxis()
-{
-    cylinder(10, 2, 2);
+module makePassiveAxis(length=10)
+{    
+    axisGap = 0.1; // TODO: Auf thight fit einstellen!
+    
+    cylinder(passiveAxisHeadHeight, passiveAxisHeadRadius - _gap, passiveAxisHeadRadius - _gap);
+    cylinder(length, passiveAxisRadius - axisGap, passiveAxisRadius - axisGap);
 }
 
 module wheelCase(gap=0, wheelRadius = _wheelRadius, wheelHeight = _wheelHeight)
@@ -100,6 +103,6 @@ module wheelCase(gap=0, wheelRadius = _wheelRadius, wheelHeight = _wheelHeight)
 
 // Render if not main
 if ($main != 1)    
-    //drivenWheel();
+    drivenWheel();
     //passiveWheel();
-    passiveAxis();
+    //makePassiveAxis();

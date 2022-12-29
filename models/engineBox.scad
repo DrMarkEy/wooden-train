@@ -22,22 +22,34 @@ $fn = 50;
 spurweite = _spurweite;
 wheelDistance = 26;
 
+engineTopEmptySpace = 2;
+
 engineBottomHolderThickness = _thi0;
 engineSize = getEngineSize(_gap);   
 
 engineBoxLength = getEngineSize(_gap).x + 8; // -> 6 länger als der Motor passt ganz gut
 engineBoxWidth = spurweite - getWheelHeight(_gap);
-engineBoxHeight = getEngineSize(_gap).z + engineBottomHolderThickness; 
+engineBoxHeight = getEngineSize(_gap).z + engineBottomHolderThickness + engineTopEmptySpace; 
 
 engineSideHoldersXOffset = (engineBoxLength - wheelDistance )/2;
 engineSideHoldersThickness = (engineBoxWidth - engineSize.y)/2;
 
-lidThickness = _thi1;
+engineBeginHolderThickness = -getAxisOffset().x + engineSideHoldersXOffset - _gap;
 
+lidThickness = 3;
+lidZOffset = -getAxisOffset(_gap).z - engineBottomHolderThickness + engineBoxHeight;
+
+engineEndHolderEngineOffset = 0.5;
+engineEndHolderOffset = engineSize.x - getAxisOffset().x + engineEndHolderEngineOffset;
+engineEndHolderThickness = (-engineSideHoldersXOffset + engineBoxLength) - engineEndHolderOffset;
+
+
+    
 // Getters
 function getEngineBoxSize() = [engineBoxLength, engineBoxWidth, engineBoxHeight];
 function getWheelDistance() = wheelDistance;
-function getAxisCenter() = [-engineSideHoldersXOffset + engineBoxLength / 2, 0, -getAxisOffset(_gap).z - engineBottomHolderThickness + engineBoxHeight +lidThickness];
+function getAxisCenter() = [-engineSideHoldersXOffset + engineBoxLength / 2, 0, lidZOffset+lidThickness];
+function getLidThickness() = lidThickness;
 
 // Public modules
 
@@ -53,13 +65,6 @@ module rectangleEngineBox()
 {
     axisLength = getAxisLength();
     axisOffset = getAxisOffset();      
-
-    engineBeginHolderThickness = -axisOffset.x + engineSideHoldersXOffset - _gap;
-
-    engineEndHolderEngineOffset = 0.5;
-    engineEndHolderOffset = engineSize.x - axisOffset.x + engineEndHolderEngineOffset;
-    engineEndHolderThickness = (-engineSideHoldersXOffset + engineBoxLength) - engineEndHolderOffset;
-
     
     // ----- Engine holders ------
     difference()
@@ -68,19 +73,19 @@ module rectangleEngineBox()
         {        
             // Left side        
             translate([- engineSideHoldersXOffset, engineSize.y/2, -axisOffset.z - _gap])
-            cube([engineBoxLength, engineSideHoldersThickness, engineSize.z]);
+            cube([engineBoxLength, engineSideHoldersThickness, engineSize.z + engineTopEmptySpace]);
          
             // Right side
             translate([- engineSideHoldersXOffset, -engineSize.y/2 - engineSideHoldersThickness, -axisOffset.z - _gap])
-            cube([engineBoxLength, engineSideHoldersThickness, engineSize.z]);  
+            cube([engineBoxLength, engineSideHoldersThickness, engineSize.z + engineTopEmptySpace]);  
  
             // Begin holder
             translate([-engineSideHoldersXOffset, -engineSize.y/2, -axisOffset.z - _gap])
-            cube([engineBeginHolderThickness, engineSize.y, engineSize.z]);
+            cube([engineBeginHolderThickness, engineSize.y, engineSize.z + engineTopEmptySpace]);
 
             // End Holder
             translate([engineEndHolderOffset, -engineSize.y/2, -axisOffset.z - _gap])
-            cube([engineEndHolderThickness, engineSize.y, engineSize.z]);
+            cube([engineEndHolderThickness, engineSize.y, engineSize.z + engineTopEmptySpace]);
             
             // Lower end Holder
             translate([getEngineSize().x-axisOffset.x-getEngineEndZylinderLength(), -engineSize.y/2, -axisOffset.z - _gap])
@@ -91,25 +96,12 @@ module rectangleEngineBox()
         translate([0, -axisLength / 2, 0])
         axisInsertionWedge(axisLength);
                 
-        // Nut holes
-        /*translate([12, 0, 0])
-        {
-            nutYOffset = 0.5;        
-            translate([14, engineSize.y / 2 + engineSideHoldersThickness/2 + nutYOffset, 0])
-            rotate([0, 0, 60])
-            nut_slot();
-            
-            translate([14, -engineSize.y / 2 - engineSideHoldersThickness/2 - nutYOffset, 0])
-            rotate([0, 0, -60])
-            nut_slot();
-        }
-        
-        translate([-7.0, 0, 0])
-        rotate([0, 0, 210])
-        nut_slot();*/
+        // Nut hole
+        translate([-axisOffset.x - engineBeginHolderThickness/2, 0,  lidZOffset + _eps])
+        insetNutHole();       
     }
     
-    // Bottom holder
+    // Bottom holder    
     translate([-engineSideHoldersXOffset, -engineSize.y/2 - engineSideHoldersThickness, axisOffset.z + _gap - engineSize.z - engineBottomHolderThickness])
             cube([engineBoxLength, 2*engineSideHoldersThickness + engineSize.y, engineBottomHolderThickness]);
 
@@ -130,9 +122,14 @@ module rectangleEngineBox()
     }
 }
 
+lidHoleLength = 2;
+lidHoleWidth = 10;    
+lidHoleHeight = 2;
+
+
 module axisCenteredEngineBox()
 {
-    notchDepth = 3;
+    notchDepth = 3;    
     
     difference()
     {
@@ -141,43 +138,70 @@ module axisCenteredEngineBox()
            rectangleEngineBox();
         }
         
+        // Front notch
         translate([-engineSideHoldersXOffset , -engineBoxWidth/2-_eps, -getAxisOffset().z + notchDepth])
         rotate([0, 45, 0])
         translate([0, 0, -engineBoxHeight])
         cube([engineBoxLength, engineBoxWidth+2*_eps, engineBoxHeight]);
         
-        
+        // Back notch
         translate([-engineSideHoldersXOffset + engineBoxLength , -engineBoxWidth/2-_eps, -getAxisOffset().z + notchDepth])
         rotate([0, -45, 0])
         translate([-engineBoxLength, 0, -engineBoxHeight])
         cube([engineBoxLength, engineBoxWidth+2*_eps, engineBoxHeight]);
     }    
+    
+    // Lid holder bridge
+    translate([engineEndHolderOffset, -engineBoxWidth/2, lidZOffset])
+    difference()
+    {
+        cube([engineEndHolderThickness, engineBoxWidth, lidThickness]);
+        
+        translate([-_eps, (engineBoxWidth - lidHoleWidth) / 2, 0])
+        cube([lidHoleLength+_gap, lidHoleWidth+_gap, lidHoleHeight+_gap]);
+    }
 }
 
 module engineBox()
-{
+{    
     translateOriginFromAxisToCenter()
-    axisCenteredEngineBox();         
+    axisCenteredEngineBox();                 
 }
 
 module engineBoxLid()
-{
+{    
     axisWidth = getAxisRadius()*2;
     axisHoleFillerHeight = 5;
 
-    // The lid itself   
-    translate([-engineBoxLength/2, -engineBoxWidth/2, -lidThickness])
-    cube([engineBoxLength, engineBoxWidth, lidThickness]);
-    
-    // Axis holes filler
-    translate([engineSideHoldersXOffset - engineBoxLength / 2, 0, 0])
-    translate([-axisWidth/2, engineSize.y / 2, -axisHoleFillerHeight])
+    difference()
     {
-        cube([axisWidth, engineSideHoldersThickness, axisHoleFillerHeight]);
-        
-        translate([0, -engineSize.y - engineSideHoldersThickness, 0])
-        cube([axisWidth, engineSideHoldersThickness, axisHoleFillerHeight]);
-    }    
+        union()
+        {
+
+            // The lid itself   
+            translate([-engineBoxLength/2, -engineBoxWidth/2, -lidThickness])
+            cube([engineBoxLength - engineEndHolderThickness, engineBoxWidth, lidThickness]);
+            
+            // Axis holes filler
+            translate([engineSideHoldersXOffset - engineBoxLength / 2, 0, 0])
+            translate([-axisWidth/2, engineSize.y / 2, -axisHoleFillerHeight])
+            {
+                cube([axisWidth, engineSideHoldersThickness, axisHoleFillerHeight]);
+                
+                translate([0, -engineSize.y - engineSideHoldersThickness, 0])
+                cube([axisWidth, engineSideHoldersThickness, axisHoleFillerHeight]);
+            }    
+            
+            // Lid hole notch
+            color("red");
+            translate([engineBoxLength/2 - engineEndHolderThickness, -engineBoxWidth/2 + (engineBoxWidth - lidHoleWidth) / 2 + _gap, -lidThickness])
+            cube([lidHoleLength-_gap, lidHoleWidth - 2*_gap, lidHoleHeight - _gap]);            
+        }
+            
+        // screw hole
+        translate([-engineBoxLength/2 + engineBeginHolderThickness/2 + _gap, 0, -10])
+        cylinder(100, 1.4, 1.4);
+    }
 }
 
 module engineBoxAssembly()
@@ -185,30 +209,28 @@ module engineBoxAssembly()
     translateOriginFromAxisToCenter()
     if($assembly == 1)
     {    
-        wheelRadius = 11;
-        
         translate(-getAxisOffset())
         engineBlock();
 
         color("red")
         translate([0, spurweite / 2, 0])
         rotate([90, 0, 0])
-        drivenWheel(wheelRadius);
+        drivenWheel();
 
         color("red")
         translate([0, -spurweite / 2, 0])
         rotate([90, 0, 0])
-        drivenWheel(wheelRadius);
+        drivenWheel();
         
         color("red")
         translate([wheelDistance, -spurweite / 2, 0])
         rotate([90, 0, 0])
-        passiveWheel(wheelRadius);
+        passiveWheel();
         
         color("red")
         translate([wheelDistance, spurweite / 2, 0])
         rotate([90, 0, 0])
-        passiveWheel(wheelRadius);
+        passiveWheel();
     }
 }
 
