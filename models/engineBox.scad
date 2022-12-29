@@ -127,15 +127,14 @@ lidHoleWidth = 10;
 lidHoleHeight = 2;
 
 
-module axisCenteredEngineBox()
+module addNotches()
 {
     notchDepth = 3;    
-    
     difference()
-    {
-        
+    {        
+        union()
         {
-           rectangleEngineBox();
+            children();
         }
         
         // Front notch
@@ -149,6 +148,15 @@ module axisCenteredEngineBox()
         rotate([0, -45, 0])
         translate([-engineBoxLength, 0, -engineBoxHeight])
         cube([engineBoxLength, engineBoxWidth+2*_eps, engineBoxHeight]);
+    }   
+}
+
+
+module axisCenteredEngineBox()
+{    
+    addNotches()
+    {             
+       rectangleEngineBox();     
     }    
     
     // Lid holder bridge
