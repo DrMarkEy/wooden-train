@@ -71,13 +71,17 @@ module addOuterBars()
         }    
         
         // Outer bar holder  
-        translate([-outerBarHolderLength/2, -drehgestellWidth/2, -axisCenter.z])    
+        translate([-outerBarHolderLength/2, -drehgestellWidth/2, 0])    
         hull()
         {
-            translate([0, 0, - outerBarHeight/2])
+            //color("green")
+            //cube([100, 100, 0.1], center=true);
+            
+            translate([0, 0, - outerBarHeight/2 -axisCenter.z])
             cube([outerBarHolderLength, outerBarHolderWidth, outerBarHeight]);
             
-            translate([0, outerBarHolderWidth, - engineBoxSize.z/2 - 0.4]) // TODO: Warum - 0.4 ???
+            color("red")
+            translate([0, outerBarHolderWidth, -getLidThickness() - getEngineBoxSize().z])
             cube([outerBarHolderLength, 0.1, engineBoxSize.z]);
         }
     }    

@@ -43,7 +43,6 @@ engineEndHolderEngineOffset = 0.5;
 engineEndHolderOffset = engineSize.x - getAxisOffset().x + engineEndHolderEngineOffset;
 engineEndHolderThickness = (-engineSideHoldersXOffset + engineBoxLength) - engineEndHolderOffset;
 
-
     
 // Getters
 function getEngineBoxSize() = [engineBoxLength, engineBoxWidth, engineBoxHeight];
