@@ -48,8 +48,9 @@ drehgestellWidth = engineBoxSize.y + 2*getWheelHeight(_gap) + 2*outerBarThicknes
 
 axisCenter = getAxisCenter();
 
-module drehgestellHinten()
-    {
+
+module addOuterBars()
+{    
     module outerBar()
     {
         outerBarHeight = 8;
@@ -79,41 +80,61 @@ module drehgestellHinten()
             translate([0, outerBarHolderWidth, - engineBoxSize.z/2 - 0.4]) // TODO: Warum - 0.4 ???
             cube([outerBarHolderLength, 0.1, engineBoxSize.z]);
         }
+    }    
+
+    union()
+    {
+        children();
+        
+        outerBar();
+
+        rotate([180, 180, 0])
+        outerBar();
     }
+}
 
-    module outerBars()
-    {    
-        difference()
-        {
-            union()
-            {
-                outerBar();
 
-                rotate([180, 180, 0])
-                outerBar();
-            }
-            
-            // Angetriebene Achse
-            translate([-axisCenter.x, getAxisLength(2*_gap) / 2, -axisCenter.z])
-            rotate([90, 0, 0])
-            cylinder(h = getAxisLength(2*_gap), r = getAxisRadius(2*_gap));        
-        }
-    }
-
-    passiveAxisHeadSize = getPassiveAxisHeadSize();
-
+module addMagnetConnector(xPos)
+{
     difference()
-    {    
+    {
         union()
         {
-            engineBox();
-            outerBars();      
-  
+            children();
+            
             // magnet cylinder
-            translate([engineBoxSize.x/2, 0, -engineBoxSize.z - getLidThickness() + magnetHoleHeight])
+            translate([xPos, 0, -engineBoxSize.z - getLidThickness() + magnetHoleHeight])
             rotate([0, 90, 0])
             cylinder(magnetHoleCylinderHeight, magnetHoleCylinderRadius , magnetHoleCylinderRadius);
         }
+        
+        // magnet needle hole
+        translate([xPos -10, 0, -engineBoxSize.z - getLidThickness() + magnetHoleHeight])
+        rotate([0, 90, 0])
+        cylinder(20, magnetHoleDiameter , magnetHoleDiameter);  
+
+        // magnet inset hole
+        translate([engineBoxSize.x/2 + magnetHoleCylinderHeight + _eps, 0, -engineBoxSize.z - getLidThickness() + magnetHoleHeight])
+        rotate([0, -90, 0])
+        cylinder(magnetHoleCylinderHoleDepth, magnetHoleCylinderHoleRadius , magnetHoleCylinderHoleRadius);  
+    }
+}
+
+
+module addPassiveAxisHole(xPos)
+{
+    module passiveAxisHole(sig, startYOffset, radius, height)
+    {
+        translate([xPos, startYOffset, -axisCenter.z])        
+        rotate([90*sig, 0, 0])    
+        cylinder(h = height, r = radius);
+    }
+    
+    passiveAxisHeadSize = getPassiveAxisHeadSize();
+
+    difference()
+    {
+        children();
         
         // Nicht angetriebene Achse: Ausschnitt (innen)
         passiveAxisHole(1, -getEngineSize().y/2 - _thi2, getPassiveAxisRadius(), 100);
@@ -125,24 +146,42 @@ module drehgestellHinten()
         
         // Axis head
         passiveAxisHole(1, -drehgestellWidth/2 + +_thi0 - _eps, passiveAxisHeadSize[0]+_gap, passiveAxisHeadSize[1]);
-        passiveAxisHole(-1, drehgestellWidth/2 + -_thi0 + _eps, passiveAxisHeadSize[0]+_gap, passiveAxisHeadSize[1]);                  
-        // magnet needle hole
-        translate([engineBoxSize.x/2 -10, 0, -engineBoxSize.z - getLidThickness() + magnetHoleHeight])
-        rotate([0, 90, 0])
-        cylinder(20, magnetHoleDiameter , magnetHoleDiameter);  
-
-        // magnet inset hole
-        translate([engineBoxSize.x/2 + magnetHoleCylinderHeight + _eps, 0, -engineBoxSize.z - getLidThickness() + magnetHoleHeight])
-        rotate([0, -90, 0])
-        cylinder(magnetHoleCylinderHoleDepth, magnetHoleCylinderHoleRadius , magnetHoleCylinderHoleRadius);  
-    }    
+        passiveAxisHole(-1, drehgestellWidth/2 + -_thi0 + _eps, passiveAxisHeadSize[0]+_gap, passiveAxisHeadSize[1]);
+    }
 }
 
-module passiveAxisHole(sig, startYOffset, radius, height)
+
+module addDrivenAxisHole(xPos)
 {
-    translate([axisCenter.x, startYOffset, -axisCenter.z])        
-    rotate([90*sig, 0, 0])    
-    cylinder(h = height, r = radius);
+    difference()
+    {
+        children();
+        
+        // Angetriebene Achse
+        translate([xPos, getAxisLength(2*_gap) / 2, -axisCenter.z])
+        rotate([90, 0, 0])
+        cylinder(h = getAxisLength(2*_gap), r = getAxisRadius(_gap));       
+        
+        // Extra Gap außen                
+        translate([xPos, -getEngineBoxSize().y/2 - _eps, -axisCenter.z])
+        rotate([90, 0, 0])
+        cylinder(h = getAxisLength(2*_gap)/2 - getEngineBoxSize().y/2, r = getAxisRadius(2*_gap));       
+        
+        // Extra Gap außen                
+        translate([xPos, getEngineBoxSize().y/2 + _eps, -axisCenter.z])
+        rotate([-90, 0, 0])
+        cylinder(h = getAxisLength(2*_gap)/2 - getEngineBoxSize().y/2, r = getAxisRadius(2*_gap));       
+    }
+}
+
+
+module drehgestellHinten()
+{
+    addMagnetConnector(engineBoxSize.x/2)        
+    addDrivenAxisHole(-axisCenter.x)            
+    addPassiveAxisHole(axisCenter.x)               
+    addOuterBars()                    
+    engineBox();                   
 }
 
 module passiveAxis()
@@ -150,7 +189,6 @@ module passiveAxis()
     passiveAxisLength = drehgestellWidth/2 + (-getEngineSize().y/2 - _thi2) - _gap;    
     makePassiveAxis(passiveAxisLength);
 }
-
 
 
 drehgestellHinten();
@@ -166,8 +204,6 @@ cylinder(2, 6, 6);
 translate([0, 0, 5])
 scale([1.7, 1, 1])
 cylinder(2, 6, 6);*/
-
-
 if($assembly == 1)
 {    
     color("red")
