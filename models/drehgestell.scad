@@ -1,10 +1,19 @@
 $main = 1;
 //$assembly = 1;
 
+$render = "front";
+//$render = "back";
+//$render = "axis";
+
 // Idee: Austauschbare und drehbare Drehgestelle für die Räder
 // Vorne: Drehbares Zahnrad mit Servo-Antrieb; Color-Sensor am Boden Zwischen den Lenk-Rädern
 // Hinten: Drehbares, angetriebenes Gestell + Motor mit integrierter Rückstellfeder
 // -> Achtung! Braucht das hintere Drehgestell dann zwei Achsen??
+
+// TODO: Auswahl, was gerendert werden soll
+// TODO: Bei Assembly passend zum aktuellen Rendering Teile anzeigen
+// TODO: Kabel-Loch in Lid
+// TODO: addTopConnector-Methode
 
 include<train.base.scad>;
 use<engineBlock.scad>;
@@ -222,9 +231,14 @@ module passiveAxis()
 }
 
 
-//drehgestellHinten();
-drehgestellVorne();
-//passiveAxis();
+if($render == "front")
+    drehgestellVorne();
+
+if($render == "back")
+    drehgestellHinten();
+
+if($render == "axis")    
+    passiveAxis();
 
 
 /*
@@ -238,11 +252,43 @@ translate([0, 0, 5])
 scale([1.7, 1, 1])
 cylinder(2, 6, 6);*/
 
-if($assembly == 1)
-{    
-    color("red")
-    engineBoxAssembly();
+if($assembly == 1 && $render != "axis")
+{                
+    if($render == "back")
+    {
+        color("red")
+        engineBoxAssembly();
+        
+        color("orange")
+        engineBoxLid();
+    }
     
+    else if($render == "front")
+    {
+        spurweite = _spurweite;
+        
+        color("red")
+        translate([-wheelDistance/2, spurweite/2, -axisCenter.z])
+        rotate([90, 0, 0])
+        passiveWheel();
+
+        color("red")
+        translate([-wheelDistance/2, -spurweite/2, -axisCenter.z])
+        rotate([90, 0, 0])
+        passiveWheel();
+        
+        color("red")
+        translate([wheelDistance/2, spurweite/2, -axisCenter.z])
+        rotate([90, 0, 0])
+        passiveWheel();
+        
+        color("red")
+        translate([wheelDistance/2, -spurweite/2, -axisCenter.z])
+        rotate([90, 0, 0])
+        passiveWheel();
+    }
+    
+    // passive axes
     color("darkorange")
     {
         translate([wheelDistance/2, drehgestellWidth/2, -axisCenter.z])
@@ -252,9 +298,17 @@ if($assembly == 1)
         translate([wheelDistance/2, -drehgestellWidth/2, -axisCenter.z])
         rotate([-90, 0, 0])
         passiveAxis();
+        
+        if($render == "front")
+        {
+            translate([-wheelDistance/2, drehgestellWidth/2, -axisCenter.z])
+            rotate([90, 0, 0])
+            passiveAxis();
+            
+            translate([-wheelDistance/2, -drehgestellWidth/2, -axisCenter.z])
+            rotate([-90, 0, 0])
+            passiveAxis();
+        }
     }
-    
-    color("orange")
-    engineBoxLid();
 }
 
