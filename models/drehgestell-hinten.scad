@@ -187,6 +187,13 @@ module addDrivenAxisHole(xPos)
     }
 }
 
+module drehgestellBox()
+{
+    size = getEngineBoxSize();
+    
+    translate([-size.x/2, -size.y/2, -size.z - getLidThickness()])
+    cube([size.x, size.y, size.z + getLidThickness()]);
+}
 
 module drehgestellHinten()
 {
@@ -195,7 +202,17 @@ module drehgestellHinten()
     addPassiveAxisHole(axisCenter.x)               
     addOuterBars()                   
     addNotches() 
-    engineBox();                   
+    engineBox();
+}
+
+module drehgestellVorne()
+{
+    addMagnetConnector(engineBoxSize.x/2)            
+    addPassiveAxisHole(axisCenter.x)               
+    addPassiveAxisHole(-axisCenter.x)               
+    addOuterBars()             
+    addNotches() 
+    drehgestellBox();
 }
 
 module passiveAxis()
@@ -205,7 +222,8 @@ module passiveAxis()
 }
 
 
-drehgestellHinten();
+//drehgestellHinten();
+drehgestellVorne();
 //passiveAxis();
 
 
@@ -219,6 +237,7 @@ cylinder(2, 6, 6);
 translate([0, 0, 5])
 scale([1.7, 1, 1])
 cylinder(2, 6, 6);*/
+
 if($assembly == 1)
 {    
     color("red")
