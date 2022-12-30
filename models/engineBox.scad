@@ -1,16 +1,5 @@
 $assembly = 1;
 
-// TODO: 
-// - Ursprung in Dreh-Achse Verschieben ✅
-// - Unterkanten abflachen ✅
-// - Deckel draufsetzen ✅
-// - Axis hole filler am Deckel ✅
-
-// - Löcher für Schrauben + Muttern, um Deckel zu befestigen
-// - Dorn für Drehachse (muss stabil sein!!)
-// - Deckel + Dorn muss höher werden als die Räder sind!!
-// - Drehgestell sollte dieses File nutzen 
-
 include<train.base.scad>;
 include<injc/Holes.scad>;
 use<engineBlock.scad>;
@@ -126,38 +115,10 @@ lidHoleWidth = 10;
 lidHoleHeight = 2;
 
 
-module addNotches()
-{
-    notchDepth = 3;    
-    difference()
-    {        
-        union()
-        {
-            children();
-        }
-        
-        // Front notch
-        translate([-engineSideHoldersXOffset , -engineBoxWidth/2-_eps, -getAxisOffset().z + notchDepth])
-        rotate([0, 45, 0])
-        translate([0, 0, -engineBoxHeight])
-        cube([engineBoxLength, engineBoxWidth+2*_eps, engineBoxHeight]);
-        
-        // Back notch
-        translate([-engineSideHoldersXOffset + engineBoxLength , -engineBoxWidth/2-_eps, -getAxisOffset().z + notchDepth])
-        rotate([0, -45, 0])
-        translate([-engineBoxLength, 0, -engineBoxHeight])
-        cube([engineBoxLength, engineBoxWidth+2*_eps, engineBoxHeight]);
-    }   
-}
-
-
 module axisCenteredEngineBox()
-{    
-    addNotches()
-    {             
-       rectangleEngineBox();     
-    }    
-    
+{               
+    rectangleEngineBox();     
+
     // Lid holder bridge
     translate([engineEndHolderOffset, -engineBoxWidth/2, lidZOffset])
     difference()
@@ -171,6 +132,7 @@ module axisCenteredEngineBox()
 
 module engineBox()
 {    
+    //addNotches()
     translateOriginFromAxisToCenter()
     axisCenteredEngineBox();                 
 }

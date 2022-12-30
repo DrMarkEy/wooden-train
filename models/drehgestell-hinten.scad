@@ -1,23 +1,6 @@
 $main = 1;
 //$assembly = 1;
 
-// TODO:
-// - Löcher für die angetriebenen Achsen ✅
-// - Halter für AußenHalterungen --> woher kommt die differenz von 0.4 ???
-// - Löcher für nicht angetriebene Achsen (Außen und Innen) ✅
-
-// - Räder-Abstand vergrößern, um Bodenfreiheit zu gewinnen ✅
-// - Löcher in Außenhalterungen größer (und tiefer) machen ✅
-// - Dorn in Antriebsloser Achse unnötig (oder sollte zumindest nach außen hin spitzer werden) ✅
-// - Nochmal Räder mit passendem (kleineren) Radius drucken
-
-// - Mehr Spiel auf beiden Seiten der antriebslosen Räder, um sie drehbarer zu machen ✅
-// ---> Angetriebene Räder Dicker machen als antriebslose ✅
-// - Antriebslose Räder + Achsen designen (mit Wiggle-Room) ✅
-
-// - Deckel-Verschluss (Wie Batteriefach mit einer/ohne Schrauben??) designen
-
-
 // Idee: Austauschbare und drehbare Drehgestelle für die Räder
 // Vorne: Drehbares Zahnrad mit Servo-Antrieb; Color-Sensor am Boden Zwischen den Lenk-Rädern
 // Hinten: Drehbares, angetriebenes Gestell + Motor mit integrierter Rückstellfeder
@@ -48,6 +31,32 @@ drehgestellWidth = engineBoxSize.y + 2*getWheelHeight(_gap) + 2*outerBarThicknes
 
 axisCenter = getAxisCenter();
 
+
+module addNotches()
+{
+    notchDepth = 4;    
+    engineBoxSize = getEngineBoxSize();
+    
+    difference()    
+    {        
+        union()
+        {
+            children();
+        }
+        
+        // Front notch
+        translate([-engineBoxSize.x/2, -engineBoxSize.y/2-_eps, -engineBoxSize.z - getLidThickness() + notchDepth])
+        rotate([0, 45, 0])
+        translate([0, 0, -engineBoxSize.z])
+        cube([engineBoxSize.x, engineBoxSize.y+2*_eps, engineBoxSize.z]);
+        
+        // Back notch
+        translate([engineBoxSize.x/2 , -engineBoxSize.y/2-_eps, -engineBoxSize.z - getLidThickness() + notchDepth])
+        rotate([0, -45, 0])
+        translate([-engineBoxSize.x, 0, -engineBoxSize.z])
+        cube([engineBoxSize.x, engineBoxSize.y+2*_eps, engineBoxSize.z]);
+    }   
+}
 
 module addOuterBars()
 {    
@@ -184,7 +193,8 @@ module drehgestellHinten()
     addMagnetConnector(engineBoxSize.x/2)        
     addDrivenAxisHole(-axisCenter.x)            
     addPassiveAxisHole(axisCenter.x)               
-    addOuterBars()                    
+    addOuterBars()                   
+    addNotches() 
     engineBox();                   
 }
 
@@ -197,6 +207,7 @@ module passiveAxis()
 
 drehgestellHinten();
 //passiveAxis();
+
 
 /*
 // TODO: cylinder-Aufbau
