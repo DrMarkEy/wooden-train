@@ -25,6 +25,8 @@ engineSideHoldersThickness = (engineBoxWidth - engineSize.y)/2;
 
 engineBeginHolderThickness = -getAxisOffset().x + engineSideHoldersXOffset - _gap;
 
+echo(engineBeginHolderThickness);
+
 lidThickness = 3;
 lidZOffset = -getAxisOffset(_gap).z - engineBottomHolderThickness + engineBoxHeight;
 
