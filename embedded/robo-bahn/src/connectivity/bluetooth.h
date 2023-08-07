@@ -23,12 +23,10 @@
 //Der Wert einer Charakteristik darf höchstens 23 bytes groß sein...
 
 
-#define SERVICE_MAIN_UUID "ba451494-3447-11ee-be56-0242ac120002"
+#define BLUETOOTH_SERVICE_MAIN_UUID "ba451494-3447-11ee-be56-0242ac120002"
 
-#define CHARACTERISTIC_MOTOR_SPEED_UUID "c045fb9c-3447-11ee-be56-0242ac120002"
-#define CHARACTERISTIC_COMMAND_UUID "c8d7e25c-3447-11ee-be56-0242ac120002"
-
-#define BLUETOOTH_COMMAND_COUNT 5
+#define BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID "c045fb9c-3447-11ee-be56-0242ac120002"
+#define BLUETOOTH_CHARACTERISTIC_COMMAND_UUID "c8d7e25c-3447-11ee-be56-0242ac120002"
 
 #define BLUETOOTH_CONNECTION_ESTABLISHED 1
 #define BLUETOOTH_CONNECTION_TERMINATED 2
@@ -38,13 +36,8 @@
 #define BLUETOOTH_COMMAND_STOP 5
 #define BLUETOOTH_COMMAND_REVERSE 6
 
-/*#define BLUETOOTH_COMMAND_START 6
-#define BLUETOOTH_COMMAND_STOP 7
-#define BLUETOOTH_COMMAND_MUTE 8
+#define BLUETOOTH_COMMAND_COUNT 6
 
-#define BLUETOOTH_COMMAND_GET_SETTINGS 9
-#define BLUETOOTH_COMMAND_SETTINGS_RESPONSE 10
-#define BLUETOOTH_COMMAND_SET_SETTING 11*/
 
 struct BluetoothCommandCallback
 {
@@ -215,15 +208,15 @@ class BluetoothConnector
 		}));
 		  
 		   //------- Create STATE-Service ------------
-		  mainService = bluetoothConnection->createService(SERVICE_MAIN_UUID);  
+		  mainService = bluetoothConnection->createService(BLUETOOTH_SERVICE_MAIN_UUID);  
 
 		  // Engine
-		  engineChar = mainService->createCharacteristic(CHARACTERISTIC_MOTOR_SPEED_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+		  engineChar = mainService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
 		  //updateInfo(false);  
 		  engineChar->addDescriptor(new BLE2902()); //Allows notify
 
 		  //Commands
-		  commandChar = mainService->createCharacteristic(CHARACTERISTIC_COMMAND_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);  
+		  commandChar = mainService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);  
 		  byte none[1];
 		  none[0] = BLUETOOTH_COMMAND_NONE;
 		  commandChar->setValue(none, 1);  
@@ -234,7 +227,7 @@ class BluetoothConnector
 
 		  //--------------- Start Advertising --------------
 		  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-		  pAdvertising->addServiceUUID(SERVICE_MAIN_UUID);
+		  pAdvertising->addServiceUUID(BLUETOOTH_SERVICE_MAIN_UUID);
 		  pAdvertising->setScanResponse(true);
 		  
 		  // functions that help with iPhone connections issue
