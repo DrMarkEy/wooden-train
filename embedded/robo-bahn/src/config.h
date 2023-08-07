@@ -1,4 +1,4 @@
-#define VERSION_CODE "0.4"
+#define VERSION_CODE "0.5.0"
 
 #define DEFAULT_WIFI_SSID "Kosmische Hintergrundstrahlung"
 #define DEFAULT_WIFI_PASSWORD "sheldoncooper"

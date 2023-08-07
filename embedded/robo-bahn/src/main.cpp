@@ -6,6 +6,8 @@
 
 BluetoothConnector* bluetooth;
 WifiConnector* wifi;
+Engine* engine;
+ButtonController* buttons;
 
 void setup() {
 
@@ -13,26 +15,37 @@ void setup() {
   Serial.print("Baureihe 101, Version ");
   Serial.println(VERSION_CODE);
 
-  initialize_engine();
+  engine = new Engine();
   wifi = new WifiConnector();
+  buttons = new ButtonController();  
+  buttons->onButtonPressed([]() {
+    if(buttons->isReversed()) {
+      engine->drive_backward();
+    }
+    else {
+      engine->drive_forward();
+    }
+  });
   bluetooth = new BluetoothConnector();
   bluetooth->on(BLUETOOTH_COMMAND_START, 0, [](byte command, byte* buffer, byte bufferSize){
     Serial.println("Received Drive forward command!");
-    engine_drive_forward();
+    
+    engine->drive_forward();
   });
 
     bluetooth->on(BLUETOOTH_COMMAND_STOP, 0, [](byte command, byte* buffer, byte bufferSize){
     Serial.println("Received stop command!");
-    engine_stop();
+    
+    engine->stop();
   });
 }
 
 // the loop function runs over and over again forever
 void loop() {  
-  wifi.Loop();  
+  wifi->Loop();  
 
-  if(!wifi.isInOTAUpdate()) {
-    update_button_states();
+  if(!wifi->isInOTAUpdate()) {
     bluetooth->Loop();
+    buttons->Loop();
   }
 }
