@@ -19,17 +19,20 @@
 #define WIFI_STATE_CONNECTING 1
 #define WIFI_STATE_CONNECTED 2
 
-char wifiState = WIFI_STATE_OFF;
-unsigned long nextWifiUpdate = 0;
-unsigned long nextWifiConnectionRetry = 0;
 
+class WifiConnector
+{
 
+  private:
+  char wifiState = WIFI_STATE_OFF;
+  unsigned long nextWifiUpdate = 0;
+  unsigned long nextWifiConnectionRetry = 0;
+  bool inOTAUpdate = false;
 
+  void initialize_ota() {
 
-bool inOTAUpdate = false;
-
-void initialize_ota() {
-
+    static WifiConnector* me = this;
+  
     ArduinoOTA
     .onStart([]() {
       String type;
@@ -38,20 +41,20 @@ void initialize_ota() {
       else // U_SPIFFS
         type = "filesystem";
 
-      inOTAUpdate = true;
+      me->inOTAUpdate = true;
 
       // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
       Serial.println("Start updating " + type);
     })
     .onEnd([]() {
       Serial.println("\nOTA-Update finished!");
-      inOTAUpdate = false;
+      me->inOTAUpdate = false;
     })
     .onProgress([](unsigned int progress, unsigned int total) {
       Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
     })
     .onError([](ota_error_t error) {
-      inOTAUpdate = false;
+      me->inOTAUpdate = false;
 
       Serial.printf("Error[%u]: ", error);
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
@@ -61,15 +64,14 @@ void initialize_ota() {
       else if (error == OTA_END_ERROR) Serial.println("End Failed");
     });
 
-  ArduinoOTA.begin();
-}
+    ArduinoOTA.begin();
+  }
 
 
 
+  public:
 
-
-void initialize_wifi() {
-
+  WifiConnector() {
     WiFi.setHostname(DEFAULT_WIFI_HOSTNAME);
 
     // Station mode: Connect as a wifi client to a wifi router
@@ -82,24 +84,27 @@ void initialize_wifi() {
 
     wifiState = WIFI_STATE_CONNECTING;
     nextWifiConnectionRetry = millis() + WIFI_RETRY_INTERVAL;
-}
+  }
+
+  bool isInOTAUpdate(){
+    return this->inOTAUpdate;
+  }
+
+  void Loop() {
+
+    ArduinoOTA.handle();
 
 
-void update_wifi() {
 
-   ArduinoOTA.handle();
-
-
-
-  if(millis() > nextWifiUpdate) {
+    if(millis() > nextWifiUpdate) {
     
-    if(wifiState == WIFI_STATE_CONNECTING) {
+      if(wifiState == WIFI_STATE_CONNECTING) {
 
-      if(WiFi.status() == WL_CONNECTED) {
-         Serial.print("WiFi connected: ");
-         Serial.println(WiFi.localIP());
+        if(WiFi.status() == WL_CONNECTED) {
+           Serial.print("WiFi connected: ");
+           Serial.println(WiFi.localIP());
 
-         // TODO: Connect to Websocket-server!
+           // TODO: Connect to Websocket-server!
 
 
 /*
@@ -128,25 +133,25 @@ HTTPClient http;
       http.end();
 */
 
-        Serial.println("Checking for newer OTA version...");
-        initialize_ota();
+          Serial.println("Checking for newer OTA version...");
+          initialize_ota();
 
          
-         wifiState = WIFI_STATE_CONNECTED;         
-      }
-      else {
-
-        if(millis() > nextWifiConnectionRetry) {
-          Serial.println("Retrying WiFi connection..");
-          WiFi.disconnect();
-          WiFi.reconnect();
-          nextWifiConnectionRetry = millis() + WIFI_RETRY_INTERVAL;
+           wifiState = WIFI_STATE_CONNECTED;         
         }
+        else {
 
-        Serial.print('.');
+          if(millis() > nextWifiConnectionRetry) {
+            Serial.println("Retrying WiFi connection..");
+            WiFi.disconnect();
+            WiFi.reconnect();
+            nextWifiConnectionRetry = millis() + WIFI_RETRY_INTERVAL;
+          }
+
+          Serial.print('.');
+        }
       }
-    }
-    else if(wifiState == WIFI_STATE_CONNECTED) {
+      else if(wifiState == WIFI_STATE_CONNECTED) {
         
         if ((WiFi.status() != WL_CONNECTED)) {          
           Serial.println("Lost WiFi Connection.");          
@@ -154,11 +159,12 @@ HTTPClient http;
 
           wifiState = WIFI_STATE_CONNECTING;
         }
-    }
+      }
     
-    // In any case: Recheck the WiFi state after 200 ms
-    nextWifiUpdate = millis() + WIFI_CHECK_INTERVAL;
+      // In any case: Recheck the WiFi state after 200 ms
+      nextWifiUpdate = millis() + WIFI_CHECK_INTERVAL;
+    }
   }
-}
+};
 
 #endif

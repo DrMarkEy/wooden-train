@@ -5,6 +5,7 @@
 #include <connectivity/bluetooth.h>
 
 BluetoothConnector* bluetooth;
+WifiConnector* wifi;
 
 void setup() {
 
@@ -13,7 +14,7 @@ void setup() {
   Serial.println(VERSION_CODE);
 
   initialize_engine();
-  initialize_wifi();  
+  wifi = new WifiConnector();
   bluetooth = new BluetoothConnector();
   bluetooth->on(BLUETOOTH_COMMAND_START, 0, [](byte command, byte* buffer, byte bufferSize){
     Serial.println("Received Drive forward command!");
@@ -28,9 +29,9 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {  
-  update_wifi();  
+  wifi.Loop();  
 
-  if(!inOTAUpdate) {
+  if(!wifi.isInOTAUpdate()) {
     update_button_states();
     bluetooth->Loop();
   }
