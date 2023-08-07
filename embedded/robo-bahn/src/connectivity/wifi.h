@@ -1,3 +1,11 @@
+/*
+  wifi.h - Handles connection to a WiFi network and over the air updates (OTA)
+  Created by Marc Mendler, August 2023
+*/
+#ifndef wificonnector_h
+#define wificonnector_h
+
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ArduinoOTA.h>
@@ -153,3 +161,4 @@ HTTPClient http;
   }
 }
 
+#endif
