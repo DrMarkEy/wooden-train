@@ -12,7 +12,7 @@ void initialize_buttons()
 
 bool is_reversed()
 {
-    return digitalRead(PIN_REVERSE);
+    return !digitalRead(PIN_REVERSE);
 }
 
 bool start_button_pressed = false;
