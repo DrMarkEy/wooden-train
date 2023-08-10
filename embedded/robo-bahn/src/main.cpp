@@ -3,6 +3,7 @@
 #include <buttons.h>
 #include <connectivity/wifi.h>
 #include <connectivity/bluetooth.h>
+#include <http-logger.h>
 
 BluetoothConnector* bluetooth;
 WifiConnector* wifi;
@@ -10,13 +11,15 @@ Engine* engine;
 ButtonController* buttons;
 
 void setup() {
-
-  Serial.begin(115200);
-  Serial.print("Baureihe 101, Version ");
-  Serial.println(VERSION_CODE);
+  logger = new Logger();
+  logger->Log("Baureihe 101, Version ");
+  logger->Log(VERSION_CODE);
+  
+  wifi = new WifiConnector();
+  logger->setWifiConnector(wifi);
+  logger->Log("Http Logger Ready!");
 
   engine = new Engine();
-  wifi = new WifiConnector();
   buttons = new ButtonController();  
   buttons->onButtonPressed([]() {
     if(buttons->isReversed()) {
@@ -28,13 +31,13 @@ void setup() {
   });
   bluetooth = new BluetoothConnector();
   bluetooth->on(BLUETOOTH_COMMAND_START, 0, [](byte command, byte* buffer, byte bufferSize){
-    Serial.println("Received Drive forward command!");
+    logger->Log("Drive forward!");
     
     engine->drive_forward();
   });
 
     bluetooth->on(BLUETOOTH_COMMAND_STOP, 0, [](byte command, byte* buffer, byte bufferSize){
-    Serial.println("Received stop command!");
+    logger->Log("Stop driving!");
     
     engine->stop();
   });
