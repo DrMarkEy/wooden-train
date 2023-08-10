@@ -9,10 +9,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ArduinoOTA.h>
+#include <HTTPClient.h>
+#include <UrlEncode.h>
 
 #include <config.h>
-
-//#include <HTTPClient.h>
 
 
 #define WIFI_STATE_OFF 0
@@ -107,31 +107,6 @@ class WifiConnector
            // TODO: Connect to Websocket-server!
 
 
-/*
-HTTPClient http;
-      
-      // Your Domain name with URL path or IP address with path
-      http.begin("192.168.10.29/train.html");
-      
-      // If you need Node-RED/server authentication, insert user and password below
-      //http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
-      
-      // Send HTTP GET request
-      int httpResponseCode = http.GET();
-      
-      if (httpResponseCode>0) {
-        Serial.print("HTTP Response code: ");
-        Serial.println(httpResponseCode);
-        String payload = http.getString();
-        Serial.println(payload);
-      }
-      else {
-        Serial.print("Error code: ");
-        Serial.println(httpResponseCode);
-      }
-      // Free resources
-      http.end();
-*/
 
           Serial.println("Checking for newer OTA version...");
           initialize_ota();
@@ -164,6 +139,28 @@ HTTPClient http;
       // In any case: Recheck the WiFi state after 200 ms
       nextWifiUpdate = millis() + WIFI_CHECK_INTERVAL;
     }
+  }
+
+  void sendHttpLog(String text) {
+    
+    HTTPClient http;
+
+    text = urlEncode(text);    
+    String url = "http://" LOGGING_SERVER_IP ":" LOGGING_SERVER_PORT "/log/"+text;
+    http.begin(url);
+    Serial.println(url);
+
+    // Send HTTP GET request
+    int httpResponseCode = http.GET();
+      
+    if (httpResponseCode<0) {
+      Serial.print("Error code: ");
+      Serial.println(httpResponseCode);
+    }
+
+    // Free resources
+    http.end();
+
   }
 };
 
