@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import {UUIDS, STATE, TIMING} from './Enums.js';
+import {UUIDS} from './Enums.js';
 
 let CONNECTION_STATE = {
     DISCONNECTED: 0,
@@ -155,10 +155,10 @@ let btp = new Vue({
           this.server.disconnect();
           this.server = undefined;
           this.device = undefined;        
-          this.modules = [];        
-          this.bombInfos = defaultBombInfos;    
-          this.bombState = defaultBombState;
+          this.engineSpeedCharacteristic = undefined;
           this.commandCharacteristic = undefined;        
+          this.lastCommandAnswerCode = undefined;
+          this.lastCommandAnswerBuffer = undefined;
         });
       }
     }    
@@ -166,7 +166,7 @@ let btp = new Vue({
   
   computed: {
     ready: function() {
-      return this.device !== undefined;// && this.bombInfos.serial !== '' && this.bombState.state !== STATE.DISCONNECTED && this.modules.length > 0;
+      return this.device !== undefined;
     },        
     
     deviceName: function() {
