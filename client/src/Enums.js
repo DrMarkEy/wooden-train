@@ -8,6 +8,15 @@ let UUIDS = {
 	commandAnswers: "b399bd6d-fbce-4488-ae82-314a0195db4d",*/
 };
 
+let MIDI_CONTROLS = {
+  device: 176,
+  speed1: 2,
+  speed2: 3,
+  speed3: 4,
+
+  MAX_VALUE: 127
+}
+
 let STATE = {
   DISCONNECTED: -1,
   INITIALIZING: 0,
@@ -29,4 +38,4 @@ let COMMAND = {
   STOP: 5
 };
 
-export {UUIDS, STATE, COMMAND, TIMING};
+export {UUIDS, STATE, COMMAND, TIMING, MIDI_CONTROLS};
