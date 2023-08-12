@@ -10,13 +10,13 @@
     <button @click="startDriving">Go!</button>
     <button @click="stopDriving">Stop!</button>
 
-    <input class="speed-slider" type="range" v-model="speed0" min="0" max="100" :disabled="midiAvailable"/>
+    <input class="speed-slider" type="range" v-model="speed0" min="0" max="5" :disabled="midiAvailable"/>
   </div>
 </template>
 
 <script>
 //import HelloWorld from './components/HelloWorld.vue';
-import {COMMAND} from './Enums.js';
+import {COMMAND, CONFIG} from './Enums.js';
 //import WebSocket from 'ws';
 
 
@@ -42,8 +42,16 @@ export default {
 
     },
 
-    setSpeed0: function(speed) {      
-      this.speed0 = speed*100;
+    setSpeed0: function(speed) {
+      let speedStufe = Math.round(speed * CONFIG.SPEED_STEPS);
+
+      if(this.speed0 != speedStufe) {
+        
+        this.speed0 = speedStufe;        
+        this.$bluetooth.setSpeed(this.speed0);
+        
+        console.log('speed', this.speed0);
+      }
     },
 
     startDriving: function() {

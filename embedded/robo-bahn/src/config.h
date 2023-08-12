@@ -15,3 +15,4 @@
 #define PIN_MOTOR_B 17
 #define PIN_PUSH_BUTTON 18
 #define PIN_REVERSE 19
+#define SPEED_STEPS 5

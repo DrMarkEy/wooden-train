@@ -10,7 +10,8 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLE2902.h>
-
+#include <esp_bt.h>
+#include <esp_bt_main.h>
 #include <config.h>
 
 
@@ -58,7 +59,10 @@ class ServerCallbacks: public BLEServerCallbacks
     {
       *connectedPointer = true;
 	  onConnectedCallback();
-      
+
+      // Set fast connection params
+	  BLEAddress bleAddress = BLEDevice::getAddress();
+	  pServer->updateConnParams(*(bleAddress.getNative()), (uint16_t)6, (uint16_t)10, (uint16_t)0, (uint16_t)1000);
 	  Serial.println("BLE Client connected.");
     }
 
@@ -82,7 +86,8 @@ class BluetoothConnector
 	boolean clientConnected;  
     int lastUpdate = 0;
 	BluetoothCommandCallback commandCallbacks[BLUETOOTH_COMMAND_COUNT];
-	
+	void (*engineSpeedChangedCallback) (byte speed) = nullptr;
+
 	BLEServer *bluetoothConnection;
 	BLEService *mainService;
 	
@@ -120,35 +125,6 @@ class BluetoothConnector
 	  }*/
 	}
 	
-	/*
-	void updateModuleStates(boolean notify)
-	{
-	  byte buffer[NUMBER_OF_MODULES + 3];
-	  unsigned int bools = 0;
-	  
-	  buffer[0] = NUMBER_OF_MODULES;
-	  for(byte i = 0; i < NUMBER_OF_MODULES; i++)
-	  {
-		buffer[i + 1] = bombInfo->modules[i].type;  
-
-		//If solved, set ith bit to one
-		if(bombInfo->modules[i].solved)
-		  bools |= 1 << (16 - i);
-	  }
-
-	  buffer[NUMBER_OF_MODULES + 1] = bools;
-	  buffer[NUMBER_OF_MODULES + 2] = bools >> 8;  
-	  
-      //Calculate hash	  	  
-	  if(checkBufferChange(lastModuleState, buffer, NUMBER_OF_MODULES + 3))	  
-	  {		
-	    Serial.println("Updated Module Info.");
-	    moduleStatesChar->setValue(buffer, NUMBER_OF_MODULES + 3);
-	  
-	    if(notify)
-		  moduleStatesChar->notify();	  
-	  }
-	}*/
 	
 	void onConnected()
 	{
@@ -187,6 +163,20 @@ class BluetoothConnector
 	  commandChar->setValue(none, 1);	  	  
 	}	
 
+	void updateEngineSpeed()
+	{
+	  //Read speed
+	  byte *buffer = engineChar->getData();
+	  
+	  byte val = *buffer;	  
+	  
+	  //Handle command if listener is registered
+	  if(engineSpeedChangedCallback != NULL)
+	  {		
+		engineSpeedChangedCallback(val);
+	  }	  	 
+	}
+
   public:    			
 	
 	BluetoothConnector()
@@ -211,7 +201,7 @@ class BluetoothConnector
 		  mainService = bluetoothConnection->createService(BLUETOOTH_SERVICE_MAIN_UUID);  
 
 		  // Engine
-		  engineChar = mainService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+		  engineChar = mainService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY);
 		  //updateInfo(false);  
 		  engineChar->addDescriptor(new BLE2902()); //Allows notify
 
@@ -240,15 +230,15 @@ class BluetoothConnector
 	void Loop()
 	{
 		if(!clientConnected)
-			return;
+			return;	    
 		
-	    handleCommands();
-		
-		//Update with ~ 10 Hz		
-		if(millis() > lastUpdate + 100)
+		//Update with ~ 100 Hz		
+		if(millis() > lastUpdate + 10)
 		{
 			lastUpdate = millis();
-			update();			
+			//update();			
+			handleCommands();
+			updateEngineSpeed();
 		}
 	}
 	
@@ -257,6 +247,11 @@ class BluetoothConnector
 	{		
 		BluetoothCommandCallback cbk = { .callback = callback, .bufferSize = bufferSize };		
 		commandCallbacks[command] = cbk;
+	}
+
+	void onSpeedChanged(void (*callback) (byte speed))
+	{		
+		this->engineSpeedChangedCallback = callback;
 	}
 	
 	//Remove all command-callbacks

@@ -16,6 +16,9 @@ let btp = new Vue({
     
       device: undefined,
       server: undefined,      
+
+      requestedEngineSpeed: undefined,
+      engineCharacteristicLock: false,
     
       engineSpeedCharacteristic: undefined,
       commandCharacteristic: undefined,
@@ -66,6 +69,42 @@ let btp = new Vue({
       catch(ex)
       {
         this.reconnect();
+      }
+    },
+
+    setSpeed: async function(speed) 
+    {        
+      if(this.state == CONNECTION_STATE.CONNECTED) {   
+        
+        if(this.engineCharacteristicLock) 
+        {
+          this.requestedEngineSpeed = speed;
+          console.log("Requested speed of ", speed);
+        }
+        else
+        { 
+          this.engineCharacteristicLock = true;
+          console.log('Set speed to', speed);
+
+          let speedValue = new Uint8Array([speed]);          
+
+          try
+          {
+            await this.engineSpeedCharacteristic.writeValue(speedValue);            
+            this.engineCharacteristicLock = false;
+            console.log('Released speed lock');
+
+            if(this.requestedEngineSpeed !== undefined) {
+              let speed = this.requestedEngineSpeed;
+              this.requestedEngineSpeed = undefined;              
+              this.setSpeed(speed);
+            }
+          }
+          catch(ex)
+          {
+            this.reconnect();
+          }
+        }
       }
     },
     

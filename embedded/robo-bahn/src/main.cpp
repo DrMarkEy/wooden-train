@@ -23,23 +23,31 @@ void setup() {
   buttons = new ButtonController();  
   buttons->onButtonPressed([]() {
     if(buttons->isReversed()) {
-      engine->drive_backward();
+      engine->setDirection(false);
+      engine->setSpeed(255);      
     }
     else {
-      engine->drive_forward();
+      engine->setDirection(true);
+      engine->setSpeed(255);
     }
   });
   bluetooth = new BluetoothConnector();
   bluetooth->on(BLUETOOTH_COMMAND_START, 0, [](byte command, byte* buffer, byte bufferSize){
     logger->Log("Drive forward!");
     
-    engine->drive_forward();
+    engine->setDirection(true);
+    //engine->setSpeed(255);
   });
 
-    bluetooth->on(BLUETOOTH_COMMAND_STOP, 0, [](byte command, byte* buffer, byte bufferSize){
+  bluetooth->on(BLUETOOTH_COMMAND_STOP, 0, [](byte command, byte* buffer, byte bufferSize){
     logger->Log("Stop driving!");
     
     engine->stop();
+  });
+
+  bluetooth->onSpeedChanged([](byte speed){
+    engine->setSpeed(speed);
+    logger->Log("Set speed "+String(speed));    
   });
 }
 

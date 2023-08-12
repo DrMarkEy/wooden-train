@@ -15,22 +15,10 @@ let MIDI_CONTROLS = {
   speed3: 4,
 
   MAX_VALUE: 127
-}
-
-let STATE = {
-  DISCONNECTED: -1,
-  INITIALIZING: 0,
-  ACTIVE: 1, 
-  PAUSED: 2,
-  STOPPED: 3,
-  CHARGING: 4
 };
 
-let TIMING = {
-  BRILLIANT: 1,                //Players are solving the bomb very fast, so that much time will be left
-  DEFAULT: 2,                  //Players are solving the bomb at a pace, so that it will probably be solved with e few seconds left
-  BAD: 3,          //Players are solving the bomb at a pace, so that it will likely, but not definetly explode
-  CATASTROPHIC: 4  //Players are solving the bomb at a pace that there is almost no chance not to explode
+let CONFIG = {
+  SPEED_STEPS: 5
 };
 
 let COMMAND = {
@@ -38,4 +26,4 @@ let COMMAND = {
   STOP: 5
 };
 
-export {UUIDS, STATE, COMMAND, TIMING, MIDI_CONTROLS};
+export {UUIDS, COMMAND, MIDI_CONTROLS, CONFIG};
