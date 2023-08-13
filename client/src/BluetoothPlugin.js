@@ -49,7 +49,7 @@ let btp = new Vue({
   
     sendCommand: function(command, answerCode) 
     {
-      //Convert argument to array
+      /*//Convert argument to array
       if(!Array.isArray(command))
         command = [command];
         
@@ -69,7 +69,7 @@ let btp = new Vue({
       catch(ex)
       {
         this.reconnect();
-      }
+      }*/
     },
 
     setSpeed: async function(speed) 
@@ -162,7 +162,7 @@ let btp = new Vue({
       this.startListening(service, UUIDS.moduleInfos, this.updateModuleInfos);*/                
            
       this.engineSpeedCharacteristic = await service.getCharacteristic(UUIDS.engineSpeed);
-      this.commandCharacteristic = await service.getCharacteristic(UUIDS.command);
+      //this.commandCharacteristic = await service.getCharacteristic(UUIDS.command);
       
       setTimeout(this.checkConnected, 500);
     },
