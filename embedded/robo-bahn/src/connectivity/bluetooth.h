@@ -28,9 +28,8 @@
 //#define BLUETOOTH_SERVICE_MAIN_UUID "ba451494-3447-11ee-be56-0242ac120002"
 
 static uint8_t BLUETOOTH_SERVICE_MAIN_UUID[16] = {
-    0xba, 0x45, 0x14, 0x94, 0x34, 0x47, 0x11, 0xee, 0xbe, 0x56, 0x02, 0x42, 0xac, 0x12, 0x00, 0x02
+	0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0x56, 0xbe, 0xee, 0x11, 0x47, 0x34, 0x94, 0x14, 0x45, 0xba
 };
-
 
 #define BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID "c045fb9c-3447-11ee-be56-0242ac120002"
 #define BLUETOOTH_CHARACTERISTIC_COMMAND_UUID "c8d7e25c-3447-11ee-be56-0242ac120002"
@@ -45,7 +44,7 @@ static uint8_t BLUETOOTH_SERVICE_MAIN_UUID[16] = {
 
 #define BLUETOOTH_COMMAND_COUNT 6
 
-#define GATTS_SERVICE_UUID_TEST_A   0x00FF
+//#define GATTS_SERVICE_UUID_TEST_A   0x00FF
 
 
 struct BluetoothCommandCallback
@@ -57,8 +56,8 @@ struct BluetoothCommandCallback
 
 static esp_ble_adv_data_t adv_data = {
     .set_scan_rsp = false,
-    .include_name = true,
-    .include_txpower = true,
+    .include_name = false,
+    .include_txpower = false,
     .min_interval = 0x0006,
     .max_interval = 0x0007,
     .appearance = 0x00,
@@ -75,7 +74,7 @@ static esp_ble_adv_data_t adv_data = {
 static esp_ble_adv_data_t scan_rsp_data = {
     .set_scan_rsp = true,
     .include_name = true,
-    .include_txpower = true,
+    .include_txpower = false,
     //.min_interval = 0x0006,
     //.max_interval = 0x0010,
     .appearance = 0x00,
@@ -83,7 +82,7 @@ static esp_ble_adv_data_t scan_rsp_data = {
     .p_manufacturer_data =  NULL, //&test_manufacturer[0],
     .service_data_len = 0,
     .p_service_data = NULL,
-    .service_uuid_len = sizeof(BLUETOOTH_SERVICE_MAIN_UUID),
+    .service_uuid_len = 16,
     .p_service_uuid = BLUETOOTH_SERVICE_MAIN_UUID,
     .flag = (ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT),
 };
@@ -137,8 +136,8 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
              logger->Logf("REGISTER_APP_EVT, status %d, app_id %d", param->reg.status, param->reg.app_id);
              gattsProfile.service_id.is_primary = true;
              gattsProfile.service_id.id.inst_id = 0x00;
-             gattsProfile.service_id.id.uuid.len = ESP_UUID_LEN_16;
-             gattsProfile.service_id.id.uuid.uuid.uuid16 = GATTS_SERVICE_UUID_TEST_A;
+             gattsProfile.service_id.id.uuid.len = ESP_UUID_LEN_128;
+			 memcpy(gattsProfile.service_id.id.uuid.uuid.uuid128, BLUETOOTH_SERVICE_MAIN_UUID, 16);
 
              esp_ble_gap_set_device_name(DEFAULT_WIFI_HOSTNAME);
 
@@ -284,7 +283,7 @@ class BluetoothConnector
 		}
 
 
-
+	// TODO: Maybe need to init nvs first!! (see BLE example)
 
 
     esp_err_t ret;
@@ -292,15 +291,22 @@ class BluetoothConnector
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     
 	// TODO: Eventually adjust settings to be even faster!
+    
+	// Note: This method is needed for the BLE initialization to work.
+	// See https://github.com/espressif/arduino-esp32/issues/3436
+	btStarted();
+
 
     ret = esp_bt_controller_init(&bt_cfg);
     if (ret) {
-        logger->Log("BluetoothConnector initialize controller failed");
+        logger->Log("BluetoothConnector initialize controller failed!");
+		logger->Log("BluetoothConnector initialize controller failed:"+ String(ret));
         return;
     }
 
-    ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
-    if (ret) {
+    //Note: ESP_BT_MODE_BLE is not yet working
+    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
+    if (ret != ESP_OK) {
         logger->Log("BluetoothConnector enable controller failed");
         return;
     }
@@ -339,6 +345,8 @@ class BluetoothConnector
     if (local_mtu_ret){
         logger->Log("set local  MTU failed, error code = " + local_mtu_ret);
     }
+
+	logger->Log("Bluetooth initialization worked!");
     return;
 
 		/*
