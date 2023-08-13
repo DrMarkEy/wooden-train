@@ -31,7 +31,12 @@ static uint8_t BLUETOOTH_SERVICE_MAIN_UUID[16] = {
 	0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0x56, 0xbe, 0xee, 0x11, 0x47, 0x34, 0x94, 0x14, 0x45, 0xba
 };
 
-#define BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID "c045fb9c-3447-11ee-be56-0242ac120002"
+//"c045fb9c-3447-11ee-be56-0242ac120002"
+static uint8_t BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID[16] = {
+	0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0x56, 0xbe, 0xee, 0x11, 0x47, 0x34, 0x9c, 0xfb, 0x45, 0xc0
+};
+
+//#define BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID "c045fb9c-3447-11ee-be56-0242ac120002"
 #define BLUETOOTH_CHARACTERISTIC_COMMAND_UUID "c8d7e25c-3447-11ee-be56-0242ac120002"
 
 #define BLUETOOTH_CONNECTION_ESTABLISHED 1
@@ -46,6 +51,16 @@ static uint8_t BLUETOOTH_SERVICE_MAIN_UUID[16] = {
 
 //#define GATTS_SERVICE_UUID_TEST_A   0x00FF
 
+#define GATTS_NUM_HANDLE 4
+
+static esp_gatt_char_prop_t engineSpeedProperty = 0;
+static uint8_t engineSpeed[] = {0x0};
+static esp_attr_value_t engineSpeedInitialValue =
+{
+    .attr_max_len = 1,
+    .attr_len     = 1,
+    .attr_value   = engineSpeed
+};
 
 struct BluetoothCommandCallback
 {
@@ -119,20 +134,20 @@ static uint8_t adv_config_done = 0;
 #define scan_rsp_config_flag (1 << 1)
 
 
+// Declaration
+static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
 
-    // Declaration
-    static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
 
-
-	static struct gatts_profile_inst gattsProfile = { 
-		.gatts_cb = gatts_profile_a_event_handler,
-        .gatts_if = ESP_GATT_IF_NONE,       /* Not get the gatt_if, so initial is ESP_GATT_IF_NONE */
-	};
+static struct gatts_profile_inst gattsProfile = { 
+    .gatts_cb = gatts_profile_a_event_handler,
+    .gatts_if = ESP_GATT_IF_NONE,       /* Not get the gatt_if, so initial is ESP_GATT_IF_NONE */
+};
 
 
 static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
         switch (event) {
         case ESP_GATTS_REG_EVT:
+		{
              logger->Logf("REGISTER_APP_EVT, status %d, app_id %d", param->reg.status, param->reg.app_id);
              gattsProfile.service_id.is_primary = true;
              gattsProfile.service_id.id.inst_id = 0x00;
@@ -147,12 +162,72 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
                 logger->Log("config adv data failed, error code = "+ret);
             }
             adv_config_done |= adv_config_flag;
+
             //config scan response data
             ret = esp_ble_gap_config_adv_data(&scan_rsp_data);
             if (ret){
                 logger->Log("config scan response data failed, error code = "+ ret);
             }
             adv_config_done |= scan_rsp_config_flag;
+
+
+			esp_ble_gatts_create_service(gatts_if, &gattsProfile.service_id, GATTS_NUM_HANDLE);
+		}
+		break;
+
+		case ESP_GATTS_CREATE_EVT:
+		{
+            logger->Logf("CREATE_SERVICE_EVT, status %d,  service_handle %d", param->create.status, param->create.service_handle);
+            gattsProfile.service_handle = param->create.service_handle;
+            gattsProfile.char_uuid.len = ESP_UUID_LEN_128;
+		    memcpy(gattsProfile.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16);            
+
+            esp_ble_gatts_start_service(gattsProfile.service_handle);
+            engineSpeedProperty = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
+            esp_err_t add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.char_uuid,
+                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                                                        engineSpeedProperty,
+                                                        &engineSpeedInitialValue, NULL);
+            if (add_char_ret){
+                logger->Logf("add char failed, error code =%x",add_char_ret);
+            }
+		}
+        break;
+
+        case ESP_GATTS_ADD_CHAR_EVT: 
+		{
+            uint16_t length = 0;
+            const uint8_t *prf_char;
+
+            logger->Logf("ADD_CHAR_EVT, status %d,  attr_handle %d, service_handle %d",
+                param->add_char.status, param->add_char.attr_handle, param->add_char.service_handle);
+            gattsProfile.char_handle = param->add_char.attr_handle;
+            gattsProfile.descr_uuid.len = ESP_UUID_LEN_16;
+            gattsProfile.descr_uuid.uuid.uuid16 = ESP_GATT_UUID_CHAR_CLIENT_CONFIG;
+            esp_err_t get_attr_ret = esp_ble_gatts_get_attr_value(param->add_char.attr_handle,  &length, &prf_char);
+            if (get_attr_ret == ESP_FAIL){
+                logger->Log("ILLEGAL HANDLE");
+            }
+
+            logger->Logf("the gatts demo char length = %x", length);
+            for(int i = 0; i < length; i++){
+                logger->Logf("prf_char[%x] =%x",i,prf_char[i]);
+            }
+            esp_err_t add_descr_ret = esp_ble_gatts_add_char_descr(gattsProfile.service_handle, &gattsProfile.descr_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, NULL, NULL);
+            if (add_descr_ret){
+                logger->Logf("add char descr failed, error code =%x", add_descr_ret);
+			}
+        }
+        break;
+
+
+        case ESP_GATTS_ADD_CHAR_DESCR_EVT:
+            logger->Logf("ADD_DESCR_EVT, status %d, attr_handle %d, service_handle %d",
+                param->add_char.status, param->add_char.attr_handle,  
+                param->add_char.service_handle);
+        break;
+
+
 		}
 	}
 
