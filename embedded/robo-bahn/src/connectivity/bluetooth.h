@@ -109,35 +109,9 @@ class BluetoothConnector
 		return ret;
 	}
 	
-	void updateEngine(boolean notify)
-	{
-	  /*byte buffer[BombInfo::LENGTH];
-	  bombInfo->serialize(buffer);
-	  
-	  //Only update if value has changed
-	  if(checkBufferChange(lastBombInfo, buffer, BombInfo::LENGTH))	  
-	  {				
-		Serial.println("Updated Bomb Info.");
-	    infoChar->setValue(buffer, BombInfo::LENGTH);
-		
-	    if(notify)
-		  infoChar->notify();
-	  }*/
-	}
-	
-	
 	void onConnected()
 	{
 		Serial.println("Bluetooth-Client connected.");		
-		//updateInfo(true); //Würde eigentlich hier reichen, aber muss dann mit resetted werden, wenn die bombe auf active umschaltet...
-	}
-	
-	void update()
-	{
-	  if(clientConnected)
-	  {	
-		updateEngine(true);				
-	  }
 	}
 	
 	void handleCommands()
@@ -253,23 +227,6 @@ class BluetoothConnector
 	{		
 		this->engineSpeedChangedCallback = callback;
 	}
-	
-	//Remove all command-callbacks
-	void clearCallbacks()
-	{
-		//Reset callbacks to NUlL
-		for(byte i = 0; i < BLUETOOTH_COMMAND_COUNT; i++)
-		{
-			commandCallbacks[i].callback = NULL;
-			commandCallbacks[i].bufferSize = 0;
-		}
-	}
-	
-	/*void answerCommand(byte* buffer, byte length)
-	{		
-	    commandAnswerChar->setValue(buffer, length);	  
-		commandAnswerChar->notify();		
-	}*/
 };
 
 #endif
