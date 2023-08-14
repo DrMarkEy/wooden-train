@@ -14,6 +14,7 @@
 
 #include <http-logger.h>
 #include <config.h>
+#include "nvs_flash.h"
 
 
 //https://github.com/espressif/arduino-esp32/blob/master/libraries/BLE/examples/BLE_notify/BLE_notify.ino
@@ -53,7 +54,11 @@ static uint8_t BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID[16] = {
 
 #define GATTS_NUM_HANDLE 4
 
-static esp_gatt_char_prop_t engineSpeedProperty = 0;
+static  esp_attr_control_t attr_control = {
+	.auto_rsp = ESP_GATT_AUTO_RSP
+};
+
+static esp_gatt_char_prop_t engineSpeedPropertyFlags = 0;
 static uint8_t engineSpeed[] = {0x0};
 static esp_attr_value_t engineSpeedInitialValue =
 {
@@ -143,6 +148,9 @@ static struct gatts_profile_inst gattsProfile = {
     .gatts_if = ESP_GATT_IF_NONE,       /* Not get the gatt_if, so initial is ESP_GATT_IF_NONE */
 };
 
+static    	void (*engineSpeedChangedCallback) (byte speed) = nullptr;
+
+
 
 static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
         switch (event) {
@@ -183,11 +191,11 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 		    memcpy(gattsProfile.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16);            
 
             esp_ble_gatts_start_service(gattsProfile.service_handle);
-            engineSpeedProperty = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
+            engineSpeedPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE;// | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
             esp_err_t add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.char_uuid,
                                                         ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-                                                        engineSpeedProperty,
-                                                        &engineSpeedInitialValue, NULL);
+                                                        engineSpeedPropertyFlags,
+                                                        &engineSpeedInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
             if (add_char_ret){
                 logger->Logf("add char failed, error code =%x",add_char_ret);
             }
@@ -208,12 +216,13 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             if (get_attr_ret == ESP_FAIL){
                 logger->Log("ILLEGAL HANDLE");
             }
-
+			
             logger->Logf("the gatts demo char length = %x", length);
             for(int i = 0; i < length; i++){
                 logger->Logf("prf_char[%x] =%x",i,prf_char[i]);
             }
-            esp_err_t add_descr_ret = esp_ble_gatts_add_char_descr(gattsProfile.service_handle, &gattsProfile.descr_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, NULL, NULL);
+
+            esp_err_t add_descr_ret = esp_ble_gatts_add_char_descr(gattsProfile.service_handle, &gattsProfile.descr_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, NULL, NULL);//&attr_control);
             if (add_descr_ret){
                 logger->Logf("add char descr failed, error code =%x", add_descr_ret);
 			}
@@ -222,14 +231,159 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 
 
         case ESP_GATTS_ADD_CHAR_DESCR_EVT:
+		{
             logger->Logf("ADD_DESCR_EVT, status %d, attr_handle %d, service_handle %d",
                 param->add_char.status, param->add_char.attr_handle,  
                 param->add_char.service_handle);
+		}
         break;
 
+		case ESP_GATTS_CONNECT_EVT: 
+		{  
+		  // Optional:
+          /*esp_ble_conn_update_params_t conn_params = {0};  
+          memcpy(conn_params.bda, param->connect.remote_bda, sizeof(esp_bd_addr_t));
+          
+		  / * For the IOS system, please reference the apple official documents about the ble connection parameters restrictions. * /
+          conn_params.latency = 0;  
+          conn_params.max_int = 0x30;    // max_int = 0x30*1.25ms = 40ms  
+          conn_params.min_int = 0x10;    // min_int = 0x10*1.25ms = 20ms   
+          conn_params.timeout = 400;     // timeout = 400*10ms = 4000ms  
+		  */
 
-		}
+          logger->Logf("ESP_GATTS_CONNECT_EVT, conn_id %d, remote %02x:%02x:%02x:%02x:%02x:%02x:",  
+             param->connect.conn_id,  
+             param->connect.remote_bda[0],  
+             param->connect.remote_bda[1],  
+             param->connect.remote_bda[2],  
+             param->connect.remote_bda[3],  
+             param->connect.remote_bda[4],  
+             param->connect.remote_bda[5]
+		  );               
+ 	      gattsProfile.conn_id = param->connect.conn_id;
+	      
+		  // Optional:
+		  //start sent the update connection parameters to the peer device.
+	      //esp_ble_gap_update_conn_params(&conn_params);
+	      break;
+        }
+
+		case ESP_GATTS_READ_EVT: 
+		{
+          logger->Logf("GATT_READ_EVT, conn_id %d, trans_id %d, handle %d",  
+              param->read.conn_id, param->read.trans_id, param->read.handle);  
+
+              /*esp_gatt_rsp_t rsp;  
+              memset(&rsp, 0, sizeof(esp_gatt_rsp_t));  
+              rsp.attr_value.handle = param->read.handle;  
+              rsp.attr_value.len = 4;  
+              rsp.attr_value.value[0] = 0xde;  
+              rsp.attr_value.value[1] = 0xed;  
+              rsp.attr_value.value[2] = 0xbe;  
+              rsp.attr_value.value[3] = 0xef;  
+              
+			  esp_ble_gatts_send_response(gatts_if,  
+                                          param->read.conn_id,  
+                                          param->read.trans_id,  
+                                          ESP_GATT_OK, &rsp);*/
+         break;
+        }
+
+		case ESP_GATTS_WRITE_EVT: {                          
+          logger->Logf("GATT_WRITE_EVT, conn_id %d, trans_id %d, handle %d", param->write.conn_id, param->write.trans_id, param->write.handle);
+          
+          if (param->write.is_prep){
+            logger->Log("Received not implemented long send event!");
+          }
+          else {
+             logger->Logf("Written value, value len %d, value:", param->write.len);
+                          
+             // TODO: Log buffer value 
+             for(byte i = 0; i < param->write.len; i++) {
+               logger->Log(String(param->write.value[i]));             
+             }
+
+            if(engineSpeedChangedCallback != NULL)
+	        {		
+		      engineSpeedChangedCallback(param->write.value[0]);
+	        }	  	 
+
+            esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
+
+
+             if (gattsProfile.descr_handle == param->write.handle && param->write.len == 2){
+                 uint16_t descr_value= param->write.value[1]<<8 | param->write.value[0];
+
+                 logger->Logf("descr_value %d", descr_value);
+
+
+                 // Not needed:
+                 /*if(param->write.need_rsp) {
+                   logger->Log("needs response!");
+
+                    esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
+                 }*/
+
+                 //ESP_LOGI(GATTS_TAG, "notify enable");
+                 /*       uint8_t notify_data[15];
+                        for (int i = 0; i < sizeof(notify_data); ++i)
+                        {
+                            notify_data[i] = i%0xff;
+                        }
+                        //the size of notify_data[] need less than MTU size
+                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, gattsProfile.char_handle,
+                                                sizeof(notify_data), notify_data, false);
+*/
+/*
+                 if (descr_value == 0x0001){
+                      if (b_property & ESP_GATT_CHAR_PROP_BIT_NOTIFY){
+                         ESP_LOGI(GATTS_TAG, "notify enable");
+                         uint8_t notify_data[15];
+                         for (int i = 0; i < sizeof(notify_data); ++i)
+                         {
+                              notify_data[i] = i%0xff;  
+                          }
+                          //the size of notify_data[] need less than MTU size
+                          esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id,  
+                                                 gattsProfile.char_handle,  
+                                                 sizeof(notify_data),  
+                                                 notify_data, false);
+                     }
+                 }else if (descr_value == 0x0002){
+                      if (b_property & ESP_GATT_CHAR_PROP_BIT_INDICATE){
+                          ESP_LOGI(GATTS_TAG, "indicate enable");
+                          uint8_t indicate_data[15];
+                          for (int i = 0; i < sizeof(indicate_data); ++i)
+                          {
+                              indicate_data[i] = i % 0xff;
+                           }
+                           //the size of indicate_data[] need less than MTU size
+                          esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id,  
+                                                 gattsProfile.char_handle,  
+                                                 sizeof(indicate_data),  
+                                                 indicate_data, true);
+                     }
+                  }
+                  else if (descr_value == 0x0000){
+                      ESP_LOGI(GATTS_TAG, "notify/indicate disable ");
+                  }else{
+                      ESP_LOGE(GATTS_TAG, "unknown value");
+                  }*/
+              }
+           }
+        }
+		break;
+
+        case ESP_GATTS_EXEC_WRITE_EVT:  
+        {
+          logger->Log("Received unsupported Write exec command!");  
+          esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);            
+          break;
+        }
+	  }
 	}
+
+
 
 class BluetoothConnector
 {
@@ -237,7 +391,6 @@ class BluetoothConnector
 	boolean clientConnected;  
     int lastUpdate = 0;
 	BluetoothCommandCallback commandCallbacks[BLUETOOTH_COMMAND_COUNT];
-	void (*engineSpeedChangedCallback) (byte speed) = nullptr;
 
 	/*BLEServer *bluetoothConnection;
 	BLEService *mainService;
@@ -350,6 +503,7 @@ class BluetoothConnector
 	
 	BluetoothConnector()
 	{
+
 		//Initialize callbacks as NUlL
 		for(byte i = 0; i < BLUETOOTH_COMMAND_COUNT; i++)
 		{
@@ -358,10 +512,17 @@ class BluetoothConnector
 		}
 
 
-	// TODO: Maybe need to init nvs first!! (see BLE example)
-
-
     esp_err_t ret;
+
+	// TODO: Maybe need to init nvs first!! (see BLE example)
+    // Initialize NVS.
+    ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+
+
     	
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     
@@ -488,7 +649,7 @@ class BluetoothConnector
 
 	void onSpeedChanged(void (*callback) (byte speed))
 	{		
-		this->engineSpeedChangedCallback = callback;
+		engineSpeedChangedCallback = callback;
 	}
 };
 
