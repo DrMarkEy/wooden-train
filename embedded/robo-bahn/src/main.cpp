@@ -32,14 +32,14 @@ void setup() {
     }
   });
   bluetooth = new BluetoothConnector();
-  bluetooth->on(BLUETOOTH_COMMAND_START, 0, [](byte command, byte* buffer, byte bufferSize){
+  bluetooth->onCommand(BLUETOOTH_COMMAND_START, 0, [](byte command, byte* buffer, byte bufferSize){
     logger->Log("Drive forward!");
     
     engine->setDirection(true);
     //engine->setSpeed(255);
   });
 
-  bluetooth->on(BLUETOOTH_COMMAND_STOP, 0, [](byte command, byte* buffer, byte bufferSize){
+  bluetooth->onCommand(BLUETOOTH_COMMAND_STOP, 0, [](byte command, byte* buffer, byte bufferSize){
     logger->Log("Stop driving!");
     
     engine->stop();
@@ -55,8 +55,7 @@ void setup() {
 void loop() {  
   wifi->Loop();  
 
-  if(!wifi->isInOTAUpdate()) {
-    bluetooth->Loop();
+  if(!wifi->isInOTAUpdate()) {   
     buttons->Loop();
   }
 }

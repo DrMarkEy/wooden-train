@@ -26,18 +26,16 @@
 //Der Wert einer Charakteristik darf höchstens 23 bytes groß sein...
 
 
-//#define BLUETOOTH_SERVICE_MAIN_UUID "ba451494-3447-11ee-be56-0242ac120002"
-
+//ba451494-3447-11ee-be56-0242ac120002
 static uint8_t BLUETOOTH_SERVICE_MAIN_UUID[16] = {
 	0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0x56, 0xbe, 0xee, 0x11, 0x47, 0x34, 0x94, 0x14, 0x45, 0xba
 };
 
-//"c045fb9c-3447-11ee-be56-0242ac120002"
+//c045fb9c-3447-11ee-be56-0242ac120002
 static uint8_t BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID[16] = {
 	0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0x56, 0xbe, 0xee, 0x11, 0x47, 0x34, 0x9c, 0xfb, 0x45, 0xc0
 };
 
-//#define BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID "c045fb9c-3447-11ee-be56-0242ac120002"
 #define BLUETOOTH_CHARACTERISTIC_COMMAND_UUID "c8d7e25c-3447-11ee-be56-0242ac120002"
 
 #define BLUETOOTH_CONNECTION_ESTABLISHED 1
@@ -49,8 +47,6 @@ static uint8_t BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID[16] = {
 #define BLUETOOTH_COMMAND_REVERSE 6
 
 #define BLUETOOTH_COMMAND_COUNT 6
-
-//#define GATTS_SERVICE_UUID_TEST_A   0x00FF
 
 #define GATTS_NUM_HANDLE 4
 
@@ -298,7 +294,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
           else {
              logger->Logf("Written value, value len %d, value:", param->write.len);
                           
-             // TODO: Log buffer value 
+             // Log buffer value 
              for(byte i = 0; i < param->write.len; i++) {
                logger->Log(String(param->write.value[i]));             
              }
@@ -309,67 +305,6 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 	        }	  	 
 
             esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
-
-
-             if (gattsProfile.descr_handle == param->write.handle && param->write.len == 2){
-                 uint16_t descr_value= param->write.value[1]<<8 | param->write.value[0];
-
-                 logger->Logf("descr_value %d", descr_value);
-
-
-                 // Not needed:
-                 /*if(param->write.need_rsp) {
-                   logger->Log("needs response!");
-
-                    esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
-                 }*/
-
-                 //ESP_LOGI(GATTS_TAG, "notify enable");
-                 /*       uint8_t notify_data[15];
-                        for (int i = 0; i < sizeof(notify_data); ++i)
-                        {
-                            notify_data[i] = i%0xff;
-                        }
-                        //the size of notify_data[] need less than MTU size
-                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, gattsProfile.char_handle,
-                                                sizeof(notify_data), notify_data, false);
-*/
-/*
-                 if (descr_value == 0x0001){
-                      if (b_property & ESP_GATT_CHAR_PROP_BIT_NOTIFY){
-                         ESP_LOGI(GATTS_TAG, "notify enable");
-                         uint8_t notify_data[15];
-                         for (int i = 0; i < sizeof(notify_data); ++i)
-                         {
-                              notify_data[i] = i%0xff;  
-                          }
-                          //the size of notify_data[] need less than MTU size
-                          esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id,  
-                                                 gattsProfile.char_handle,  
-                                                 sizeof(notify_data),  
-                                                 notify_data, false);
-                     }
-                 }else if (descr_value == 0x0002){
-                      if (b_property & ESP_GATT_CHAR_PROP_BIT_INDICATE){
-                          ESP_LOGI(GATTS_TAG, "indicate enable");
-                          uint8_t indicate_data[15];
-                          for (int i = 0; i < sizeof(indicate_data); ++i)
-                          {
-                              indicate_data[i] = i % 0xff;
-                           }
-                           //the size of indicate_data[] need less than MTU size
-                          esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id,  
-                                                 gattsProfile.char_handle,  
-                                                 sizeof(indicate_data),  
-                                                 indicate_data, true);
-                     }
-                  }
-                  else if (descr_value == 0x0000){
-                      ESP_LOGI(GATTS_TAG, "notify/indicate disable ");
-                  }else{
-                      ESP_LOGE(GATTS_TAG, "unknown value");
-                  }*/
-              }
            }
         }
 		break;
@@ -392,11 +327,6 @@ class BluetoothConnector
     int lastUpdate = 0;
 	BluetoothCommandCallback commandCallbacks[BLUETOOTH_COMMAND_COUNT];
 
-	/*BLEServer *bluetoothConnection;
-	BLEService *mainService;
-	
-	BLECharacteristic *engineChar;
-    BLECharacteristic *commandChar;*/
 	
 	bool checkBufferChange(byte* oldValue, byte* newValue, byte length)
 	{
@@ -512,136 +442,77 @@ class BluetoothConnector
 		}
 
 
-    esp_err_t ret;
+        esp_err_t ret;
 
-	// TODO: Maybe need to init nvs first!! (see BLE example)
-    // Initialize NVS.
-    ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
+	    // TODO: Maybe need to init nvs first!! (see BLE example)
+        // Initialize NVS.
         ret = nvs_flash_init();
-    }
+        if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+            ESP_ERROR_CHECK(nvs_flash_erase());
+            ret = nvs_flash_init();
+        }
 
 
     	
-    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+        esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     
-	// TODO: Eventually adjust settings to be even faster!
-    
-	// Note: This method is needed for the BLE initialization to work.
-	// See https://github.com/espressif/arduino-esp32/issues/3436
-	btStarted();
+	    // TODO: Eventually adjust settings to be even faster!
+     
+	    // Note: This method is needed for the BLE initialization to work.
+     	// See https://github.com/espressif/arduino-esp32/issues/3436
+    	btStarted();
 
 
-    ret = esp_bt_controller_init(&bt_cfg);
-    if (ret) {
-        logger->Log("BluetoothConnector initialize controller failed!");
-		logger->Log("BluetoothConnector initialize controller failed:"+ String(ret));
-        return;
-    }
+        ret = esp_bt_controller_init(&bt_cfg);
+        if (ret) {
+            logger->Log("BluetoothConnector initialize controller failed!");
+		    logger->Log("BluetoothConnector initialize controller failed:"+ String(ret));
+            return;
+        }
 
-    //Note: ESP_BT_MODE_BLE is not yet working
-    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
-    if (ret != ESP_OK) {
-        logger->Log("BluetoothConnector enable controller failed");
-        return;
-    }
-    ret = esp_bluedroid_init();
-    if (ret) {
-        logger->Log("BluetoothConnector init bluetooth failed");
-        return;
-    }
-    ret = esp_bluedroid_enable();
-    if (ret) {
-        logger->Log("BluetoothConnector enable bluetooth failed");
-        return;
-    }
+        //Note: ESP_BT_MODE_BLE is not yet working
+        ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
+        if (ret != ESP_OK) {
+            logger->Log("BluetoothConnector enable controller failed");
+            return;
+        }
+        ret = esp_bluedroid_init();
+        if (ret) {
+            logger->Log("BluetoothConnector init bluetooth failed");
+            return;
+        }
+        ret = esp_bluedroid_enable();
+        if (ret) {
+            logger->Log("BluetoothConnector enable bluetooth failed");
+            return;
+        }
 
-    ret = esp_ble_gatts_register_callback(gatts_profile_a_event_handler);
-    if (ret){
-        logger->Log("gatts register error, error code = " + ret);
-        return;
-    }
-    ret = esp_ble_gap_register_callback(gap_event_handler);
-    if (ret){
-        logger->Log("gap register error, error code = " + ret);
-        return;
-    }
-    ret = esp_ble_gatts_app_register(0);
-    if (ret){
-        logger->Log("gatts app register error, error code = " + ret);
-        return;
-    }
-    /*ret = esp_ble_gatts_app_register(PROFILE_B_APP_ID);
-    if (ret){
-        logger->Log("gatts app register error, error code = " + ret);
-        return;
-    }*/
-    esp_err_t local_mtu_ret = esp_ble_gatt_set_local_mtu(512);
-    if (local_mtu_ret){
-        logger->Log("set local  MTU failed, error code = " + local_mtu_ret);
-    }
+        ret = esp_ble_gatts_register_callback(gatts_profile_a_event_handler);
+        if (ret){
+            logger->Log("gatts register error, error code = " + ret);
+            return;
+        }
+        ret = esp_ble_gap_register_callback(gap_event_handler);
+        if (ret){
+            logger->Log("gap register error, error code = " + ret);
+            return;
+        }
+        ret = esp_ble_gatts_app_register(0);
+        if (ret){
+            logger->Log("gatts app register error, error code = " + ret);
+            return;
+        }
 
-	logger->Log("Bluetooth initialization worked!");
-    return;
+        esp_err_t local_mtu_ret = esp_ble_gatt_set_local_mtu(512);
+        if (local_mtu_ret){
+            logger->Log("set local  MTU failed, error code = " + local_mtu_ret);
+        }
 
-		/*
-		//Create Server		
-		BLEDevice::init(DEFAULT_WIFI_HOSTNAME);
-		bluetoothConnection = BLEDevice::createServer();
-		
-		static BluetoothConnector* thi = this;
-		bluetoothConnection->setCallbacks(new ServerCallbacks(&clientConnected, []() {
-		  thi->onConnected();
-		}));
-		  
-		   //------- Create STATE-Service ------------
-		  mainService = bluetoothConnection->createService(BLUETOOTH_SERVICE_MAIN_UUID);  
-
-		  // Engine
-		  engineChar = mainService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY);
-		  //updateInfo(false);  
-		  engineChar->addDescriptor(new BLE2902()); //Allows notify
-
-		  //Commands
-		  commandChar = mainService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);  
-		  byte none[1];
-		  none[0] = BLUETOOTH_COMMAND_NONE;
-		  commandChar->setValue(none, 1);  
-
-		  //Start main service
-		  mainService->start();
-		  
-
-		  //--------------- Start Advertising --------------
-		  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-		  pAdvertising->addServiceUUID(BLUETOOTH_SERVICE_MAIN_UUID);
-		  pAdvertising->setScanResponse(true);
-		  
-		  // functions that help with iPhone connections issue
-		  pAdvertising->setMinPreferred(0x06);
-		  pAdvertising->setMinPreferred(0x12);
-		  BLEDevice::startAdvertising();*/
-	}	
-	
-		
-	void Loop()
-	{
-		if(!clientConnected)
-			return;	    
-		
-		//Update with ~ 100 Hz		
-		if(millis() > lastUpdate + 10)
-		{
-			lastUpdate = millis();
-			//update();			
-			handleCommands();
-			updateEngineSpeed();
-		}
-	}
+	    logger->Log("Bluetooth initialization finished!");    
+	}		
 	
 	//Register a callback to a module-Command
-	void on(byte command, byte bufferSize, void (*callback) (byte command, byte* buffer, byte bufferSize))
+	void onCommand(byte command, byte bufferSize, void (*callback) (byte command, byte* buffer, byte bufferSize))
 	{		
 		BluetoothCommandCallback cbk = { .callback = callback, .bufferSize = bufferSize };		
 		commandCallbacks[command] = cbk;
