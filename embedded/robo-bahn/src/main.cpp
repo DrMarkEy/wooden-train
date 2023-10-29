@@ -1,14 +1,20 @@
 #include <Arduino.h>
 #include <engine.h>
+#include <soundplayer.h>
 #include <buttons.h>
 #include <connectivity/wifi.h>
 #include <connectivity/bluetooth.h>
 #include <http-logger.h>
 
+
+
+
 BluetoothConnector* bluetooth;
 WifiConnector* wifi;
 Engine* engine;
 ButtonController* buttons;
+SoundPlayer* soundPlayer;
+
 
 void setup() {
   logger = new Logger();
@@ -20,6 +26,9 @@ void setup() {
   logger->Log("Http Logger Ready!");
 
   engine = new Engine();
+
+  soundPlayer = new SoundPlayer();
+
   buttons = new ButtonController();  
   buttons->onButtonPressed([]() {
     if(buttons->isReversed()) {
@@ -49,13 +58,30 @@ void setup() {
     engine->setSpeed(speed);
     logger->Log("Set speed "+String(speed));    
   });
+
+
+
 }
+
+
+long nextSwitch = 0;
+bool ledState = false;
 
 // the loop function runs over and over again forever
 void loop() {  
   wifi->Loop();  
 
+  soundPlayer->Loop();
+
   if(!wifi->isInOTAUpdate()) {   
     buttons->Loop();
+  }
+
+  if(nextSwitch < millis()) {
+    nextSwitch = millis() + 1000;
+    
+    // LED BLINKING
+    //ledState = !ledState;
+    //digitalWrite(4, ledState);
   }
 }

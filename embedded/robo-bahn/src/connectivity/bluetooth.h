@@ -50,6 +50,13 @@ static uint8_t BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID[16] = {
 
 #define GATTS_NUM_HANDLE 4
 
+struct BluetoothCommandCallback
+{
+	void (*callback) (byte command, byte* buffer, byte bufferSize);	
+	byte bufferSize;
+};
+
+
 static  esp_attr_control_t attr_control = {
 	.auto_rsp = ESP_GATT_AUTO_RSP
 };
@@ -62,12 +69,7 @@ static esp_attr_value_t engineSpeedInitialValue =
     .attr_len     = 1,
     .attr_value   = engineSpeed
 };
-
-struct BluetoothCommandCallback
-{
-	void (*callback) (byte command, byte* buffer, byte bufferSize);	
-	byte bufferSize;
-};
+static void (*engineSpeedChangedCallback) (byte speed) = nullptr;
 
 
 static esp_ble_adv_data_t adv_data = {
@@ -119,6 +121,14 @@ struct gatts_profile_inst {
     esp_bt_uuid_t descr_uuid;
 };
 
+// Declaration
+static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
+
+static struct gatts_profile_inst gattsProfile = { 
+    .gatts_cb = gatts_profile_a_event_handler,
+    .gatts_if = ESP_GATT_IF_NONE,       /* Not get the gatt_if, so initial is ESP_GATT_IF_NONE */
+};
+
 static esp_ble_adv_params_t adv_params = {
     .adv_int_min        = 0x20,
     .adv_int_max        = 0x40,
@@ -133,20 +143,6 @@ static esp_ble_adv_params_t adv_params = {
 static uint8_t adv_config_done = 0;
 #define adv_config_flag      (1 << 0)
 #define scan_rsp_config_flag (1 << 1)
-
-
-// Declaration
-static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
-
-
-static struct gatts_profile_inst gattsProfile = { 
-    .gatts_cb = gatts_profile_a_event_handler,
-    .gatts_if = ESP_GATT_IF_NONE,       /* Not get the gatt_if, so initial is ESP_GATT_IF_NONE */
-};
-
-static    	void (*engineSpeedChangedCallback) (byte speed) = nullptr;
-
-
 
 static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
         switch (event) {
@@ -318,8 +314,6 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 	  }
 	}
 
-
-
 class BluetoothConnector
 {
   private:
@@ -371,20 +365,6 @@ class BluetoothConnector
 	  commandChar->setValue(none, 1);*/	  	  
 	}	
 
-	void updateEngineSpeed()
-	{
-	  /*//Read speed
-	  byte *buffer = engineChar->getData();
-	  
-	  byte val = *buffer;	  
-	  
-	  //Handle command if listener is registered
-	  if(engineSpeedChangedCallback != NULL)
-	  {		
-		engineSpeedChangedCallback(val);
-	  }	  	 */
-	}
-
 	static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
     {
         switch (event) {
@@ -427,7 +407,6 @@ class BluetoothConnector
         }
     }
 
-	
 
   public:    			
 	
@@ -441,18 +420,6 @@ class BluetoothConnector
 			commandCallbacks[i].bufferSize = 0;
 		}
 
-
-        esp_err_t ret;
-
-	    // TODO: Maybe need to init nvs first!! (see BLE example)
-        // Initialize NVS.
-        ret = nvs_flash_init();
-        if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-            ESP_ERROR_CHECK(nvs_flash_erase());
-            ret = nvs_flash_init();
-        }
-
-
     	
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     
@@ -462,8 +429,7 @@ class BluetoothConnector
      	// See https://github.com/espressif/arduino-esp32/issues/3436
     	btStarted();
 
-
-        ret = esp_bt_controller_init(&bt_cfg);
+        esp_err_t ret = esp_bt_controller_init(&bt_cfg);
         if (ret) {
             logger->Log("BluetoothConnector initialize controller failed!");
 		    logger->Log("BluetoothConnector initialize controller failed:"+ String(ret));
