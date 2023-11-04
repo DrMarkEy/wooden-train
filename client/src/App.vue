@@ -3,7 +3,7 @@
     <img alt="Logo" id="logo" src="./assets/logo.webp">
     
     <div class="controller-panel">
-      <controller v-for="(c, i) in controllers" :key="i" :index="i" :type="c.type" :connection="c.connection" :name="c.name" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeTrainController(i)"/>
+      <controller v-for="(c, i) in controllers" :key="i" :index="i" :type="c.type" :connection="c.connection" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeTrainController(i)"/>
 
       <div class="empty-controller">
         <div class="circle" @click="searchBluetoothDevice">
@@ -61,7 +61,6 @@ export default {
       let index = this.controllers.length;
       this.controllers.push({
         type: 'train',
-        name: '101.01',
         ledColor: nextColor(this.controllers.length),
         selectionA: 0,
         selectionB: 1,

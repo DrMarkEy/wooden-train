@@ -1,5 +1,5 @@
 <template>
-    <train-controller v-if="type === 'train' && connection.isConnected()" :connection="connection" :index="index" :name="name" :ledColor="ledColor" @change-color="$emit('change-color', $event)" :selectionA="selectionA" @change-selection-a="$emit('change-selection-a', $event)" :selectionB="selectionB" @change-selection-b="$emit('change-selection-a', $event)" @remove="$emit('remove')"/>
+    <train-controller v-if="type === 'train' && connection.isConnected()" :connection="connection" :index="index" :ledColor="ledColor" @change-color="$emit('change-color', $event)" :selectionA="selectionA" @change-selection-a="$emit('change-selection-a', $event)" :selectionB="selectionB" @change-selection-b="$emit('change-selection-a', $event)" @remove="$emit('remove')"/>
     <div class="loading-controller" v-else-if="type === 'train'">
       Q <!-- TODO: Loading screen wird nicht angezeigt... -->
     </div>
@@ -15,7 +15,7 @@
       TrainController,    
     },
 
-    props: ['index', 'name', 'ledColor', 'selectionA', 'selectionB', 'type', 'connection'],
+    props: ['index', 'ledColor', 'selectionA', 'selectionB', 'type', 'connection'],
   }
 </script>
   

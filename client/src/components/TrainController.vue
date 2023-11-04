@@ -27,7 +27,7 @@
         </div>
 
         <div class="device-name">
-          101.01
+          {{ name }}
         </div>
       </div>
     </div>
@@ -65,6 +65,14 @@
     computed: {
       rotationAngle: function() {
         return (MAX_ANGLE - MIN_ANGLE) / (MODE_COUNT - 1) * this.selectionA + MIN_ANGLE;
+      },
+
+      name: function() {
+        if(this.connection !== undefined && this.connection.device !== undefined) {
+          return this.connection.device.name.replace("Baureihe ", "");
+        }
+        
+        return "";
       },
 
       mLedColor: {
