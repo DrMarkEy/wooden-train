@@ -13,9 +13,13 @@
     <input class="test-speed-slider" type="range" v-model="speed0" min="0" max="5" :disabled="midiAvailable"/>
 
     <div class="controller-panel">
-      <train-controller/>
-      <train-controller/>
-      <train-controller/>
+      <train-controller v-for="i in controllers" :key="i"/>
+
+      <div class="empty-controller">
+        <div class="circle" @click="addTrainController">
+          <div class="inner">+</div>
+        </div>        
+      </div>
     </div>
   </div>
 </template>
@@ -34,7 +38,7 @@ export default {
   },
 
   data: function() {
-    return {speed0: 0, midiAvailable: false};
+    return {controllers: 2, speed0: 0, midiAvailable: false};
   },
 
   mounted: function() {
@@ -42,6 +46,10 @@ export default {
   },
 
   methods: {
+    addTrainController: function() {
+      this.controllers++;
+    },
+
     connectBLE: function() {
 
       this.$bluetooth.connect();
@@ -109,6 +117,53 @@ html {
   border-radius: 12px;
   padding: 10px;
   box-shadow: 4px 4px 6px #444;
+
+  .empty-controller
+  {
+    position: relative;
+    width: 100px;
+    height: 275px;
+    border-style: dotted;
+    border-width: 3px;
+    border-color: #aaa;
+    background-color: #ccc;
+    margin: 5px;
+
+    .circle
+    {
+      left: calc(50% - 20px);
+      top: calc(50% - 20px);
+      position: absolute;
+      background-color: #ccc;
+      width: 40px;
+      height: 40px;
+      border-radius: 40px;
+      border-style: dashed;
+      border-width: 2px;
+      border-color: #999;
+      
+      .inner
+      {
+        font-size: 24px;
+        color: #999;          
+        margin-top: 5px;
+      }
+
+      &:hover
+      {
+        background-color: cornflowerblue;
+        cursor: pointer;
+        border-style: solid;
+        border-color: #333;
+        box-shadow: 1px 1px 2px #666;
+
+        .inner 
+        {
+          color:#333;
+        }
+      }
+    }
+  }
 }
 
 #logo

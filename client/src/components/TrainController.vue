@@ -33,6 +33,8 @@
   
   <script>
   
+  import {MIDI_IDS} from '../Enums.js'
+
   let MODE_COUNT = 6;
   let MIN_ANGLE = -45;
   let MAX_ANGLE = 225;
@@ -40,6 +42,9 @@
 
   export default {
     name: 'train-controller',
+
+    props: ['index'],
+
     components: {
       //HelloWorld
     },

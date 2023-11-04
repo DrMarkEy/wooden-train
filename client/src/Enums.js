@@ -17,6 +17,31 @@ let MIDI_CONTROLS = {
   MAX_VALUE: 127
 };
 
+let MIDI_IDS = {
+  0: {
+    slider: 2,
+    knob: 14,
+    buttonA: 23,
+    buttonB: 33
+  },
+
+  1: {
+    slider: 3,
+    knob: 15,
+    buttonA: 24,
+    buttonB: 34
+  },
+
+  2: {
+    slider: 4,
+    knob: 16,
+    buttonA: 25,
+    buttonB: 35
+  }
+
+  //...
+};
+
 let CONFIG = {
   SPEED_STEPS: 5
 };
@@ -26,4 +51,4 @@ let COMMAND = {
   STOP: 5
 };
 
-export {UUIDS, COMMAND, MIDI_CONTROLS, CONFIG};
+export {UUIDS, COMMAND, MIDI_CONTROLS, CONFIG, MIDI_IDS};
