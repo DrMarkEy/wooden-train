@@ -88,6 +88,7 @@
     border-style: solid;
     border-color: black;
     border-width: 1px;
+    box-shadow: 0px 0px 3px #666;
 
     .turn-button-container {
       position: absolute;

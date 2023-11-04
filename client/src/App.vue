@@ -80,19 +80,35 @@ export default {
 </script>
 
 <style lang="scss">
-#app {
+
+html {  
+  background-color: #888;
+}
+
+#app {  
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 60px;  
 }
 
 .controller-panel
 {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;  
   display: flex;
-  margin-bottom: 20px;
+  margin: 10px;
+  background-color: #ddd;
+  border-style: solid;
+  border-color: black;
+  border-width: 1px;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 4px 4px 6px #444;
 }
 
 #logo
