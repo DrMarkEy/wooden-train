@@ -137,7 +137,7 @@ let btp = new Vue({
       {
         // Step 1: Scan for a device with the general service
         this.device = await navigator.bluetooth.requestDevice({
-          filters: [{ services: [UUIDS.service] }]
+          filters: [{ services: [UUIDS.train.service] }]
         });
       }    
       catch(ex)
@@ -154,7 +154,7 @@ let btp = new Vue({
       this.state = CONNECTION_STATE.CONNECTING;
      
       this.server = await this.device.gatt.connect();    
-      var service = await this.server.getPrimaryService(UUIDS.service);
+      var service = await this.server.getPrimaryService(UUIDS.train.service);
     
       /*this.startListening(service, UUIDS.motorSpeed, this.updateBombState);
       this.startListening(service, UUIDS.command, this.updateBombInfos);

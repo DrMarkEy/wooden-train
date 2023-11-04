@@ -16,7 +16,7 @@
       <train-controller v-for="(c, i) in controllers" :key="i" :index="i" :name="c.name" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeTrainController(i)"/>
 
       <div class="empty-controller">
-        <div class="circle" @click="addTrainController">
+        <div class="circle" @click="searchBluetoothDevice">
           <div class="inner">+</div>
         </div>        
       </div>
@@ -29,6 +29,7 @@
 import {COMMAND, CONFIG} from './Enums.js';
 //import WebSocket from 'ws';
 import TrainController from './components/TrainController.vue';
+import TrainConnection from './TrainConnection.js';
 
 function nextColor(index) {
   switch(index) {
@@ -54,24 +55,38 @@ export default {
     return {controllers: [], speed0: 0, midiAvailable: false};
   },
 
-  /*mounted: function() {
-    this.$midi.setSpeedListener(0, this.setSpeed0);    
-  },*/
-
   methods: {
-    addTrainController: function() {                  
+    searchBluetoothDevice: async function() {
+      let connection = await TrainConnection.searchDevice();
+
+      if(connection !== undefined) {        
+        this.addTrainController(connection);
+      }      
+    },
+
+    addTrainController: function(trainConnection) {                  
+      let index = this.controllers.length;
       this.controllers.push({
         name: '101.01',
         ledColor: nextColor(this.controllers.length),
         selectionA: 0,
         selectionB: 1
       });
+ 
+      let thi = this;
+      trainConnection.setOnConnectionClosedListener(function() {
+        thi.removeTrainController(index);
+      });
     },
-
+    
     removeTrainController: function(index) {      
       this.controllers.splice(index, 1);
     },
     
+
+
+// OLD:
+
 
     connectBLE: function() {
 
