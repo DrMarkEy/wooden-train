@@ -1,12 +1,13 @@
 import Vue from 'vue';
 import {MIDI_CONTROLS} from './Enums.js';
+import {MIDI_IDS} from './Enums.js';
 
 let mdp = new Vue({
   data: function() 
   {
     return {       
       available: false, 
-      speedListeners: {}
+      listeners: {}
     };
   },
   
@@ -45,23 +46,45 @@ let mdp = new Vue({
 
     handleMidiMessage: function(msg) {
       if(msg.data[0] == MIDI_CONTROLS.device) {
-        if(msg.data[1] == MIDI_CONTROLS.speed1) {
+
+        let button = msg.data[1];
+        if(button in this.listeners) {
+          this.listeners[button](msg.data[2]);
+        }
+
+/*        if(msg.data[1] == MIDI_CONTROLS.speed1) {
           if(this.speedListeners[0]!== undefined) {
             this.speedListeners[0](msg.data[2] / MIDI_CONTROLS.MAX_VALUE);
           }          
-        }
+        }*/
       } 
       
       
-      //console.log(msg.data); 
+      console.log(msg.data); 
     },
 
     onMIDIFailure: function() {
       alert("midi failure!");
     },
 
-    setSpeedListener: function(train, listener) {
-      this.speedListeners[train] = listener;
+    addController: function(index, listener) {
+      let controls = MIDI_IDS[index];  
+      
+      for(let key in controls) {
+        let id = controls[key];
+        this.listeners[id] = function(val) {
+          listener(key, val);
+        };
+      }
+    },
+
+    removeController: function(index) {
+      let controls = MIDI_IDS[index];  
+      
+      for(let key in controls) {
+        let id = controls[key];
+        delete this.listeners[id];
+      }
     }
   }
 });

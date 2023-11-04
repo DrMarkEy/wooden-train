@@ -13,7 +13,7 @@
     <input class="test-speed-slider" type="range" v-model="speed0" min="0" max="5" :disabled="midiAvailable"/>
 
     <div class="controller-panel">
-      <train-controller v-for="i in controllers" :key="i"/>
+      <train-controller v-for="i in controllers" :key="i" :index="i-1"/>
 
       <div class="empty-controller">
         <div class="circle" @click="addTrainController">
@@ -38,17 +38,24 @@ export default {
   },
 
   data: function() {
-    return {controllers: 2, speed0: 0, midiAvailable: false};
+    return {controllers: 0, speed0: 0, midiAvailable: false};
   },
 
-  mounted: function() {
+  /*mounted: function() {
     this.$midi.setSpeedListener(0, this.setSpeed0);    
-  },
+  },*/
 
   methods: {
-    addTrainController: function() {
+    addTrainController: function() {                  
       this.controllers++;
     },
+
+    removeTrainController: function(index) {
+      //this.$midi.removeController(index);
+      // TODO: count down this.controllers and reassign all following controllers!
+    },
+
+
 
     connectBLE: function() {
 

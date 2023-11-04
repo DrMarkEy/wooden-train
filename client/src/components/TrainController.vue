@@ -9,15 +9,15 @@
         </div>
       </div>
 
-      <button class="press-button" id="buttonA">
+      <button :class="{'press-button': true, 'pressed': pressedA}" id="buttonA">
         <img :src="getImage(selectionA)"/>
       </button>
             
-      <button class="press-button" id="buttonB">
+      <button :class="{'press-button': true, 'pressed': pressedB}" id="buttonB">
         <img :src="getImage(selectionB)"/>
       </button>
 
-      <input class="speed-slider" type="range" min="0" max="5"/>
+      <input class="speed-slider" type="range" v-model="speed" min="0" max="127"/>
 
       <div class="bottom-line">
         <div class="color-picker" :style="{'background-color': ledColor}">
@@ -33,8 +33,6 @@
   
   <script>
   
-  import {MIDI_IDS} from '../Enums.js'
-
   let MODE_COUNT = 6;
   let MIN_ANGLE = -45;
   let MAX_ANGLE = 225;
@@ -48,9 +46,13 @@
     components: {
       //HelloWorld
     },
+
+    mounted: function() {      
+      this.$midi.addController(this.index, this.handleMidiCommand);
+    },
   
     data: function() {
-      return {selectionA: 0, selectionB: 1, ledColor: DEFAULT_COLOR};
+      return {speed: 0, selectionA: 0, selectionB: 1, pressedA: false, pressedB: false, ledColor: DEFAULT_COLOR};
     },
 
     computed: {
@@ -60,6 +62,36 @@
     },
   
     methods: {
+      handleMidiCommand: function(command, value) {
+        switch(command) {
+          case 'slider':
+            this.speed = value;
+          break;
+
+          case 'knob':
+            this.selectionA = Math.round(value / 127  * (MODE_COUNT - 1));          
+          break;
+
+          case 'buttonA':
+            if(value > 64) {
+              this.pressedA = true;              
+            }
+            else {
+              this.pressedA = false;              
+            }
+          break;
+
+          case 'buttonB':
+            if(value > 64) {
+              this.pressedB = true;              
+            }
+            else {
+              this.pressedB = false;              
+            }
+          break;
+        }
+      },
+
       nextMode: function() {
         if(this.selectionA < MODE_COUNT - 1) {
           this.selectionA++;
@@ -156,7 +188,7 @@
         top:180px;
       }
 
-      &:active
+      &:active, &.pressed
       {
         box-shadow: inset 0px 0px 2px #555;
       }
