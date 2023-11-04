@@ -37,8 +37,49 @@ let MIDI_IDS = {
     knob: 16,
     buttonA: 25,
     buttonB: 35
-  }
+  },
 
+  3: {
+    slider: 5,
+    knob: 17,
+    buttonA: 26,
+    buttonB: 36
+  },
+
+  4: {
+    slider: 6,
+    knob: 18,
+    buttonA: 27,
+    buttonB: 37
+  },
+
+  5: {
+    slider: 8,
+    knob: 19,
+    buttonA: 28,
+    buttonB: 38
+  },
+
+  6: {
+    slider: 9,
+    knob: 20,
+    buttonA: 29,
+    buttonB: 39
+  },
+
+  7: {
+    slider: 12,
+    knob: 21,
+    buttonA: 30,
+    buttonB: 40
+  },
+
+  8: {
+    slider: 13,
+    knob: 22,
+    buttonA: 31,
+    buttonB: 41
+  }
   //...
 };
 
