@@ -4,8 +4,7 @@ import {UUIDS} from './Enums.js';
 
 class TrainConnection extends BLEConnection {
   constructor(device, server) {
-    super(device, server);
-    this.setup();    
+    super(device, server);    
   }
 
   async setup() {
@@ -17,11 +16,14 @@ class TrainConnection extends BLEConnection {
     
     this.engineCharacteristicLock = false;
     this.requestedEngineSpeed = 0;
+
+    // Only call this method last to set connected flag not too early
+    super.setup();
   }
 
   async setSpeed(speed) 
   {        
-    if(this.state == CONNECTION_STATE.CONNECTED) {   
+    if(this.connected) {   
         
         if(this.engineCharacteristicLock) 
         {

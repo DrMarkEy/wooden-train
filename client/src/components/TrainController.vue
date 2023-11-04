@@ -42,7 +42,7 @@
   export default {
     name: 'train-controller',
 
-    props: ['index', 'name', 'ledColor', 'selectionA', 'selectionB'],
+    props: ['index', 'name', 'ledColor', 'selectionA', 'selectionB', 'connection'],
 
     mounted: function() {      
       this.$midi.addController(this.index, this.handleMidiCommand);
@@ -54,6 +54,12 @@
   
     data: function() {
       return {speed: 0, pressedA: false, pressedB: false};
+    },
+
+    watch: {
+      speed: function(val) {
+        this.connection.setSpeed(val/127*5);
+      }
     },
 
     computed: {

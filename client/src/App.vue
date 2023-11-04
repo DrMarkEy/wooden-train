@@ -2,18 +2,8 @@
   <div id="app">
     <img alt="Logo" id="logo" src="./assets/logo.webp">
     
-
-    <hr/>
-
-    <button @click="connectBLE">Connect to Device!</button>
-
-    <button @click="startDriving">Go!</button>
-    <button @click="stopDriving">Stop!</button>
-
-    <input class="test-speed-slider" type="range" v-model="speed0" min="0" max="5" :disabled="midiAvailable"/>
-
     <div class="controller-panel">
-      <train-controller v-for="(c, i) in controllers" :key="i" :index="i" :name="c.name" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeTrainController(i)"/>
+      <controller v-for="(c, i) in controllers" :key="i" :index="i" :type="c.type" :connection="c.connection" :name="c.name" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeTrainController(i)"/>
 
       <div class="empty-controller">
         <div class="circle" @click="searchBluetoothDevice">
@@ -26,9 +16,8 @@
 
 <script>
 
-import {COMMAND, CONFIG} from './Enums.js';
-//import WebSocket from 'ws';
-import TrainController from './components/TrainController.vue';
+import Controller from './components/Controller.vue';
+
 import TrainConnection from './TrainConnection.js';
 
 function nextColor(index) {
@@ -48,11 +37,11 @@ function nextColor(index) {
 export default {
   name: 'App',
   components: {
-    TrainController
+    Controller
   },
 
   data: function() {
-    return {controllers: [], speed0: 0, midiAvailable: false};
+    return {controllers: []};
   },
 
   methods: {
@@ -61,16 +50,22 @@ export default {
 
       if(connection !== undefined) {        
         this.addTrainController(connection);
+
+        setTimeout(function(){
+          connection.setup();
+        }, 10);
       }      
     },
 
     addTrainController: function(trainConnection) {                  
       let index = this.controllers.length;
       this.controllers.push({
+        type: 'train',
         name: '101.01',
         ledColor: nextColor(this.controllers.length),
         selectionA: 0,
-        selectionB: 1
+        selectionB: 1,
+        connection: trainConnection
       });
  
       let thi = this;
@@ -82,45 +77,6 @@ export default {
     removeTrainController: function(index) {      
       this.controllers.splice(index, 1);
     },
-    
-
-
-// OLD:
-
-
-    connectBLE: function() {
-
-      this.$bluetooth.connect();
-
-
-    },
-
-    setSpeed0: function(speed) {
-      let speedStufe = Math.round(speed * CONFIG.SPEED_STEPS);
-
-      if(this.speed0 != speedStufe) {
-        
-        this.speed0 = speedStufe;        
-        this.$bluetooth.setSpeed(this.speed0);
-        
-        console.log('speed', this.speed0);
-      }
-    },
-
-    startDriving: function() {
-      this.$bluetooth.sendCommand(COMMAND.START);
-    },
-
-
-    stopDriving: function() {
-      this.$bluetooth.sendCommand(COMMAND.STOP);
-    }
-  },
-
-  watch: {
-    '$midi.available': function(val) {
-      this.midiAvailable = val;
-    }
   }
 }
 </script>
@@ -207,12 +163,5 @@ html {
 #logo
 {
   width: 500px;  
-}
-
-.test-speed-slider
-{
-  position: absolute;
-   top: 40%;
-   transform: rotate(270deg);
 }
 </style>

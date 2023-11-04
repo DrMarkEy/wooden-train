@@ -33,10 +33,15 @@ class BLEConnection {
   constructor(device, server) {
     this.device = device;
     this.server = server;
+    this.connected = false;
         
     let thi = this;
     this.device.addEventListener('gattserverdisconnected', () => this.onConnectionClosed.apply(thi)); 
     setTimeout(this.connectionCheck, 500);
+  }
+
+  setup() {
+    this.connected = true;
   }
 
   connectionCheck() {
@@ -68,6 +73,10 @@ class BLEConnection {
 
   setOnConnectionClosedListener(listener) {
     this.onConnectionClosedListener = listener;
+  }
+
+  isConnected() {
+    return this.connected;
   }
 }
 
