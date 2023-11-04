@@ -46,7 +46,7 @@ export default {
 
   methods: {
     searchBluetoothDevice: async function() {
-      let connection = await TrainConnection.searchDevice();
+      let connection = await TrainConnection.searchDevice(this.controllers.map(cont => cont.connection));
 
       if(connection !== undefined) {        
         this.addTrainController(connection);

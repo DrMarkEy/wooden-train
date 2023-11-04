@@ -2,13 +2,20 @@ import {UUIDS} from './Enums.js';
 import TrainConnection from './TrainConnection.js';
 
 class BLEConnection {
-  static async searchDevice() {
+  static async searchDevice(connectedDevices) {
       
       try
       {
+
+        // Exclude devices that are already connected
+        let exclusionFilters = connectedDevices.map(con => { return {name: con.device.name};});
+        exclusionFilters.push({name: "_EMPTY FILTER_"}); // Add pseudo element, because an empty filter acts as "remove all"
+        console.log("exclusionFilters", exclusionFilters);
+
         // Scan for device with one of the supported services
         let device = await navigator.bluetooth.requestDevice({
-          filters: [{ services: [UUIDS.train.service] }] // TODO: Add signal, switch and station services
+          filters: [{ services: [UUIDS.train.service] }], // TODO: Add signal, switch and station services
+          exclusionFilters: exclusionFilters
         });
      
         let server = await device.gatt.connect();    
@@ -33,7 +40,7 @@ class BLEConnection {
   constructor(device, server) {
     this.device = device;
     this.server = server;
-    this.connected = false;
+    this.connected = false;    
         
     let thi = this;
     this.device.addEventListener('gattserverdisconnected', () => this.onConnectionClosed.apply(thi)); 
