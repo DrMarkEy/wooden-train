@@ -10,20 +10,27 @@
     <button @click="startDriving">Go!</button>
     <button @click="stopDriving">Stop!</button>
 
-    <input class="speed-slider" type="range" v-model="speed0" min="0" max="5" :disabled="midiAvailable"/>
+    <input class="test-speed-slider" type="range" v-model="speed0" min="0" max="5" :disabled="midiAvailable"/>
+
+    <div class="controller-panel">
+      <train-controller/>
+      <train-controller/>
+      <train-controller/>
+    </div>
   </div>
 </template>
 
 <script>
-//import HelloWorld from './components/HelloWorld.vue';
+
 import {COMMAND, CONFIG} from './Enums.js';
 //import WebSocket from 'ws';
+import TrainController from './components/TrainController.vue';
 
 
 export default {
   name: 'App',
   components: {
-    //HelloWorld
+    TrainController
   },
 
   data: function() {
@@ -82,12 +89,18 @@ export default {
   margin-top: 60px;
 }
 
+.controller-panel
+{
+  display: flex;
+  margin-bottom: 20px;
+}
+
 #logo
 {
   width: 500px;  
 }
 
-.speed-slider
+.test-speed-slider
 {
   position: absolute;
    top: 40%;
