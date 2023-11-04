@@ -13,7 +13,7 @@
     <input class="test-speed-slider" type="range" v-model="speed0" min="0" max="5" :disabled="midiAvailable"/>
 
     <div class="controller-panel">
-      <train-controller v-for="i in controllers" :key="i" :index="i-1"/>
+      <train-controller v-for="(c, i) in controllers" :key="i" :index="i" :name="c.name" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeTrainController(i)"/>
 
       <div class="empty-controller">
         <div class="circle" @click="addTrainController">
@@ -30,6 +30,19 @@ import {COMMAND, CONFIG} from './Enums.js';
 //import WebSocket from 'ws';
 import TrainController from './components/TrainController.vue';
 
+function nextColor(index) {
+  switch(index) {
+    case 0: return '#ff0000';
+    case 1: return '#00ff00';
+    case 2: return '#0000ff';
+    case 3: return '#ffff00';
+    case 4: return '#00ffff';
+    case 5: return '#ff00ff';
+    case 6: return '#ff8800';
+    case 7: return '#ffffff';
+    case 8: return '#5382ee';
+  }
+}
 
 export default {
   name: 'App',
@@ -38,7 +51,7 @@ export default {
   },
 
   data: function() {
-    return {controllers: 0, speed0: 0, midiAvailable: false};
+    return {controllers: [], speed0: 0, midiAvailable: false};
   },
 
   /*mounted: function() {
@@ -47,15 +60,18 @@ export default {
 
   methods: {
     addTrainController: function() {                  
-      this.controllers++;
+      this.controllers.push({
+        name: '101.01',
+        ledColor: nextColor(this.controllers.length),
+        selectionA: 0,
+        selectionB: 1
+      });
     },
 
-    removeTrainController: function(index) {
-      //this.$midi.removeController(index);
-      // TODO: count down this.controllers and reassign all following controllers!
+    removeTrainController: function(index) {      
+      this.controllers.splice(index, 1);
     },
-
-
+    
 
     connectBLE: function() {
 

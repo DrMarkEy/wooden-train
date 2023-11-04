@@ -1,6 +1,8 @@
 <template>
     <div class="train-controller">
 
+      <button class="remove-button" @click="removeController">x</button>
+
       <div class="turn-button-container">
         <div class="turn-button" :style="{'transform': 'rotate('+rotationAngle+'deg)'}" @click="nextMode">
           <div class="label">
@@ -20,8 +22,8 @@
       <input class="speed-slider" type="range" v-model="speed" min="0" max="127"/>
 
       <div class="bottom-line">
-        <div class="color-picker" :style="{'background-color': ledColor}">
-          <input type="color" v-model="ledColor"/>
+        <div class="color-picker" :style="{'background-color': mLedColor}">
+          <input type="color" v-model="mLedColor"/>
         </div>
 
         <div class="device-name">
@@ -36,29 +38,48 @@
   let MODE_COUNT = 6;
   let MIN_ANGLE = -45;
   let MAX_ANGLE = 225;
-  let DEFAULT_COLOR = '#fff';
 
   export default {
     name: 'train-controller',
 
-    props: ['index'],
-
-    components: {
-      //HelloWorld
-    },
+    props: ['index', 'name', 'ledColor', 'selectionA', 'selectionB'],
 
     mounted: function() {      
       this.$midi.addController(this.index, this.handleMidiCommand);
     },
+
+    unmounted: function() {
+      this.$midi.removeController(this.index);
+    },
   
     data: function() {
-      return {speed: 0, selectionA: 0, selectionB: 1, pressedA: false, pressedB: false, ledColor: DEFAULT_COLOR};
+      return {speed: 0, pressedA: false, pressedB: false};
     },
 
     computed: {
       rotationAngle: function() {
         return (MAX_ANGLE - MIN_ANGLE) / (MODE_COUNT - 1) * this.selectionA + MIN_ANGLE;
       },
+
+      mLedColor: {
+        get: function() {
+          return this.ledColor;
+        },
+        
+        set: function(val) {
+          this.$emit('change-color', val);
+        }
+      },
+
+      mSelectionA: {
+        get: function() {
+          return this.selectionA;
+        },
+
+        set: function(val) {
+          this.$emit('change-selection-a', val);
+        }
+      }
     },
   
     methods: {
@@ -69,7 +90,7 @@
           break;
 
           case 'knob':
-            this.selectionA = Math.round(value / 127  * (MODE_COUNT - 1));          
+            this.mSelectionA = Math.round(value / 127  * (MODE_COUNT - 1));          
           break;
 
           case 'buttonA':
@@ -92,12 +113,16 @@
         }
       },
 
+      removeController: function() {
+        this.$emit('remove');
+      },
+
       nextMode: function() {
-        if(this.selectionA < MODE_COUNT - 1) {
-          this.selectionA++;
+        if(this.mSelectionA < MODE_COUNT - 1) {
+          this.mSelectionA++;
         }
         else {
-          this.selectionA = 0;
+          this.mSelectionA = 0;
         }
       },
 
@@ -126,6 +151,31 @@
     border-color: black;
     border-width: 1px;
     box-shadow: 0px 0px 3px #666;
+
+    
+    .remove-button
+    {
+      color: red;
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      background-color: #444;
+      border-style: solid;
+      border-width: 1px;
+      border-radius: 2px;
+      width: 20px;
+      height: 20px;
+      font-family: sans-serif;
+      padding-bottom: 5px;
+
+      &:hover {
+        background-color: #555;
+      }
+
+      &:active {
+        box-shadow: inset 1px 1px 2px #333;
+      }
+    }
 
     .turn-button-container {
       position: absolute;

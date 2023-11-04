@@ -60,7 +60,7 @@ let mdp = new Vue({
       } 
       
       
-      console.log(msg.data); 
+      //console.log(msg.data); 
     },
 
     onMIDIFailure: function() {
