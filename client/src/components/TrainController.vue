@@ -44,7 +44,7 @@
   export default {
     name: 'train-controller',
 
-    props: ['index', 'name', 'ledColor', 'selectionA', 'selectionB', 'connection'],
+    props: ['index', 'ledColor', 'selectionA', 'selectionB', 'connection'],
 
     mounted: function() {      
       this.$midi.addController(this.index, this.handleMidiCommand);
