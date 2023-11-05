@@ -89,9 +89,4 @@ let CONFIG = {
   SPEED_STEPS: 5
 };
 
-let COMMAND = {
-  START: 4,    
-  STOP: 5
-};
-
-export {UUIDS, COMMAND, MIDI_CONTROLS, CONFIG, MIDI_IDS};
+export {UUIDS, MIDI_CONTROLS, CONFIG, MIDI_IDS};

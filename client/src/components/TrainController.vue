@@ -11,11 +11,11 @@
         </div>
       </div>
 
-      <button :class="{'press-button': true, 'pressed': pressedA}" id="buttonA">
+      <button :class="{'press-button': true, 'pressed': pressedA}" id="buttonA" @click="pressButtonA">
         <img :src="getImage(selectionA)"/>
       </button>
             
-      <button :class="{'press-button': true, 'pressed': pressedB}" id="buttonB">
+      <button :class="{'press-button': true, 'pressed': pressedB}" id="buttonB" @click="pressButtonB">
         <img :src="getImage(selectionB)"/>
       </button>
 
@@ -38,6 +38,8 @@
   let MODE_COUNT = 6;
   let MIN_ANGLE = -45;
   let MAX_ANGLE = 225;
+
+  import {TRAIN_COMMAND} from '../TrainConnection.js';
 
   export default {
     name: 'train-controller',
@@ -110,6 +112,7 @@
           case 'buttonA':
             if(value > 64) {
               this.pressedA = true;              
+              this.pressButtonA();
             }
             else {
               this.pressedA = false;              
@@ -118,13 +121,23 @@
 
           case 'buttonB':
             if(value > 64) {
-              this.pressedB = true;              
+              this.pressedB = true;          
+              this.pressButtonB();    
             }
             else {
               this.pressedB = false;              
             }
           break;
         }
+      },
+
+      pressButtonA: function() {        
+        // TODO: Send different commands, depending on mSelectionA
+        this.connection.sendCommand(TRAIN_COMMAND.WHISTLE);
+      },
+
+      pressButtonB: function() {
+        //TRAIN_COMMAND
       },
 
       removeController: function() {
