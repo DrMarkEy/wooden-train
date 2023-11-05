@@ -182,6 +182,25 @@ static uint8_t adv_config_done = 0;
 #define adv_config_flag      (1 << 0)
 #define scan_rsp_config_flag (1 << 1)
 
+
+static characteristic findCharacteristic(byte uuid128[16])
+{  
+  characteristic chara;
+  if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16))
+  {
+    return gattsProfile.command_char;
+  } else if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16))
+  {
+    return gattsProfile.speed_char;
+  }
+  else
+  {
+    logger->Log("Encountered unknown characteristic!");
+    return characteristic();
+  }   
+}
+
+
 static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
         switch (event) {
         case ESP_GATTS_REG_EVT:
@@ -252,25 +271,10 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 		{
             uint16_t length = 0;
             const uint8_t *prf_char;
-
-            // Find right characteristic from uuid (TODO: Clean this up...)
-            characteristic chara;
-            if(equalContent(param->add_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16))
-            {
-              chara = gattsProfile.command_char;
-            } else if(equalContent(param->add_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16))
-            {
-              chara = gattsProfile.speed_char;
-            }
-            else
-            {
-                logger->Log("Encountered unknown characteristic!");
-                return;
-            }
-
+            
+            characteristic chara = findCharacteristic(param->add_char.char_uuid.uuid.uuid128);
             logger->Logf("ADD_CHAR_EVT, status %d,  attr_handle %d, service_handle %d, characteristic id %d",
                 param->add_char.status, param->add_char.attr_handle, param->add_char.service_handle, chara.id);
-
 
             chara.char_handle = param->add_char.attr_handle;
             chara.descr_uuid.len = ESP_UUID_LEN_16;
