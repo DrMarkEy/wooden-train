@@ -6,15 +6,11 @@
 #include <connectivity/bluetooth.h>
 #include <http-logger.h>
 
-
-
-
 BluetoothConnector* bluetooth;
 WifiConnector* wifi;
 Engine* engine;
 ButtonController* buttons;
 SoundPlayer* soundPlayer;
-
 
 void setup() {
   logger = new Logger();
@@ -29,6 +25,9 @@ void setup() {
 
   soundPlayer = new SoundPlayer();
 
+  // TODO: Nur zum Test:
+  soundPlayer->playSound(1);
+
   buttons = new ButtonController();  
   buttons->onButtonPressed([]() {
     if(buttons->isReversed()) {
@@ -40,6 +39,7 @@ void setup() {
       engine->setSpeed(255);
     }
   });
+  
   bluetooth = new BluetoothConnector();
   bluetooth->onCommand(BLUETOOTH_COMMAND_START, 0, [](byte command, byte* buffer, byte bufferSize){
     logger->Log("Drive forward!");

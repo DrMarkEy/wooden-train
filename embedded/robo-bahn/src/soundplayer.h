@@ -6,69 +6,71 @@
 #define soundplayer_h
 
 #include <Arduino.h>
-//#include <AudioOutputI2S.h>
 #include <AudioFileSourcePROGMEM.h>
-#include <AudioGeneratorFLAC.h>
 #include <AudioGeneratorWAV.h>
-#include "AudioOutputI2SNoDAC.h"
+#include <AudioOutputI2SNoDAC.h>
 
+#include "config.h"
 #include "sample2.h"
-
-AudioOutputI2SNoDAC *out;
-//AudioOutputI2S *out;
-AudioFileSourcePROGMEM *file;
-AudioGeneratorWAV *flac;
-
-#define I2S_SPEAKER_SERIAL_CLOCK GPIO_NUM_12 // BCLK
-#define I2S_SPEAKER_LEFT_RIGHT_CLOCK GPIO_NUM_5 // WSEL
-#define I2S_SPEAKER_SERIAL_DATA GPIO_NUM_25
 
 
 class SoundPlayer {
 
-  //private:
+  private:
+  AudioOutputI2SNoDAC *out; // TODO: Rather use AudioOutputI2S *out; if the bug with esp32 are ever fixed. Belongs to //out = new AudioOutputI2S(0, 1);
+  AudioFileSourcePROGMEM *file = nullptr;
+  AudioGeneratorWAV *audioGenerator;
 
   public:
 
   SoundPlayer()
   {
 
-/*      const char  RTTLsound[] PROGMEM = "5thSymph:d=16,o=5,b=130:g,g,g,4d#,4p,f,f,f,4d";
+// MIGHT BE INTERESTING: MIDI-LIKE SOUND GENERATION
+/*    const char  RTTLsound[] PROGMEM = "5thSymph:d=16,o=5,b=130:g,g,g,4d#,4p,f,f,f,4d";
       file = new AudioFileSourcePROGMEM(RTTLsound, strlen_P(RTTLsound));
       flac = new AudioGeneratorRTTTL();
       rtttl->begin(file_progmem, out);*/
 
-out = new AudioOutputI2SNoDAC();
-out -> SetPinout(I2S_SPEAKER_SERIAL_CLOCK, I2S_SPEAKER_LEFT_RIGHT_CLOCK, I2S_SPEAKER_SERIAL_DATA);
-
-
-    file = new AudioFileSourcePROGMEM( SAMPLES_WIN, sizeof(SAMPLES_WIN) );
-    //out = new AudioOutputI2S(0, 1);
-    flac = new AudioGeneratorWAV();
-    flac->begin(file, out);
-
-    
-
+    // Configure audio sink
+    out = new AudioOutputI2SNoDAC();
+    out -> SetPinout(PIN_UNUSED_SPEAKER_ALIBI_A, PIN_UNUSED_SPEAKER_ALIBI_B, PIN_SPEAKER);
     //out->SetGain(1.0);    // Specify Volume between 0 and 1.0
     //out->SetChannels(1);    // Specify the channel(1) or (2)
    // out->SetBitsPerSample(8);    //  Specify bits per sample generally 8 or 16
     //out->SetRate(44100);      // Specify the rate here : 8000 ,22050 , 44100 , 48000
     //out->use_mclk = false;//(false);
+    
+    // Configure audio generator
+    audioGenerator = new AudioGeneratorWAV();    
+  }
 
-//    ledcAttachPin(25, 0);
-//    ledcWriteNote(0, NOTE_C, 4);
+  void playSound(int sound) 
+  {
+    // Close old sound file
+    if(file != nullptr) {
+      audioGenerator->stop();
+      file->close();      
+      delete file;
+    }
 
+    switch(sound) {
+      case 1:
+        
+        // Configure audio source        
+        file = new AudioFileSourcePROGMEM( SAMPLES_WIN, sizeof(SAMPLES_WIN) );
+        audioGenerator->begin(file, out);
+
+      break;
+    }
   }
 
   void Loop()
   {
-    if (flac->isRunning()) {
-      if (!flac->loop()) 
-        flac->stop();
-    } /*else {
-      //Serial.printf("FLAC done\n");
-      //delay(1000);
-    }*/
+    if (audioGenerator->isRunning()) {
+      if (!audioGenerator->loop()) 
+        audioGenerator->stop();
+    }
   }
 };
 #endif
