@@ -61,7 +61,7 @@ static uint8_t BLUETOOTH_CHARACTERISTIC_COMMAND_UUID[16] = {
 
 #define BLUETOOTH_COMMAND_COUNT 7
 
-#define GATTS_NUM_HANDLE 4
+#define GATTS_NUM_HANDLE 8 // ( num of characteristics + num of descriptors) * 2
 
 
 static  esp_attr_control_t attr_control = {
