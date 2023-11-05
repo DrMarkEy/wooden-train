@@ -63,12 +63,6 @@ static uint8_t BLUETOOTH_CHARACTERISTIC_COMMAND_UUID[16] = {
 
 #define GATTS_NUM_HANDLE 4
 
-struct BluetoothCommandCallback
-{
-	void (*callback) (byte command, byte* buffer, byte bufferSize);	
-	byte bufferSize;
-};
-
 
 static  esp_attr_control_t attr_control = {
 	.auto_rsp = ESP_GATT_AUTO_RSP
@@ -83,7 +77,6 @@ static esp_attr_value_t engineSpeedInitialValue =
     .attr_len     = 1,
     .attr_value   = engineSpeed
 };
-static void (*engineSpeedChangedCallback) (byte speed) = nullptr;
 
 static esp_gatt_char_prop_t commandPropertyFlags = 0;
 static uint8_t commandValue[] = {0x0};
@@ -93,7 +86,6 @@ static esp_attr_value_t commandInitialValue =
     .attr_len     = 1,
     .attr_value   = commandValue
 };
-static void (*commandChangedCallback) (byte command) = nullptr;
 
 
 static esp_ble_adv_data_t adv_data = {
@@ -137,6 +129,8 @@ struct characteristic {
 
     uint16_t descr_handle;
     esp_bt_uuid_t descr_uuid;
+
+    void (*callback) (byte* buffer, byte bufferSize);
 };
 
 struct gatts_profile_inst {
@@ -159,11 +153,13 @@ static struct gatts_profile_inst gattsProfile = {
     .gatts_if = ESP_GATT_IF_NONE,       /* Not get the gatt_if, so initial is ESP_GATT_IF_NONE */
 
     .speed_char = {
-        .id = 1
+        .id = 1,
+        .callback = nullptr
     },
 
     .command_char = {
-        .id = 2
+        .id = 2,
+        .callback = nullptr
     }
 };
 
@@ -183,20 +179,43 @@ static uint8_t adv_config_done = 0;
 #define scan_rsp_config_flag (1 << 1)
 
 
-static characteristic findCharacteristic(byte uuid128[16])
+static characteristic* findCharacteristic(uint16_t char_handle)
 {  
-  characteristic chara;
-  if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16))
+
+  logger->Logf("CHAR HANDLE %d", char_handle);
+  logger->Logf("command HANDLE %d", gattsProfile.command_char.char_handle);
+  logger->Logf("speed HANDLE %d", gattsProfile.speed_char.char_handle);
+
+  characteristic* chara;
+  if(gattsProfile.command_char.char_handle == char_handle)
   {
-    return gattsProfile.command_char;
-  } else if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16))
+    return &gattsProfile.command_char;
+  } else if(gattsProfile.speed_char.char_handle == char_handle)
   {
-    return gattsProfile.speed_char;
+    return &gattsProfile.speed_char;
   }
   else
   {
     logger->Log("Encountered unknown characteristic!");
-    return characteristic();
+    return nullptr;
+  }   
+}
+
+
+static characteristic* findCharacteristic(byte uuid128[16])
+{  
+  characteristic* chara;
+  if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16))
+  {
+    return &gattsProfile.command_char;
+  } else if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16))
+  {
+    return &gattsProfile.speed_char;
+  }
+  else
+  {
+    logger->Log("Encountered unknown characteristic!");
+    return nullptr;
   }   
 }
 
@@ -272,13 +291,13 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             uint16_t length = 0;
             const uint8_t *prf_char;
             
-            characteristic chara = findCharacteristic(param->add_char.char_uuid.uuid.uuid128);
+            characteristic* chara = findCharacteristic(param->add_char.char_uuid.uuid.uuid128);
             logger->Logf("ADD_CHAR_EVT, status %d,  attr_handle %d, service_handle %d, characteristic id %d",
-                param->add_char.status, param->add_char.attr_handle, param->add_char.service_handle, chara.id);
+                param->add_char.status, param->add_char.attr_handle, param->add_char.service_handle, chara->id);
 
-            chara.char_handle = param->add_char.attr_handle;
-            chara.descr_uuid.len = ESP_UUID_LEN_16;
-            chara.descr_uuid.uuid.uuid16 = ESP_GATT_UUID_CHAR_CLIENT_CONFIG;
+            chara->char_handle = param->add_char.attr_handle;
+            chara->descr_uuid.len = ESP_UUID_LEN_16;
+            chara->descr_uuid.uuid.uuid16 = ESP_GATT_UUID_CHAR_CLIENT_CONFIG;
             esp_err_t get_attr_ret = esp_ble_gatts_get_attr_value(param->add_char.attr_handle,  &length, &prf_char);
             if (get_attr_ret == ESP_FAIL){
                 logger->Log("ILLEGAL HANDLE");
@@ -289,7 +308,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
                 logger->Logf("prf_char[%x] =%x",i,prf_char[i]);
             }
 
-            esp_err_t add_descr_ret = esp_ble_gatts_add_char_descr(gattsProfile.service_handle, &chara.descr_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, NULL, NULL);//&attr_control);
+            esp_err_t add_descr_ret = esp_ble_gatts_add_char_descr(gattsProfile.service_handle, &chara->descr_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, NULL, NULL);//&attr_control);
             if (add_descr_ret){
                 logger->Logf("add char descr failed, error code =%x", add_descr_ret);
 			}
@@ -370,9 +389,11 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
                logger->Log(String(param->write.value[i]));             
              }
 
-            if(engineSpeedChangedCallback != NULL)
-	        {		
-		      engineSpeedChangedCallback(param->write.value[0]);
+            // Call callback if exists
+            characteristic* chara = findCharacteristic(param->write.handle);
+            if(chara->callback != nullptr)
+	        {
+                chara->callback(param->write.value, param->write.len);
 	        }	  	 
 
             esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);
@@ -391,55 +412,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 
 class BluetoothConnector
 {
-  private:
-	boolean clientConnected;  
-    int lastUpdate = 0;
-	BluetoothCommandCallback commandCallbacks[BLUETOOTH_COMMAND_COUNT];
-
-	
-	bool checkBufferChange(byte* oldValue, byte* newValue, byte length)
-	{
-		bool ret = false;
-		for(byte i = 0; i < length; i++)
-		{
-			if(oldValue[i] != newValue[i])
-			{
-				oldValue[i] = newValue[i];
-				ret = true;
-			}
-		}
-		
-		return ret;
-	}
-	
-	void onConnected()
-	{
-		Serial.println("Bluetooth-Client connected.");		
-	}
-	
-	void handleCommands()
-	{
-	  /*//Read command
-	  byte *buffer = commandChar->getData();
-	  
-	  byte val = *buffer;	  
-	  if(val == BLUETOOTH_COMMAND_NONE)
-	  {		
-		return;
-	  }	  	 
-	  
-	  //Handle command if listener is registered
-	  else if(commandCallbacks[val].callback != NULL)
-	  {		
-		commandCallbacks[val].callback(val, buffer + 1, commandCallbacks[val].bufferSize);
-	  }
-	  
-	  //Unset command	  
-	  byte none[1];
-	  none[0] = BLUETOOTH_COMMAND_NONE;
-	  commandChar->setValue(none, 1);*/	  	  
-	}	
-
+  private:	    
 	static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
     {
         switch (event) {
@@ -489,11 +462,11 @@ class BluetoothConnector
 	{
 
 		//Initialize callbacks as NUlL
-		for(byte i = 0; i < BLUETOOTH_COMMAND_COUNT; i++)
+		/*for(byte i = 0; i < BLUETOOTH_COMMAND_COUNT; i++)
 		{
 			commandCallbacks[i].callback = NULL;
 			commandCallbacks[i].bufferSize = 0;
-		}
+		}*/
 
     	
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
@@ -553,15 +526,14 @@ class BluetoothConnector
 	}		
 	
 	//Register a callback to a module-Command
-	void onCommand(byte command, byte bufferSize, void (*callback) (byte command, byte* buffer, byte bufferSize))
+	void onCommand(void (*callback) (byte* buffer, byte bufferSize))
 	{		
-		BluetoothCommandCallback cbk = { .callback = callback, .bufferSize = bufferSize };		
-		commandCallbacks[command] = cbk;
+        gattsProfile.command_char.callback = callback;
 	}
 
-	void onSpeedChanged(void (*callback) (byte speed))
+	void onSpeedChanged(void (*callback) (byte* buffer, byte bufferSize))
 	{		
-		engineSpeedChangedCallback = callback;
+		gattsProfile.speed_char.callback = callback;
 	}
 };
 

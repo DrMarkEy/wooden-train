@@ -41,24 +41,32 @@ void setup() {
   });
   
   bluetooth = new BluetoothConnector();
-  bluetooth->onCommand(BLUETOOTH_COMMAND_START, 0, [](byte command, byte* buffer, byte bufferSize){
+  /*bluetooth->onCommand(BLUETOOTH_COMMAND_START, 0, [](byte command, byte* buffer, byte bufferSize){
     logger->Log("Drive forward!");
     
     engine->setDirection(true);
     //engine->setSpeed(255);
-  });
+  });*/
 
-  bluetooth->onCommand(BLUETOOTH_COMMAND_STOP, 0, [](byte command, byte* buffer, byte bufferSize){
+/*  bluetooth->onCommand(BLUETOOTH_COMMAND_STOP, 0, [](byte command, byte* buffer, byte bufferSize){
     logger->Log("Stop driving!");
     
     engine->stop();
-  });
+  });*/
 
-  bluetooth->onSpeedChanged([](byte speed){
+  bluetooth->onSpeedChanged([](byte* array, byte len){
+    byte speed = array[0];
     engine->setSpeed(speed);
     logger->Log("Set speed "+String(speed));    
   });
 
+  bluetooth->onCommand([](byte* buffer, byte bufferSize){
+    
+    if(buffer[0] == BLUETOOTH_COMMAND_WHISTLE) {
+      logger->Log("Whistle!");
+      soundPlayer->playSound(1);
+    }
+  });
 
 
 }
