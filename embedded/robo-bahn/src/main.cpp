@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <engine.h>
 #include <soundplayer.h>
+#include <lights.h>
 #include <buttons.h>
 #include <connectivity/wifi.h>
 #include <connectivity/bluetooth.h>
@@ -11,6 +12,7 @@ WifiConnector* wifi;
 Engine* engine;
 ButtonController* buttons;
 SoundPlayer* soundPlayer;
+Lights* lights;
 
 void setup() {
   logger = new Logger();
@@ -23,6 +25,7 @@ void setup() {
 
   engine = new Engine();
 
+  lights = new Lights();
   soundPlayer = new SoundPlayer();
 
   // TODO: Nur zum Test:
@@ -68,7 +71,7 @@ void setup() {
     }
   });
 
-
+  lights->setGlobalColor(255, 0, 0);
 }
 
 
@@ -79,6 +82,7 @@ bool ledState = false;
 void loop() {  
   wifi->Loop();  
 
+  lights->Loop();
   soundPlayer->Loop();
 
   if(!wifi->isInOTAUpdate()) {   
