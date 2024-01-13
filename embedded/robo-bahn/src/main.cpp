@@ -63,6 +63,12 @@ void setup() {
     logger->Log("Set speed "+String(speed));    
   });
 
+  bluetooth->onColorChanged([](byte* array, byte len){
+    //byte speed = array[0];
+    //engine->setSpeed(speed);
+    logger->Log("Set color " + String(array[0]) + "," + String(array[1]) + "," + String(array[2]));    
+  });
+
   bluetooth->onCommand([](byte* buffer, byte bufferSize){
     
     if(buffer[0] == BLUETOOTH_COMMAND_WHISTLE) {

@@ -34,10 +34,12 @@ bool equalContent(byte* arr1, byte* arr2, int len) {
 
 //Der Wert einer Charakteristik darf höchstens 23 bytes groß sein...
 
+// WICHTIG: Die Reihenfolge der Characteristiken in den Methoden, Structs usw. muss überall exakt die selbe sein!
+// WICHTIG: Die Service-UUID muss geupdated werden, wenn neue Characteristics hinzugefügt wurden, sonst kommt es zu komischen Caching-Problemen!!
 
-//ba451494-3447-11ee-be56-0242ac120002
+//d89fb925-996f-43b7-b6b1-b6f17dc1480b
 static uint8_t BLUETOOTH_SERVICE_MAIN_UUID[16] = {
-	0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0x56, 0xbe, 0xee, 0x11, 0x47, 0x34, 0x94, 0x14, 0x45, 0xba
+    0x0b, 0x48, 0xc1, 0x7d, 0xf1, 0xb6, 0xb1, 0xb6, 0xb7, 0x43, 0x6f, 0x99, 0x25, 0xb9, 0x9f, 0xd8
 };
 
 //c045fb9c-3447-11ee-be56-0242ac120002
@@ -45,8 +47,13 @@ static uint8_t BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID[16] = {
 	0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0x56, 0xbe, 0xee, 0x11, 0x47, 0x34, 0x9c, 0xfb, 0x45, 0xc0
 };
 
-//c8d7e25c-3447-11ee-be56-0242ac120002
+//3804213f-d6ad-458e-977c-4f9f1b9f6b9a
 static uint8_t BLUETOOTH_CHARACTERISTIC_COMMAND_UUID[16] = {    
+	0x9a, 0x6b, 0x9f, 0x1b, 0x9f, 0x4f, 0x7c, 0x97, 0x8e, 0x45, 0xad, 0xd6, 0x3f, 0x21, 0x04, 0x38
+};
+
+//c8d7e25c-3447-11ee-be56-0242ac120002
+static uint8_t BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID[16] = {    
 	0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0x56, 0xbe, 0xee, 0x11, 0x47, 0x34, 0x5c, 0xe2, 0xd7, 0xc8
 };
 
@@ -61,10 +68,10 @@ static uint8_t BLUETOOTH_CHARACTERISTIC_COMMAND_UUID[16] = {
 
 #define BLUETOOTH_COMMAND_COUNT 7
 
-#define GATTS_NUM_HANDLE 8 // ( num of characteristics + num of descriptors) * 2
+#define GATTS_NUM_HANDLE 12 // ( num of characteristics + num of descriptors) * 2, descriptors = number of bytes in each characteristic ??? (also try 12)
 
 
-static  esp_attr_control_t attr_control = {
+static esp_attr_control_t attr_control = {
 	.auto_rsp = ESP_GATT_AUTO_RSP
 };
 
@@ -76,6 +83,15 @@ static esp_attr_value_t engineSpeedInitialValue =
     .attr_max_len = 1,
     .attr_len     = 1,
     .attr_value   = engineSpeed
+};
+
+static esp_gatt_char_prop_t lightColorPropertyFlags = 0;
+static uint8_t lightColor[] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+static esp_attr_value_t lightColorInitialValue =
+{
+    .attr_max_len = 18,
+    .attr_len     = 18,
+    .attr_value   = lightColor
 };
 
 static esp_gatt_char_prop_t commandPropertyFlags = 0;
@@ -122,7 +138,7 @@ static esp_ble_adv_data_t scan_rsp_data = {
 };
 
 struct characteristic {
-    byte id; // 1 = speed, 2: command
+    byte id; // 1 = speed, 2: lightsColor, 3: command
 
     uint16_t char_handle;
     esp_bt_uuid_t char_uuid;
@@ -142,6 +158,7 @@ struct gatts_profile_inst {
     esp_gatt_srvc_id_t service_id;
     
     characteristic speed_char;
+    characteristic light_color_char;
     characteristic command_char;
 };
 
@@ -157,8 +174,13 @@ static struct gatts_profile_inst gattsProfile = {
         .callback = nullptr
     },
 
-    .command_char = {
+    .light_color_char = {
         .id = 2,
+        .callback = nullptr
+    },
+
+    .command_char = {
+        .id = 3,
         .callback = nullptr
     }
 };
@@ -181,19 +203,29 @@ static uint8_t adv_config_done = 0;
 
 static characteristic* findCharacteristic(uint16_t char_handle)
 {  
-
+  /*
   logger->Logf("CHAR HANDLE %d", char_handle);
-  logger->Logf("command HANDLE %d", gattsProfile.command_char.char_handle);
   logger->Logf("speed HANDLE %d", gattsProfile.speed_char.char_handle);
+  logger->Logf("light color HANDLE %d", gattsProfile.light_color_char.char_handle);
+  logger->Logf("command HANDLE %d", gattsProfile.command_char.char_handle);*/
 
   characteristic* chara;
-  if(gattsProfile.command_char.char_handle == char_handle)
+  if(gattsProfile.speed_char.char_handle == char_handle)
   {
-    return &gattsProfile.command_char;
-  } else if(gattsProfile.speed_char.char_handle == char_handle)
-  {
+    logger->Log("Found speed characteristic!");
     return &gattsProfile.speed_char;
   }
+  else if(gattsProfile.light_color_char.char_handle == char_handle)
+  {
+    logger->Log("Found light color characteristic!");
+    return &gattsProfile.light_color_char;
+  }
+  else if(gattsProfile.command_char.char_handle == char_handle)
+  {
+    logger->Log("Found command characteristic!");
+    return &gattsProfile.command_char;
+  } 
+  
   else
   {
     logger->Log("Encountered unknown characteristic!");
@@ -205,13 +237,21 @@ static characteristic* findCharacteristic(uint16_t char_handle)
 static characteristic* findCharacteristic(byte uuid128[16])
 {  
   characteristic* chara;
-  if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16))
+  if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16))
   {
-    return &gattsProfile.command_char;
-  } else if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16))
-  {
+    logger->Log("Found speed characteristic!");
     return &gattsProfile.speed_char;
   }
+  else if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID, 16))
+  {
+     logger->Log("Found light color characteristic!");
+    return &gattsProfile.light_color_char;
+  }
+  else if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16))
+  {
+    logger->Log("Found command characteristic!");
+    return &gattsProfile.command_char;
+  } 
   else
   {
     logger->Log("Encountered unknown characteristic!");
@@ -271,6 +311,19 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
                 logger->Logf("add char failed, error code =%x",add_char_ret);
             }
 
+            // ------- Create light color characteristic ---------
+            gattsProfile.light_color_char.char_uuid.len = ESP_UUID_LEN_128;
+		    memcpy(gattsProfile.light_color_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID, 16);            
+
+            lightColorPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE;// | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
+            add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.light_color_char.char_uuid,
+                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                                                        lightColorPropertyFlags,
+                                                        &lightColorInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
+            if (add_char_ret){
+                logger->Logf("add char failed, error code =%x",add_char_ret);
+            }
+
             // ------- Create command characteristic ---------
             gattsProfile.command_char.char_uuid.len = ESP_UUID_LEN_128;
 		    memcpy(gattsProfile.command_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16);            
@@ -305,7 +358,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 			
             logger->Logf("the gatts demo char length = %x", length);
             for(int i = 0; i < length; i++){
-                logger->Logf("prf_char[%x] =%x",i,prf_char[i]);
+                logger->Logf("prf_char[%x] = %x", i, prf_char[i]);
             }
 
             esp_err_t add_descr_ret = esp_ble_gatts_add_char_descr(gattsProfile.service_handle, &chara->descr_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, NULL, NULL);//&attr_control);
@@ -460,14 +513,6 @@ class BluetoothConnector
 	
 	BluetoothConnector()
 	{
-
-		//Initialize callbacks as NUlL
-		/*for(byte i = 0; i < BLUETOOTH_COMMAND_COUNT; i++)
-		{
-			commandCallbacks[i].callback = NULL;
-			commandCallbacks[i].bufferSize = 0;
-		}*/
-
     	
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     
@@ -534,6 +579,11 @@ class BluetoothConnector
 	void onSpeedChanged(void (*callback) (byte* buffer, byte bufferSize))
 	{		
 		gattsProfile.speed_char.callback = callback;
+	}
+
+    void onColorChanged(void (*callback) (byte* buffer, byte bufferSize))
+	{		
+		gattsProfile.light_color_char.callback = callback;
 	}
 };
 

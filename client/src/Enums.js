@@ -1,12 +1,12 @@
 let UUIDS = {	
   train: {
-	  service: "ba451494-3447-11ee-be56-0242ac120002",	
+	  service: "d89fb925-996f-43b7-b6b1-b6f17dc1480b",	
 	  engineSpeed: "c045fb9c-3447-11ee-be56-0242ac120002",
-  	command: "c8d7e25c-3447-11ee-be56-0242ac120002",
+  	lightColor: "c8d7e25c-3447-11ee-be56-0242ac120002",
+    command: "3804213f-d6ad-458e-977c-4f9f1b9f6b9a",
   }
 /*
 	moduleInfos: "9be5491f-198c-4d6b-9f97-7634d63fd30f",
-	command: "36881b37-d617-4e8f-906a-3ab843b2e9ed",
 	commandAnswers: "b399bd6d-fbce-4488-ae82-314a0195db4d",*/
 };
 

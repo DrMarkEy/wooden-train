@@ -84,6 +84,7 @@
         
         set: function(val) {
           this.$emit('change-color', val);
+          this.connection.setLightsColor(123, 13, 23);
         }
       },
 

@@ -20,6 +20,7 @@ class TrainConnection extends BLEConnection {
 
     let service = await this.server.getPrimaryService(UUIDS.train.service);
     this.engineSpeedCharacteristic = await service.getCharacteristic(UUIDS.train.engineSpeed);
+    this.lightColorCharacteristic = await service.getCharacteristic(UUIDS.train.lightColor);
     this.commandCharacteristic = await service.getCharacteristic(UUIDS.train.command);
     
     this.engineCharacteristicLock = false;
@@ -61,6 +62,23 @@ class TrainConnection extends BLEConnection {
         {
           this.reconnect();
         }
+      }
+    }
+  }
+
+  async setLightsColor(r, g, b) {
+    if(this.connected) {   
+      
+      console.log('Set colors to', r, g, b);
+      let colorsValue = new Uint8Array([r, g, b]);          
+
+      try
+      {
+        await this.lightColorCharacteristic.writeValue(colorsValue);
+      }
+      catch(ex)
+      {
+        this.reconnect();
       }
     }
   }
