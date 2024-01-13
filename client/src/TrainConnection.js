@@ -66,11 +66,17 @@ class TrainConnection extends BLEConnection {
     }
   }
 
-  async setLightsColor(r, g, b) {
+  async setLightsColor(led1, led2, led3, led4, led5, led6) {
     if(this.connected) {   
-      
-      console.log('Set colors to', r, g, b);
-      let colorsValue = new Uint8Array([r, g, b]);          
+            
+      let colorsValue = new Uint8Array([
+        led1.r, led1.g, led1.b,
+        led2.r, led2.g, led2.b,
+        led3.r, led3.g, led3.b,
+        led4.r, led4.g, led4.b,
+        led5.r, led5.g, led5.b,
+        led6.r, led6.g, led6.b
+      ]);          
 
       try
       {

@@ -41,6 +41,15 @@
 
   import {TRAIN_COMMAND} from '../TrainConnection.js';
 
+  function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }
+
   export default {
     name: 'train-controller',
 
@@ -84,7 +93,8 @@
         
         set: function(val) {
           this.$emit('change-color', val);
-          this.connection.setLightsColor(123, 13, 23);
+          let cols = hexToRgb(val);
+          this.connection.setLightsColor(cols, cols, cols, cols, cols, cols);
         }
       },
 
