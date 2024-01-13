@@ -12,19 +12,23 @@
 #define BRIGHTNESS_CORRECTION_GREEN 1
 #define BRIGHTNESS_CORRECTION_BLUE 1
 
-#define DUTY_CYCLE_LENGTH 9
+#define DUTY_CYCLE_LENGTH 45
 
 class Lights
 {
 
    private:
-   byte brightness = 100;
-   byte red[6];
-   byte green[6];
-   byte blue[6];
+     byte dutyCyclePosition = 0;
+     byte red = 4;
+     byte green = 2;     
+     byte blue = 9;
+     byte dutyCycle[DUTY_CYCLE_LENGTH] = {red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue}; // 15 entries for each color, Format: rgbrgbrgbrgbrgb... 
+     // Only 6 Bit of every entry are used to determine which LEDs should be lit during this duty cycle
 
-   byte nextLed = 0;
-   long lastUpdate = 0;
+   //byte brightness = 100;
+  // byte red[6];
+  // byte green[6];
+  // byte blue[6];
 
    void activateLED(byte led, bool r, bool g, bool b) {
       // rgb01234
@@ -44,10 +48,8 @@ class Lights
         digitalWrite(PIN_LED_BACK_CENTER, LOW);
       }
 
-//     byte data = 0b11000001;
-
     // Farben: 1 = an
-
+    // Zahlen: 0 = an
 
     // In Fahrtrichtung // Zahlen: 1 = aus
     // 0: vorne rechts 
@@ -56,19 +58,88 @@ class Lights
     // 3: hinten links
     // 4: hinten rechts
 
-    // Blau ist vorne kaputt
-
-     //
-
+    // Blau ist vorne kaputt (Hardware issue!)
 
      digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
      shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, data); // Write data
      digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
    }
 
-   // returns: duty cycle iterations
-   int activateLEDWithColor(byte led, byte r, byte g, byte b) {
-     return 0;
+   void activateLEDs(bool r, bool g, bool b, byte ledMask) {
+      // rgb01234
+      byte data = 0b00011111;
+      if(r)
+        data = data | 0b10000000;
+      if(g)
+        data = data | 0b01000000;
+      if(b)
+        data = data | 0b00100000;
+            
+      // ledMask: 012345
+      data ^= (ledMask >> 1);      
+      
+      if((ledMask & 0b1) == 0b1) {
+        digitalWrite(PIN_LED_BACK_CENTER, LOW);
+      }
+      else
+      {
+        digitalWrite(PIN_LED_BACK_CENTER, HIGH);
+      }
+
+    // Farben: 1 = an
+    // Zahlen: 0 = an
+
+    // In Fahrtrichtung // Zahlen: 1 = aus
+    // 0: vorne rechts 
+    // 1: vorne mitte
+    // 2: vorne links
+    // 3: hinten links
+    // 4: hinten rechts
+
+    // Blau ist vorne kaputt (Hardware issue!)
+
+     digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
+     shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, data); // Write data
+     digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
+   }
+
+  
+  const byte pattern[15][15] = {{0}, {0, 7}, {0, 5, 10}, {0, 3, 7, 10}, {0, 3, 6, 9, 12}, {0, 2, 5, 7, 10, 12}, {0, 2, 4, 6, 8, 10, 12}, {0, 2, 4, 5, 6, 8, 10, 12}, {0, 1, 2, 4, 5, 6, 8, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 7, 8, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}};
+
+  // idea: Always call this function once when any color is changed
+  // build a byte array of the complete duty cycle to light all leds
+  // alternate the current duty cycle value with 0 to reduce brightness globally,
+
+  // Currently: Simplest version: go through all leds in order and set their color
+  // TODO: Better version: Group leds with the exact same color
+  // TODO: Even better version: Reuse duty cycle entries of the same color between all effected leds
+   void buildDutyCycle(byte r[6], byte g[6], byte b[6]) {
+    
+    // Initialize all leds as off
+    for(byte i = 0; i < DUTY_CYCLE_LENGTH; i++) {
+      dutyCycle[i] = 0;
+    }
+
+    for(byte i = 0; i < 6; i++) {
+      setDutyCycleLevel(r[i], 0);
+      setDutyCycleLevel(g[i], 1);
+      setDutyCycleLevel(b[i], 2);
+    }
+    
+     // TODO: Apply color correction!
+   }
+
+   void setDutyCycleLevel(byte colorValue, byte colorOffset) {
+      byte rLevel = colorValue / 17;
+      
+      for(byte s = 0; s < rLevel; s++) {
+        dutyCycle[pattern[rLevel][s] * colorOffset] = 1;
+      }
+   }
+
+   void dutyCycleStep(byte i) {
+      byte ledMask = dutyCycle[i];
+      activateLEDs(i % 3 == 0, i % 3 == 1, i % 3 == 2, ledMask);
    }
 
    public:
@@ -87,17 +158,20 @@ class Lights
    }
 
    void setBrightness(byte _brightness) {
-     brightness = _brightness;
+     //brightness = _brightness;
      //analogWrite(PIN_LED_EN, 255-brightness);
    }
 
-   void setGlobalColor(byte r, byte g, byte b) {
+   void setGlobalColor(byte red, byte green, byte blue) {
+     byte r[6];    
+     byte g[6];
+     byte b[6];
      for(byte i = 0; i < 6; i++) {
-        red[i] = r;
-        green[i] = g;
-        blue[i] = b;
+      r[i] = red;
+      g[i] = green;
+      b[i] = blue;
      }
-
+     //buildDutyCycle(r, g, b);
    }
 
    void setDirectionColor(boolean forward) {                
@@ -105,27 +179,24 @@ class Lights
         green[i] = g;
         blue[i] = b;*/ // TODO!
    }
-
-   // Go through all 6 LED positions
-   // Set the right color(s) while each LED is displayed
-   // control brightness via the length that each LED is active
-   // TODO: activate leds with the same color simultaneously??
-
    
    void Loop() {
-      /*nextLed++;
+      
+      dutyCycleStep(dutyCyclePosition);
+      dutyCyclePosition ++;
+      if(dutyCyclePosition == DUTY_CYCLE_LENGTH) {
+        dutyCyclePosition = 0;
+      }
 
-      if(nextLed == 256)
-        nextLed = 0;*/
-
-      activateLED(5, false, true, false);
-      delay(5);
+      //activateLEDs(true, true, false, 0b111111);
+      
+      
 
      digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
      shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, 0); // Write data
      digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
 
-     delay(5);
+     
    }   
 
 
