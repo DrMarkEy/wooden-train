@@ -148,7 +148,7 @@
       },
 
       pressButtonB: function() {
-        //TRAIN_COMMAND
+        this.connection.sendCommand(TRAIN_COMMAND.REVERSE);
       },
 
       removeController: function() {

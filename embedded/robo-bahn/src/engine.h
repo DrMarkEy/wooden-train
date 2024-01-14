@@ -40,6 +40,14 @@ class Engine {
     update();
   }
 
+  bool getDirection() {
+    return forward;
+  }
+
+  byte getSpeed() {
+    return speed;
+  }
+
   void stop()
   {
     speed = 0;

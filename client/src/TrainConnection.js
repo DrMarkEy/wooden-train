@@ -5,6 +5,7 @@ import {UUIDS} from './Enums.js';
 let TRAIN_COMMAND = {
   START: 4,    
   STOP: 5,
+  REVERSE: 6,
   WHISTLE: 7
 };
 
