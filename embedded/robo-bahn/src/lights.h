@@ -19,10 +19,11 @@ class Lights
 
    private:
      byte dutyCyclePosition = 0;
-     byte red = 4;
-     byte green = 2;     
-     byte blue = 9;
-     byte dutyCycle[DUTY_CYCLE_LENGTH] = {red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue, red, green, blue}; // 15 entries for each color, Format: rgbrgbrgbrgbrgb... 
+     byte red = 1;
+     byte red2 = 3;
+     byte green = 3;     
+     byte blue = 0;
+     byte dutyCycle[DUTY_CYCLE_LENGTH] = {red, green, blue, red2, green, blue, red, green, blue, red2, green, blue, red, green, blue, red2, green, blue, red, green, blue, red2, green, blue, red, green, blue, red2, green, blue, red, green, blue, red2, green, blue, red, green, blue, red2, green, blue, red, green, blue}; // 15 entries for each color, Format: rgbrgbrgbrgbrgb... 
      // Only 6 Bit of every entry are used to determine which LEDs should be lit during this duty cycle
 
    //byte brightness = 100;
@@ -66,6 +67,22 @@ class Lights
    }
 
    void activateLEDs(bool r, bool g, bool b, byte ledMask) {
+      /*Serial.print("L: ");
+      
+      if(r)
+      Serial.print("r");
+
+      if(g)
+      Serial.print("g");
+
+      if(b)
+      Serial.print("b");
+
+      Serial.print(":");
+      Serial.println(ledMask);
+
+*/
+
       // rgb01234
       byte data = 0b00011111;
       if(r)
@@ -76,7 +93,9 @@ class Lights
         data = data | 0b00100000;
             
       // ledMask: 012345
-      data ^= (ledMask >> 1);      
+      // data: rgb01234
+      // Letztes Bit abschneiden
+      data ^= ledMask >> 1; 
       
       if((ledMask & 0b1) == 0b1) {
         digitalWrite(PIN_LED_BACK_CENTER, LOW);
@@ -104,7 +123,7 @@ class Lights
    }
 
   
-  const byte pattern[15][15] = {{0}, {0, 7}, {0, 5, 10}, {0, 3, 7, 10}, {0, 3, 6, 9, 12}, {0, 2, 5, 7, 10, 12}, {0, 2, 4, 6, 8, 10, 12}, {0, 2, 4, 5, 6, 8, 10, 12}, {0, 1, 2, 4, 5, 6, 8, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 7, 8, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}};
+  const uint8_t pattern[15][15] = {{0}, {0, 7}, {0, 5, 10}, {0, 3, 7, 10}, {0, 3, 6, 9, 12}, {0, 2, 5, 7, 10, 12}, {0, 2, 4, 6, 8, 10, 12}, {0, 2, 4, 5, 6, 8, 10, 12}, {0, 1, 2, 4, 6, 8, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 8, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 7, 8, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}};
 
   // idea: Always call this function once when any color is changed
   // build a byte array of the complete duty cycle to light all leds
@@ -121,24 +140,52 @@ class Lights
     }
 
     for(byte i = 0; i < 6; i++) {
-      setDutyCycleLevel(r[i], 0);
-      setDutyCycleLevel(g[i], 1);
-      setDutyCycleLevel(b[i], 2);
+      byte ledMask = 1 << i;
+
+      Serial.print("Red: ");
+      Serial.println(String(ledMask));
+      setDutyCycleLevel(r[i], 0, ledMask);
+      Serial.print("Green: ");
+      Serial.println(String(ledMask));
+      setDutyCycleLevel(g[i], 1, ledMask);
+      Serial.print("Blue: ");
+      Serial.println(String(ledMask));
+      setDutyCycleLevel(b[i], 2, ledMask);
     }
     
      // TODO: Apply color correction!
+
+    Serial.print("Duty-Cycle: ");
+    for(byte i = 0; i < DUTY_CYCLE_LENGTH; i++) {
+      Serial.print(String(dutyCycle[i]));
+      Serial.print(", ");
+    }
+    Serial.println("");
    }
 
-   void setDutyCycleLevel(byte colorValue, byte colorOffset) {
-      byte rLevel = colorValue / 17;
+   void setDutyCycleLevel(byte colorValue, byte colorOffset, byte ledMask) {
+      byte rLevel = (colorValue - 1) / 17;
       
-      for(byte s = 0; s < rLevel; s++) {
-        dutyCycle[pattern[rLevel][s] * colorOffset] = 1;
+      for(byte s = 0; s <= rLevel; s++) {
+        Serial.print("Entry: ");
+        Serial.print(rLevel);
+        Serial.print(", ");
+        Serial.print(s);
+        Serial.print(", ");
+        Serial.print(pattern[rLevel][s]);
+        Serial.print(", ");
+        Serial.println(pattern[rLevel][s] * 3 + colorOffset);
+
+        dutyCycle[pattern[rLevel][s] * 3 + colorOffset] += ledMask;
       }
    }
 
    void dutyCycleStep(byte i) {
       byte ledMask = dutyCycle[i];
+
+      
+
+
       activateLEDs(i % 3 == 0, i % 3 == 1, i % 3 == 2, ledMask);
    }
 
@@ -171,31 +218,45 @@ class Lights
       g[i] = green;
       b[i] = blue;
      }
-     //buildDutyCycle(r, g, b);
+     buildDutyCycle(r, g, b);
    }
 
-   void setDirectionColor(boolean forward) {                
-        /*red[i] = r;
-        green[i] = g;
-        blue[i] = b;*/ // TODO!
+   void setDirectionColorWithColoredBacklights(boolean forward, byte red, byte green, byte blue) {                
+     if(forward) {
+       byte r[6] = {255, 255, 255, red, 0, red};    
+       byte g[6] = {255, 255, 255, green, 0, green};
+       byte b[6] = {255, 255, 255, blue, 0, blue};
+
+       buildDutyCycle(r, g, b);
+     }
+     else
+     {
+       byte r[6] = {red, 0, red, 255, 255, 255};    
+       byte g[6] = {green, 0, green, 255, 255, 255};
+       byte b[6] = {blue, 0, blue, 255, 255, 255};
+
+       buildDutyCycle(r, g, b);
+     }
+     
    }
    
    void Loop() {
       
       dutyCycleStep(dutyCyclePosition);
       dutyCyclePosition ++;
-      if(dutyCyclePosition == DUTY_CYCLE_LENGTH) {
+      if(dutyCyclePosition >= DUTY_CYCLE_LENGTH) {
         dutyCyclePosition = 0;
       }
 
-      //activateLEDs(true, true, false, 0b111111);
+      delayMicroseconds(50);
+//      activateLEDs(true, true, false, 0b1);
       
       
-
-     digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
-     shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, 0); // Write data
-     digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
-
+     if(dutyCyclePosition % 2 == 0) {
+       digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
+       shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, 0); // Write data
+       digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
+     }
      
    }   
 

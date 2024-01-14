@@ -67,6 +67,7 @@ void setup() {
     //byte speed = array[0];
     //engine->setSpeed(speed);
     logger->Log("Set color " + String(array[0]) + "," + String(array[1]) + "," + String(array[2]));    
+    lights->setDirectionColorWithColoredBacklights(true, array[0], array[1], array[2]);
   });
 
   bluetooth->onCommand([](byte* buffer, byte bufferSize){
@@ -77,7 +78,7 @@ void setup() {
     }
   });
 
-  lights->setGlobalColor(255, 128, 0);
+  lights->setGlobalColor(255, 0, 0);
 }
 
 
