@@ -14,7 +14,13 @@ ButtonController* buttons;
 SoundPlayer* soundPlayer;
 Lights* lights;
 
+
+#include "esp_system.h"
+#include "esp_ota_ops.h"
+
 void setup() {
+
+
   logger = new Logger();
   logger->Log("Baureihe 101, Version ");
   logger->Log(VERSION_CODE);
@@ -22,6 +28,28 @@ void setup() {
   wifi = new WifiConnector();
   logger->setWifiConnector(wifi);
   logger->Log("Http Logger Ready!");
+
+
+
+
+    const esp_partition_t* runningPartition = esp_ota_get_running_partition();
+   if (runningPartition != NULL) {
+        logger->Logf("Boot-Partition Label: %s", runningPartition->label);
+        logger->Logf("Boot-Partition Typ: %d", runningPartition->type);
+        logger->Logf("Boot-Partition Adresse: 0x%X", runningPartition->address);
+        logger->Logf("Boot-Partition Größe: %d Bytes", runningPartition->size);
+    } else {
+        logger->Log("Fehler beim Abrufen der Boot-Partition-Informationen");
+    }
+
+/*  if( running_partition != ota0 ) {
+    // copy partition ota1 to ota0
+    // set boot partition to ota0
+    //restart
+  }*/
+
+
+
 
   engine = new Engine();
 
@@ -81,25 +109,14 @@ void setup() {
 }
 
 
-long nextSwitch = 0;
-bool ledState = false;
-
 // the loop function runs over and over again forever
 void loop() {  
   wifi->Loop();  
 
+  if(wifi->isInOTAUpdate()) 
+    return;
+  
+  buttons->Loop();
   lights->Loop();
   soundPlayer->Loop();
-
-  if(!wifi->isInOTAUpdate()) {   
-    buttons->Loop();
-  }
-
-  if(nextSwitch < millis()) {
-    nextSwitch = millis() + 1000;
-    
-    // LED BLINKING
-    //ledState = !ledState;
-    //digitalWrite(4, ledState);
-  }
 }
