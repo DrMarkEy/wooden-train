@@ -7,6 +7,10 @@
 #include <connectivity/bluetooth.h>
 #include <http-logger.h>
 
+#include "esp_system.h"
+#include "esp_ota_ops.h"
+
+
 BluetoothConnector* bluetooth;
 WifiConnector* wifi;
 Engine* engine;
@@ -14,9 +18,9 @@ ButtonController* buttons;
 SoundPlayer* soundPlayer;
 Lights* lights;
 
+uint8_t sensorColor[4];
 
-#include "esp_system.h"
-#include "esp_ota_ops.h"
+
 
 void setup() {
 
