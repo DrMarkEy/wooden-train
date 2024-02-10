@@ -23,6 +23,8 @@ class TrainConnection extends BLEConnection {
     this.engineSpeedCharacteristic = await service.getCharacteristic(UUIDS.train.engineSpeed);
     this.lightColorCharacteristic = await service.getCharacteristic(UUIDS.train.lightColor);
     this.commandCharacteristic = await service.getCharacteristic(UUIDS.train.command);
+    this.colorReadingCharacteristic = await service.getCharacteristic(UUIDS.train.colorReading);
+    this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', this.colorReadingReceived);
     
     this.engineCharacteristicLock = false;
     this.requestedEngineSpeed = 0;
@@ -115,6 +117,11 @@ class TrainConnection extends BLEConnection {
       //this.reconnect();
       // TODO!
     }
+  }
+
+  colorReadingReceived(e) 
+  {
+    console.log("Received color reading!", e);
   }
 }
 
