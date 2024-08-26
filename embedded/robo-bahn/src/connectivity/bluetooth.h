@@ -37,9 +37,9 @@ bool equalContent(byte* arr1, byte* arr2, int len) {
 // WICHTIG: Die Reihenfolge der Characteristiken in den Methoden, Structs usw. muss überall exakt die selbe sein!
 // WICHTIG: Die Service-UUID muss geupdated werden, wenn neue Characteristics hinzugefügt wurden, sonst kommt es zu komischen Caching-Problemen!!
 
-// d89fb925-996f-43b7-b6b1-b6f17dc1480b
+// 566804f6-368b-44a4-a375-ce8789eb1dd7
 static uint8_t BLUETOOTH_SERVICE_MAIN_UUID[16] = {
-    0x0b, 0x48, 0xc1, 0x7d, 0xf1, 0xb6, 0xb1, 0xb6, 0xb7, 0x43, 0x6f, 0x99, 0x25, 0xb9, 0x9f, 0xd8
+    0xd7, 0x1d, 0xeb, 0x89, 0x87, 0xce, 0x75, 0xa3, 0xa4, 0x44, 0x8b, 0x36, 0xf6, 0x04, 0x68, 0x56
 };
 
 // c045fb9c-3447-11ee-be56-0242ac120002
@@ -73,7 +73,7 @@ static uint8_t BLUETOOTH_CHARACTERISTIC_COLOR_READING_UUID[16] = {
 
 #define BLUETOOTH_COMMAND_COUNT 7
 
-#define GATTS_NUM_HANDLE 16 // ( num of characteristics + num of descriptors) * 2, descriptors = one per characteristic??
+#define GATTS_NUM_HANDLE 16 // ( num of characteristics + num of descriptors) * 2, descriptors = one per characteristic
 
 
 static esp_attr_control_t attr_control = {
@@ -552,12 +552,14 @@ class BluetoothConnector
     }
 
     void updateCharacteristicValue(characteristic chara, uint8_t* buffer, uint16_t length) {
-        logger->Logf("Updating characteristic %s", chara.id);
+        logger->Logf("Updating characteristic %d to values", chara.id);
+        for(uint8_t i = 0; i < length; i++) {
+            logger->Logf("%d", buffer[i]);
+        }
         
         esp_err_t result = esp_ble_gatts_set_attr_value(chara.char_handle, length, buffer); 
         esp_err_t result2 = esp_ble_gatts_send_indicate(gattsProfile.gatts_if, gattsProfile.conn_id, chara.char_handle, length, buffer, false);
     }
-
 
   public:    			
 	
@@ -618,6 +620,14 @@ class BluetoothConnector
         }
 
 	    logger->Log("Bluetooth initialization finished!");    
+        
+        // Initialize sensor color as zero
+        uint8_t sensorColor[4];
+        sensorColor[0] = 0;
+        sensorColor[1] = 0;
+        sensorColor[2] = 0;
+        sensorColor[3] = 0;
+        setSensorColor(sensorColor);
 	}		
 	
 	//Register a callback to a module-Command
