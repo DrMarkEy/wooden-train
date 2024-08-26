@@ -37,6 +37,9 @@ bool equalContent(byte* arr1, byte* arr2, int len) {
 // WICHTIG: Die Reihenfolge der Characteristiken in den Methoden, Structs usw. muss überall exakt die selbe sein!
 // WICHTIG: Die Service-UUID muss geupdated werden, wenn neue Characteristics hinzugefügt wurden, sonst kommt es zu komischen Caching-Problemen!!
 
+// Useful: chrome://bluetooth-internals/#devices/e0:5a:1b:63:90:36
+// Useful: chrome://device-log/
+
 // 566804f6-368b-44a4-a375-ce8789eb1dd7
 static uint8_t BLUETOOTH_SERVICE_MAIN_UUID[16] = {
     0xd7, 0x1d, 0xeb, 0x89, 0x87, 0xce, 0x75, 0xa3, 0xa4, 0x44, 0x8b, 0x36, 0xf6, 0x04, 0x68, 0x56
