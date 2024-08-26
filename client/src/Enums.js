@@ -1,6 +1,6 @@
 let UUIDS = {	
   train: {
-	  service: "566804f6-368b-44a4-a375-ce8789eb1dd7",	
+	  service: "566804f6-368b-44a4-a375-ce8789eb1dd8",	
 	  engineSpeed: "c045fb9c-3447-11ee-be56-0242ac120002",
   	lightColor: "c8d7e25c-3447-11ee-be56-0242ac120002",
     command: "3804213f-d6ad-458e-977c-4f9f1b9f6b9a",

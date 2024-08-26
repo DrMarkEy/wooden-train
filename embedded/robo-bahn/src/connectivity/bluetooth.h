@@ -40,9 +40,9 @@ bool equalContent(byte* arr1, byte* arr2, int len) {
 // Useful: chrome://bluetooth-internals/#devices/e0:5a:1b:63:90:36
 // Useful: chrome://device-log/
 
-// 566804f6-368b-44a4-a375-ce8789eb1dd7
+// 566804f6-368b-44a4-a375-ce8789eb1dd8
 static uint8_t BLUETOOTH_SERVICE_MAIN_UUID[16] = {
-    0xd7, 0x1d, 0xeb, 0x89, 0x87, 0xce, 0x75, 0xa3, 0xa4, 0x44, 0x8b, 0x36, 0xf6, 0x04, 0x68, 0x56
+    0xd8, 0x1d, 0xeb, 0x89, 0x87, 0xce, 0x75, 0xa3, 0xa4, 0x44, 0x8b, 0x36, 0xf6, 0x04, 0x68, 0x56
 };
 
 // c045fb9c-3447-11ee-be56-0242ac120002
@@ -292,6 +292,86 @@ static characteristic* findCharacteristic(byte uuid128[16])
   }   
 }
 
+static void registerCharacteristic(byte characteristicId) {
+
+    switch(characteristicId) {
+        
+        // ------- Create speed characteristic ---------
+        case 1: {            
+            logger->Log("Registering engine speed characteristic...");
+            gattsProfile.speed_char.char_uuid.len = ESP_UUID_LEN_128;
+	        memcpy(gattsProfile.speed_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16);            
+
+            engineSpeedPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE;// | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
+            esp_err_t add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.speed_char.char_uuid,
+                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                                                        engineSpeedPropertyFlags,
+                                                        &engineSpeedInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
+            if (add_char_ret){
+                logger->Logf("add char failed, error code =%x",add_char_ret);
+            }
+            break;
+        }
+
+        // ------- Create light color characteristic ---------
+        case 2: {            
+            logger->Log("Registering light color characteristic...");
+            gattsProfile.light_color_char.char_uuid.len = ESP_UUID_LEN_128;
+		    memcpy(gattsProfile.light_color_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID, 16);            
+
+            lightColorPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE;// | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
+            esp_err_t add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.light_color_char.char_uuid,
+                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                                                        lightColorPropertyFlags,
+                                                        &lightColorInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
+            if (add_char_ret){
+                logger->Logf("add char failed, error code =%x",add_char_ret);
+            }
+            break;
+        }
+
+        // ------- Create command characteristic ---------
+        case 3: {            
+            logger->Log("Registering command characteristic...");
+            gattsProfile.command_char.char_uuid.len = ESP_UUID_LEN_128;
+		    memcpy(gattsProfile.command_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16);            
+
+            commandPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE;// | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
+            esp_err_t add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.command_char.char_uuid,
+                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                                                        commandPropertyFlags,
+                                                        &commandInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
+            if (add_char_ret){
+                logger->Logf("add char failed, error code =%x",add_char_ret);
+            }
+            break;
+        }
+
+        // ------- Color reading characteristic ---------
+        case 4: {            
+
+            logger->Log("Registering color reading characteristic...");
+            gattsProfile.color_reading_char.char_uuid.len = ESP_UUID_LEN_128;
+		    memcpy(gattsProfile.color_reading_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_COLOR_READING_UUID, 16);            
+
+            colorReadingPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
+            esp_err_t add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.color_reading_char.char_uuid,
+                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                                                        colorReadingPropertyFlags,
+                                                        &colorReadingInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
+            if (add_char_ret){
+                logger->Logf("add char failed, error code =%x",add_char_ret);
+            }
+            break;
+        }
+
+        case 5: {
+            logger->Log("All characteristics registered.");
+        }
+    }
+}
+
+static byte nextCharacteristic = 1;
 
 static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
     switch (event) {
@@ -330,58 +410,9 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             gattsProfile.service_handle = param->create.service_handle;
 
             esp_ble_gatts_start_service(gattsProfile.service_handle);
-
-            // ------- Create speed characteristic ---------
-            gattsProfile.speed_char.char_uuid.len = ESP_UUID_LEN_128;
-		    memcpy(gattsProfile.speed_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16);            
-
-            engineSpeedPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE;// | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
-            esp_err_t add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.speed_char.char_uuid,
-                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-                                                        engineSpeedPropertyFlags,
-                                                        &engineSpeedInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
-            if (add_char_ret){
-                logger->Logf("add char failed, error code =%x",add_char_ret);
-            }
-
-            // ------- Create light color characteristic ---------
-            gattsProfile.light_color_char.char_uuid.len = ESP_UUID_LEN_128;
-		    memcpy(gattsProfile.light_color_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID, 16);            
-
-            lightColorPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE;// | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
-            add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.light_color_char.char_uuid,
-                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-                                                        lightColorPropertyFlags,
-                                                        &lightColorInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
-            if (add_char_ret){
-                logger->Logf("add char failed, error code =%x",add_char_ret);
-            }
-
-            // ------- Create command characteristic ---------
-            gattsProfile.command_char.char_uuid.len = ESP_UUID_LEN_128;
-		    memcpy(gattsProfile.command_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16);            
-
-            commandPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE;// | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
-            add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.command_char.char_uuid,
-                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-                                                        commandPropertyFlags,
-                                                        &commandInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
-            if (add_char_ret){
-                logger->Logf("add char failed, error code =%x",add_char_ret);
-            }
-
-            // ------- Color reading characteristic ---------
-            gattsProfile.color_reading_char.char_uuid.len = ESP_UUID_LEN_128;
-		    memcpy(gattsProfile.color_reading_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_COLOR_READING_UUID, 16);            
-
-            colorReadingPropertyFlags = ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_WRITE | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
-            add_char_ret = esp_ble_gatts_add_char(gattsProfile.service_handle, &gattsProfile.color_reading_char.char_uuid,
-                                                        ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-                                                        colorReadingPropertyFlags,
-                                                        &colorReadingInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
-            if (add_char_ret){
-                logger->Logf("add char failed, error code =%x",add_char_ret);
-            }
+           
+            registerCharacteristic(nextCharacteristic);            
+            nextCharacteristic++;
 		}
         break;
 
@@ -407,6 +438,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
                 logger->Logf("prf_char[%x] = %x", i, prf_char[i]);
             }
 
+
             esp_err_t add_descr_ret = esp_ble_gatts_add_char_descr(gattsProfile.service_handle, &chara->descr_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, NULL, NULL);//&attr_control);
             if (add_descr_ret){
                 logger->Logf("add char descr failed, error code =%x", add_descr_ret);
@@ -417,9 +449,15 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 
         case ESP_GATTS_ADD_CHAR_DESCR_EVT:
 		{
+            // TODO: A characteristic descriptor is always added to the last characteristic.
+            // Thus, we can only create the next characteristic after THIS event has fired...
             logger->Logf("ADD_DESCR_EVT, status %d, attr_handle %d, service_handle %d",
                 param->add_char.status, param->add_char.attr_handle,  
                 param->add_char.service_handle);
+
+            // Register the next characteristic            
+            registerCharacteristic(nextCharacteristic);
+            nextCharacteristic++;
 		}
         break;
 
@@ -508,6 +546,9 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
         }
 	  }
 	}
+
+
+
 
 class BluetoothConnector
 {
