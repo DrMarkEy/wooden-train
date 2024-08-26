@@ -515,6 +515,9 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 		case ESP_GATTS_WRITE_EVT: {                          
           logger->Logf("GATT_WRITE_EVT, conn_id %d, trans_id %d, handle %d", param->write.conn_id, param->write.trans_id, param->write.handle);
           
+          // Note: this method is also called when notifications are enabled. 
+          // In this case, the given write.handle does not refer to a characteristic and findCharacteristic will return nullptr!
+          
           if (param->write.is_prep){
             logger->Log("Received not implemented long send event!");
           }
@@ -528,7 +531,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 
             // Call callback if exists
             characteristic* chara = findCharacteristic(param->write.handle);
-            if(chara->callback != nullptr)
+            if(chara != nullptr && chara->callback != nullptr)
 	        {
                 chara->callback(param->write.value, param->write.len);
 	        }	  	 
