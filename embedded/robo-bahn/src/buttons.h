@@ -54,7 +54,7 @@ class ButtonController {
       if(onPressed != nullptr)
         onPressed();
    }
-   else if(*buttonStateVariable)
+   else if(*buttonStateVariable && !digitalRead(buttonPin))
    {
       *buttonStateVariable = false;
 
