@@ -63,7 +63,7 @@ class SoundPlayer {
       case 1:
         
         // Configure audio source        
-        file = new AudioFileSourcePROGMEM( SAMPLES_WIN, sizeof(SAMPLES_WIN) );
+        file = new AudioFileSourcePROGMEM( SAMPLES_WHISTLE, sizeof(SAMPLES_WHISTLE) );
         audioGenerator->begin(file, out);
       break;
     }
