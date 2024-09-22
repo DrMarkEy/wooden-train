@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 #include <AudioFileSourcePROGMEM.h>
-#include <AudioGeneratorWAV.h>
+#include <AudioGeneratorRTTTL.h>
 #include <AudioOutputI2SNoDAC.h>
 
 #include "config.h"
@@ -22,7 +22,7 @@ class SoundPlayer {
  // See: https://github.com/earlephilhower/ESP8266Audio/issues/420
 
   AudioFileSourcePROGMEM *file = nullptr;
-  AudioGeneratorWAV *audioGenerator;
+  AudioGeneratorRTTTL *audioGenerator;
 
   public:
 
@@ -30,22 +30,24 @@ class SoundPlayer {
   {
 
     // MIGHT BE INTERESTING: MIDI-LIKE SOUND GENERATION
-    /*const char  RTTLsound[] PROGMEM = "5thSymph:d=16,o=5,b=130:g,g,g,4d#,4p,f,f,f,4d";
+   /* const char  RTTLsound[] PROGMEM = "train_whistle:d=4,o=5,b=100:8c#6,8p,4.c#6";
       file = new AudioFileSourcePROGMEM(RTTLsound, strlen_P(RTTLsound));
-      flac = new AudioGeneratorRTTTL();
-      rtttl->begin(file_progmem, out);*/
+      audioGenerator = new AudioGeneratorRTTTL();
+      audioGenerator->begin(file, out);*/
+
+ audioGenerator = new AudioGeneratorRTTTL();
 
     // Configure audio sink
     out = new AudioOutputI2SNoDAC();
     out -> SetPinout(PIN_UNUSED_SPEAKER_ALIBI_A, PIN_UNUSED_SPEAKER_ALIBI_B, PIN_SPEAKER);
     out->SetGain(1.0);    // Specify Volume between 0 and 1.0
     out->SetChannels(1);    // Specify the channel(1) or (2)
-    out->SetBitsPerSample(8);    //  Specify bits per sample generally 8 or 16
+    out->SetBitsPerSample(16);    //  Specify bits per sample generally 8 or 16
     out->SetRate(44100);      // Specify the rate here : 8000 ,22050 , 44100 , 48000
     //out->use_mclk = false;//(false);
     
     // Configure audio generator
-    audioGenerator = new AudioGeneratorWAV();    
+    //audioGenerator = new AudioGeneratorWAV();    
   }
 
 
@@ -61,10 +63,14 @@ class SoundPlayer {
 
     switch(sound) {
       case 1:
-        
+         // MIGHT BE INTERESTING: MIDI-LIKE SOUND GENERATION
+    const char  RTTLsound[] PROGMEM = "train_whistle:d=4,o=5,b=100:8c#6,8p,4.c#6";
+      file = new AudioFileSourcePROGMEM(RTTLsound, strlen_P(RTTLsound));
+     
+      audioGenerator->begin(file, out);
         // Configure audio source        
-        file = new AudioFileSourcePROGMEM( SAMPLES_WHISTLE, sizeof(SAMPLES_WHISTLE) );
-        audioGenerator->begin(file, out);
+        //file = new AudioFileSourcePROGMEM( SAMPLES_WHISTLE, sizeof(SAMPLES_WHISTLE) );
+        //audioGenerator->begin(file, out);
       break;
     }
   }
