@@ -115,12 +115,12 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {  
-  wifi->Loop();  
+  /*wifi->Loop();  
 
   if(wifi->isInOTAUpdate()) 
     return;
   
   buttons->Loop();
-  lights->Loop();
+  lights->Loop();*/
   soundPlayer->Loop();
 }
