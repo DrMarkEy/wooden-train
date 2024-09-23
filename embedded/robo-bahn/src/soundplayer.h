@@ -12,6 +12,9 @@
 class SoundPlayer {
 
   private:
+  int nextNote;
+  int nextLength;
+  long nextTime = 0;
 
   public:
 
@@ -25,17 +28,21 @@ class SoundPlayer {
   {
    
     switch(sound) {
-      case 1:
+      case 1:         
         tone(PIN_SPEAKER, 1440, 300);
-        delay(500);  // TODO: Replace delay
-        tone(PIN_SPEAKER, 1440, 700);
+        nextNote = 1440;
+        nextLength = 700;
+        nextTime = millis() + 500;
       break;
     }
   }
 
   void Loop()
   {
-   
+    if(nextTime != 0 && millis() > nextTime) {
+      nextTime = 0;
+      tone(PIN_SPEAKER, nextNote, nextLength);
+    }
   }
 };
 #endif
