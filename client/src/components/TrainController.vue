@@ -19,6 +19,8 @@
         <img :src="getImage(selectionB)"/>
       </button>
 
+      <button @click="requestColorReading">TEST</button>
+
       <input class="speed-slider" type="range" v-model="speed" min="0" max="127"/>
 
       <div class="bottom-line">
@@ -149,6 +151,10 @@
 
       pressButtonB: function() {
         this.connection.sendCommand(TRAIN_COMMAND.REVERSE);
+      },
+
+      requestColorReading: function() {
+        this.connection.requestColorReading();
       },
 
       removeController: function() {

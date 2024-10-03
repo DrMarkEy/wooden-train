@@ -24,8 +24,11 @@ class TrainConnection extends BLEConnection {
     this.lightColorCharacteristic = await service.getCharacteristic(UUIDS.train.lightColor);
     this.commandCharacteristic = await service.getCharacteristic(UUIDS.train.command);
     this.colorReadingCharacteristic = await service.getCharacteristic(UUIDS.train.colorReading);
+
+    //await this.colorReadingCharacteristic.startNotifications();    
+
     this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', this.colorReadingReceived);
-    
+
     this.engineCharacteristicLock = false;
     this.requestedEngineSpeed = 0;
 
@@ -116,6 +119,18 @@ class TrainConnection extends BLEConnection {
     {
       //this.reconnect();
       // TODO!
+    }
+  }
+
+  async requestColorReading() {
+    try
+    {
+      let result = await this.colorReadingCharacteristic.readValue();
+      console.log('color', result);
+    }
+    catch(ex)
+    {
+      console.error("Error reading sensor color!");
     }
   }
 
