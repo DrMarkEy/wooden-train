@@ -15,7 +15,7 @@
 
 #define DEFAULT_WIFI_SSID "Kosmische Hintergrundstrahlung"
 #define DEFAULT_WIFI_PASSWORD "sheldoncooper"
-#define DEFAULT_WIFI_HOSTNAME "Baureihe 101-04" // The ESP32 Hostname string is allowed to have only letters, numbers, and the dash symbol!!
+#define DEFAULT_WIFI_HOSTNAME "Baureihe 101-03" // The ESP32 Hostname string is allowed to have only letters, numbers, and the dash symbol!!
 
 #define WIFI_CHECK_INTERVAL 200
 #define WIFI_RETRY_INTERVAL 30000
