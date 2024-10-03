@@ -28,6 +28,8 @@ class WifiConnector
   unsigned long nextWifiUpdate = 0;
   unsigned long nextWifiConnectionRetry = 0;
   bool inOTAUpdate = false;
+  void (*wifiConnectedCallback)() = nullptr;
+
 
   void initialize_ota() {
 
@@ -112,7 +114,10 @@ class WifiConnector
           initialize_ota();
 
          
-           wifiState = WIFI_STATE_CONNECTED;         
+           wifiState = WIFI_STATE_CONNECTED;     
+           if(wifiConnectedCallback != nullptr) {
+             wifiConnectedCallback();
+           }    
         }
         else {
 
@@ -139,6 +144,11 @@ class WifiConnector
       // In any case: Recheck the WiFi state after 200 ms
       nextWifiUpdate = millis() + WIFI_CHECK_INTERVAL;
     }
+  }
+
+  void onWifiConnected(void (*_callback) ())
+  {		
+    this->wifiConnectedCallback = _callback;	
   }
 
   void sendHttpLog(String text) {

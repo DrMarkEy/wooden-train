@@ -23,8 +23,8 @@ class Logger {
   void Log(String str) {
     Serial.println(str);    
 
-    //if(wifiConnector != nullptr)
-      //wifiConnector->sendHttpLog(str);
+    if(wifiConnector != nullptr)
+      wifiConnector->sendHttpLog(str);
   }
 
   void Logf(const char *format, ...) {

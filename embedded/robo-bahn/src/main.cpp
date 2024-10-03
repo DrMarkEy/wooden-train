@@ -30,11 +30,11 @@ void setup() {
   logger->Log(VERSION_CODE);
   
   wifi = new WifiConnector();
-  logger->setWifiConnector(wifi);
-  logger->Log("Http Logger Ready!");
 
-
-
+  wifi->onWifiConnected([]() {
+    logger->setWifiConnector(wifi);
+    logger->Log("Http Logger Ready!");
+  });
 
     const esp_partition_t* runningPartition = esp_ota_get_running_partition();
    if (runningPartition != NULL) {
