@@ -126,7 +126,7 @@ class TrainConnection extends BLEConnection {
     try
     {
       let result = await this.colorReadingCharacteristic.readValue();
-      console.log('color', result);
+      console.log('color', [result.getUint8(),result.getUint8(),result.getUint8(),result.getUint8()]);
     }
     catch(ex)
     {

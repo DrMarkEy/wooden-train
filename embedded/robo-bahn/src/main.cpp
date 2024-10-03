@@ -6,6 +6,7 @@
 #include <connectivity/wifi.h>
 #include <connectivity/bluetooth.h>
 #include <http-logger.h>
+#include <track-sensor.h>
 
 #include "esp_system.h"
 #include "esp_ota_ops.h"
@@ -17,6 +18,7 @@ Engine* engine;
 ButtonController* buttons;
 SoundPlayer* soundPlayer;
 Lights* lights;
+TrackSensor* trackSensor;
 
 uint8_t sensorColor[4];
 
@@ -34,6 +36,8 @@ void setup() {
   wifi->onWifiConnected([]() {
     logger->setWifiConnector(wifi);
     logger->Log("Http Logger Ready!");
+
+    trackSensor->init();
   });
 
     const esp_partition_t* runningPartition = esp_ota_get_running_partition();
@@ -64,13 +68,13 @@ void setup() {
   buttons = new ButtonController();  
   buttons->onButtonPressed([]() {
     if(engine->getSpeed() == 0) {
-    if(buttons->isReversed()) {
-      engine->setDirection(false);
-      engine->setSpeed(255);      
-    }
-    else {
-      engine->setDirection(true);
-      engine->setSpeed(255);
+      if(buttons->isReversed()) {
+        engine->setDirection(false);
+        engine->setSpeed(255);      
+      }
+      else {
+        engine->setDirection(true);
+        engine->setSpeed(255);
       }
     }
     else {      
@@ -112,6 +116,15 @@ void setup() {
     }
   });
 
+  trackSensor = new TrackSensor();
+  trackSensor->onColorChangeDetected([](uint8_t color) {
+    sensorColor[0] = color;
+    sensorColor[1] = 10;
+    sensorColor[2] = 255;
+    sensorColor[3] = 50;
+    bluetooth->setSensorColor(sensorColor);
+  });
+
   lights->setGlobalColor(255, 0, 0);
 }
 
@@ -126,4 +139,5 @@ void loop() {
   buttons->Loop();
   lights->Loop();
   soundPlayer->Loop();
+  trackSensor->Loop();
 }
