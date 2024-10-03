@@ -163,6 +163,8 @@ struct characteristic {
     uint16_t descr_handle;
     esp_bt_uuid_t descr_uuid;
 
+    uint16_t ccc_handle;
+
     void (*callback) (byte* buffer, byte bufferSize);
 };
 
@@ -372,6 +374,7 @@ static void registerCharacteristic(byte characteristicId) {
 }
 
 static byte nextCharacteristic = 1;
+static characteristic* currentCharacteristic = nullptr;
 
 static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
     switch (event) {
@@ -428,6 +431,9 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             chara->char_handle = param->add_char.attr_handle;
             chara->descr_uuid.len = ESP_UUID_LEN_16;
             chara->descr_uuid.uuid.uuid16 = ESP_GATT_UUID_CHAR_CLIENT_CONFIG;
+
+            currentCharacteristic = chara;
+            
             esp_err_t get_attr_ret = esp_ble_gatts_get_attr_value(param->add_char.attr_handle,  &length, &prf_char);
             if (get_attr_ret == ESP_FAIL){
                 logger->Log("ILLEGAL HANDLE");
@@ -452,8 +458,10 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             // TODO: A characteristic descriptor is always added to the last characteristic.
             // Thus, we can only create the next characteristic after THIS event has fired...
             logger->Logf("ADD_DESCR_EVT, status %d, attr_handle %d, service_handle %d",
-                param->add_char.status, param->add_char.attr_handle,  
-                param->add_char.service_handle);
+                param->add_char_descr.status, param->add_char_descr.attr_handle,  
+                param->add_char_descr.service_handle);
+            
+            currentCharacteristic->ccc_handle = param->add_char_descr.attr_handle;
 
             // Register the next characteristic            
             registerCharacteristic(nextCharacteristic);
@@ -496,7 +504,10 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
           logger->Logf("GATT_READ_EVT, conn_id %d, trans_id %d, handle %d",  
               param->read.conn_id, param->read.trans_id, param->read.handle);  
 
-              /*esp_gatt_rsp_t rsp;  
+
+              // TODO: Wird aufgerufen, wenn colorReadingCharacteristic.readValue() aufgerufen wird
+
+              esp_gatt_rsp_t rsp;  
               memset(&rsp, 0, sizeof(esp_gatt_rsp_t));  
               rsp.attr_value.handle = param->read.handle;  
               rsp.attr_value.len = 4;  
@@ -508,7 +519,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 			  esp_ble_gatts_send_response(gatts_if,  
                                           param->read.conn_id,  
                                           param->read.trans_id,  
-                                          ESP_GATT_OK, &rsp);*/
+                                          ESP_GATT_OK, &rsp);
          break;
         }
 
@@ -517,20 +528,40 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
           
           // Note: this method is also called when notifications are enabled. 
           // In this case, the given write.handle does not refer to a characteristic and findCharacteristic will return nullptr!
-          
+
           if (param->write.is_prep){
             logger->Log("Received not implemented long send event!");
           }
           else {
+
              logger->Logf("Written value, value len %d, value:", param->write.len);
-                          
              // Log buffer value 
              for(byte i = 0; i < param->write.len; i++) {
                logger->Log(String(param->write.value[i]));             
              }
 
-            // Call callback if exists
+
             characteristic* chara = findCharacteristic(param->write.handle);
+            
+
+              if (chara == nullptr && /*heart_rate_handle_table[IDX_CHAR_CFG_A] == param->write.handle && */param->write.len == 2){
+                    uint16_t descr_value = param->write.value[1]<<8 | param->write.value[0];
+                    if (descr_value == 0x0001){
+                        logger->Log("notify enable");
+                        uint8_t notify_data[15];
+                        for (int i = 0; i < sizeof(notify_data); ++i)
+                        {
+                            notify_data[i] = i % 0xff;
+                        }
+                        //the size of notify_data[] need less than MTU size
+                        esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, gattsProfile.color_reading_char.char_handle,
+                                                sizeof(notify_data), notify_data, false);
+
+                    }
+              }
+
+            // Call callback if exists
+
             if(chara != nullptr && chara->callback != nullptr)
 	        {
                 chara->callback(param->write.value, param->write.len);
@@ -604,8 +635,17 @@ class BluetoothConnector
             logger->Logf("%d", buffer[i]);
         }
         
+// Helpful: https://www.esp32.com/viewtopic.php?f=13&t=11228&p=45738&hilit=ble+notify#p45738 ??
+
         esp_err_t result = esp_ble_gatts_set_attr_value(chara.char_handle, length, buffer); 
+
+        if (result) {
+            logger->Log("indicate failed");		    
+        }
         esp_err_t result2 = esp_ble_gatts_send_indicate(gattsProfile.gatts_if, gattsProfile.conn_id, chara.char_handle, length, buffer, false);
+        if (result2) {
+            logger->Log("send failed");		    
+        }
     }
 
   public:    			
