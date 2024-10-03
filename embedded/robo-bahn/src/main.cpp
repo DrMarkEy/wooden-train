@@ -59,8 +59,6 @@ void setup() {
 
   lights = new Lights();
   soundPlayer = new SoundPlayer();
-
-  // TODO: Nur zum Test:
   soundPlayer->playSound(1);
 
   buttons = new ButtonController();  
