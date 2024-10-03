@@ -118,16 +118,16 @@ void setup() {
 
   trackSensor = new TrackSensor();
   trackSensor->onColorChangeDetected([](uint8_t color) {
+    // TODO: Test!
+    if(color == COLOR_RED) {
+      engine->setSpeed(0);
+    }
+
     sensorColor[0] = color;
     sensorColor[1] = 10;
     sensorColor[2] = 255;
     sensorColor[3] = 50;
     bluetooth->setSensorColor(sensorColor);
-
-    // TODO: Test!
-    if(color == COLOR_RED) {
-      engine->setSpeed(0);
-    }
   });
 
   lights->setGlobalColor(255, 0, 0);
