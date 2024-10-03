@@ -63,6 +63,7 @@ void setup() {
 
   buttons = new ButtonController();  
   buttons->onButtonPressed([]() {
+    if(engine->getSpeed() == 0) {
     if(buttons->isReversed()) {
       engine->setDirection(false);
       engine->setSpeed(255);      
@@ -70,6 +71,10 @@ void setup() {
     else {
       engine->setDirection(true);
       engine->setSpeed(255);
+      }
+    }
+    else {      
+      engine->setSpeed(0);
     }
   });
   
