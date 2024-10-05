@@ -105,14 +105,29 @@ void setup() {
 
 
 // the loop function runs over and over again forever
-void loop() {  
-  wifi->Loop();  
-
-  if(wifi->isInOTAUpdate()) 
-    return;
+void loop() {    
+  logger->LogDuration("Wifi Loop", []() {
+    wifi->Loop(); 
+  }); 
   
-  buttons->Loop();
-  lights->Loop();
-  soundPlayer->Loop();
-  trackSensor->Loop();
+  logger->LogDuration("OTA Update Check", []() {
+    if(wifi->isInOTAUpdate()) 
+      return;
+  });
+
+  logger->LogDuration("Buttons", []() {
+    buttons->Loop();
+  });
+
+  logger->LogDuration("Lights", []() {
+    lights->Loop();
+  });
+
+  logger->LogDuration("SoundPlayer", []() {
+    soundPlayer->Loop();
+  });
+
+  logger->LogDuration("TrackSensor", []() {
+    trackSensor->Loop();
+  });
 }

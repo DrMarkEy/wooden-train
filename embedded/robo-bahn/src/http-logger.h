@@ -27,6 +27,16 @@ class Logger {
       wifiConnector->sendHttpLog(str);
   }
 
+  void LogDuration(String msg, void (*runnable) ()) {
+    long startTime = micros();
+    runnable();
+    long endTime = micros();
+
+    msg.concat(": ");
+    msg.concat(endTime - startTime);
+    Log(msg);
+  }
+
   void Logf(const char *format, ...) {
     va_list arg;
     va_start(arg, format);
