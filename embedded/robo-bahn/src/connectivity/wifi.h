@@ -12,6 +12,9 @@
 #include <HTTPClient.h>
 #include <UrlEncode.h>
 
+#include "esp_system.h"
+#include "esp_ota_ops.h"
+
 #include <config.h>
 
 
@@ -86,6 +89,23 @@ class WifiConnector
 
     wifiState = WIFI_STATE_CONNECTING;
     nextWifiConnectionRetry = millis() + WIFI_RETRY_INTERVAL;
+
+    // Log ota running partition
+    const esp_partition_t* runningPartition = esp_ota_get_running_partition();
+    if (runningPartition != NULL) {
+      Serial.printf("Boot-Partition Label: %s", runningPartition->label);
+      Serial.printf("Boot-Partition Typ: %d", runningPartition->type);
+      Serial.printf("Boot-Partition Adresse: 0x%X", runningPartition->address);
+      Serial.printf("Boot-Partition Größe: %d Bytes", runningPartition->size);
+    } else {
+      Serial.printf("Fehler beim Abrufen der Boot-Partition-Informationen");
+    }
+
+    /*  if( running_partition != ota0 ) {
+    // copy partition ota1 to ota0
+    // set boot partition to ota0
+    //restart
+    }*/
   }
 
   bool isInOTAUpdate(){
@@ -93,10 +113,8 @@ class WifiConnector
   }
 
   void Loop() {
-
+    
     ArduinoOTA.handle();
-
-
 
     if(millis() > nextWifiUpdate) {
     

@@ -8,24 +8,17 @@
 #include <http-logger.h>
 #include <track-sensor.h>
 
-#include "esp_system.h"
-#include "esp_ota_ops.h"
-
 
 BluetoothConnector* bluetooth;
 WifiConnector* wifi;
+
 Engine* engine;
 ButtonController* buttons;
 SoundPlayer* soundPlayer;
 Lights* lights;
 TrackSensor* trackSensor;
 
-uint8_t sensorColor[4];
-
-
-
 void setup() {
-
 
   logger = new Logger();
   logger->Log("Baureihe 101, Version ");
@@ -40,30 +33,7 @@ void setup() {
     trackSensor->init();
   });
 
-    const esp_partition_t* runningPartition = esp_ota_get_running_partition();
-   if (runningPartition != NULL) {
-        logger->Logf("Boot-Partition Label: %s", runningPartition->label);
-        logger->Logf("Boot-Partition Typ: %d", runningPartition->type);
-        logger->Logf("Boot-Partition Adresse: 0x%X", runningPartition->address);
-        logger->Logf("Boot-Partition Größe: %d Bytes", runningPartition->size);
-    } else {
-        logger->Log("Fehler beim Abrufen der Boot-Partition-Informationen");
-    }
-
-/*  if( running_partition != ota0 ) {
-    // copy partition ota1 to ota0
-    // set boot partition to ota0
-    //restart
-  }*/
-
-
-
-
   engine = new Engine();
-
-  lights = new Lights();
-  soundPlayer = new SoundPlayer();
-  soundPlayer->playSound(1);
 
   buttons = new ButtonController();  
   buttons->onButtonPressed([]() {
@@ -91,8 +61,6 @@ void setup() {
   });
 
   bluetooth->onColorChanged([](byte* array, byte len){
-    //byte speed = array[0];
-    //engine->setSpeed(speed);
     logger->Log("Set color " + String(array[0]) + "," + String(array[1]) + "," + String(array[2]));    
     lights->setDirectionColorWithColoredBacklights(true, array[0], array[1], array[2]);
   });
@@ -118,19 +86,23 @@ void setup() {
 
   trackSensor = new TrackSensor();
   trackSensor->onColorChangeDetected([](uint8_t color) {
-    // TODO: Test!
+    // TODO: Replace with gradually slowing down?!?
     if(color == COLOR_RED) {
       engine->setSpeed(0);
     }
 
-    sensorColor[0] = color;
+    /*sensorColor[0] = color;
     sensorColor[1] = 10;
     sensorColor[2] = 255;
     sensorColor[3] = 50;
-    bluetooth->setSensorColor(sensorColor);
-  });
+    bluetooth->setSensorColor(sensorColor);*/
+  });  
 
+  lights = new Lights();
   lights->setGlobalColor(255, 0, 0);
+
+  soundPlayer = new SoundPlayer();
+  soundPlayer->playSound(1);
 }
 
 
