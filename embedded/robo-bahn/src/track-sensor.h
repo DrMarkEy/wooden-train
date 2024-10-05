@@ -35,27 +35,8 @@
 const float LAB_WOOD[] = {37.71, -3.81, 11.59};
 const float LAB_RED[] = {20.81, 27.61, 14.62};
 const float LAB_YELLOW[] = {87.59, -24.43, 59.86};
-
-/*#define LAB_WOOD_1 37.71
-#define LAB_WOOD_2 -3.81
-#define LAB_WOOD_3 11.59
-
-#define LAB_RED_1  20.81
-#define LAB_RED_2 27.61
-#define LAB_RED_3 14.62
-
-#define LAB_YELLOW_1 87.59
-#define LAB_YELLOW_2 -24.43
-#define LAB_YELLOW_3 59.86*/
-
-/*#define LAB_BLUE_1 23.54
-#define LAB_BLUE_2 -6.45
-#define LAB_BLUE_3 -16.21
-
-#define LAB_GREEN_1 18.03
-#define LAB_GREEN_2 -16.85
-#define LAB_GREEN_3 9.40
-*/
+const float LAB_BLUE[] = {23.54, -6.45, -16.21};
+const float LAB_GREEN[] = {18.03, -16.85, 9.40};
 
 // TODO: LAB_BLACK
 
@@ -71,13 +52,8 @@ class TrackSensor {
 
   uint8_t lastColor = COLOR_WOOD;
 
-  void readColor(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* c) {
-    
-// uint16_t r, g, b, c;//, colorTemp, lux;
-
-  colorSensor->getRawData(r, g, b, c);  
-  //colorTemp = tcs.calculateColorTemperature_dn40(r, g, b, c);
-  //lux = tcs.calculateLux(r, g, b);
+  void readColor(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* c) {  
+    colorSensor->getRawData(r, g, b, c);    
   }
 
   void readMagneticField() {
