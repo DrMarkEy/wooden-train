@@ -95,9 +95,7 @@ class TrackSensor {
   TrackSensor()
   {    
     colorSensor = new Adafruit_TCS34725();
-  }
 
-  void init() {
     // COLOR-SENSOR LED
     pinMode(PIN_COLOR_SENSOR_LED, OUTPUT);
     digitalWrite(PIN_COLOR_SENSOR_LED, true);

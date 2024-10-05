@@ -29,8 +29,6 @@ void setup() {
   wifi->onWifiConnected([]() {
     logger->setWifiConnector(wifi);
     logger->Log("Http Logger Ready!");
-
-    trackSensor->init();
   });
 
   engine = new Engine();
