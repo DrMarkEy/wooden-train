@@ -281,28 +281,6 @@ float clamp(float value, float min, float max) {
     if (value < min) return min;
     if (value > max) return max;
     return value;
-}
-/*
-// Hauptfunktion
-int main() {
-    double lab[3] = {50.0, 20.0, 30.0};
-    int rgb[3];
-    lab2rgb(lab, rgb);
-    // Ausgabe der RGB-Werte
-    printf("RGB: (%d, %d, %d)\n", rgb[0], rgb[1], rgb[2]);
-
-    double labConverted[3];
-    rgb2lab(rgb, labConverted);
-    // Ausgabe der LAB-Werte
-    printf("LAB: (%f, %f, %f)\n", labConverted[0], labConverted[1], labConverted[2]);
-
-    double distance = deltaE(lab, labConverted);
-    // Ausgabe von Delta E
-    printf("Delta E: %f\n", distance);
-
-    return 0;
-}*/
-
-
+  }
 };
 #endif
