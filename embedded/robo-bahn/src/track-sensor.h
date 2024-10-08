@@ -67,6 +67,7 @@ class TrackSensor {
   uint8_t nextOperation = OPERATION_LED_ON;
   void (*colorChangedCallback)(uint8_t color) = nullptr;  
   uint16_t bg_r, bg_g, bg_b, bg_c;
+  bool working = false;
 
   uint8_t lastColor = COLOR_WOOD;
 
@@ -104,9 +105,11 @@ class TrackSensor {
     // Initialize color sensor
     if (colorSensor->begin()) {
       logger->Log("Color Sensor initialized!");
+      working = true;
       
     } else {
       logger->Log("No TCS34725 found ... check your connections");      
+      working = false;
     }
   }
 
@@ -114,6 +117,13 @@ class TrackSensor {
   {    
 
     if(millis() > nextUpdate) {
+      if(!working) {
+        logger->Log("ColorSensor broken!");
+        nextUpdate = millis() + 1000;
+        return;
+      }
+   
+
       switch(nextOperation) {
         case OPERATION_MEASURE_BACKGROUND:          
           readColor(&bg_r, &bg_g, &bg_b, &bg_c);
