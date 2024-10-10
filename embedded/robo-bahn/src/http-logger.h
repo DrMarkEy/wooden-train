@@ -5,6 +5,8 @@
 #include <connectivity/wifi.h>
 #include <config.h>
 
+//#define ENABLE_LOG_DURATION
+
 class Logger {
   private:
 
@@ -69,5 +71,12 @@ class Logger {
 };
 
 static Logger* logger;
+
+
+#ifdef ENABLE_LOG_DURATION
+    #define LOG_DURATION(logger, name, lambda) logger->LogDuration(name, [](){lambda;})
+#else
+    #define LOG_DURATION(logger, name, code) code
+#endif
 
 #endif
