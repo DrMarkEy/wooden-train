@@ -11,16 +11,9 @@
 #include <http-logger.h>
 #include <library.h>
 
-#define WAIT_INTERVAL 100
-#define LED_SWITCH_WAIT_INTERVAL 50
-#define MEASURE_WAIT_INTERVAL 20
-
-#define OPERATION_MEASURE_BACKGROUND 1
-#define OPERATION_LED_ON 2
-#define OPERATION_MEASURE_COLOR 3
-#define OPERATION_LED_OFF 4
-
-#define BRIGHTNESS_MULTIPLIER 10
+#define WAIT_INTERVAL 10
+#define LED_SWITCH_WAIT_INTERVAL 10
+#define MEASURE_WAIT_INTERVAL 0
 
 // https://github.com/adafruit/Adafruit_TCS34725/blob/master/examples/colorview/colorview.ino
 // https://de.wikipedia.org/wiki/Lab-Farbraum
@@ -32,28 +25,37 @@
 #define COLOR_GREEN 4
 #define COLOR_BLUE 5
 
-const float LAB_WOOD[] = {37.71, -3.81, 11.59};
-const float LAB_RED[] = {20.81, 27.61, 14.62};
-const float LAB_YELLOW[] = {87.59, -24.43, 59.86};
-const float LAB_BLUE[] = {23.54, -6.45, -16.21};
-const float LAB_GREEN[] = {18.03, -16.85, 9.40};
+const float LAB_WOOD[] = {77.52, -7.01, 24.47};
+const float LAB_RED[] = {36.77, 46.03, 27.51};
+const float LAB_YELLOW[] = {93.00, -19.94, 63.85};
+const float LAB_BLUE[] = {44.77, -10.77, -24.40};
+const float LAB_GREEN[] = {35.95, -23.92, 14.81};
+const float LAB_BLACK[] = {0, 0, 0};
 
-// TODO: LAB_BLACK
+volatile boolean interrupt = false;
+void colorSensorInterrupt() 
+{
+  interrupt = true;
+}
 
 class TrackSensor {
 
   private:
   Adafruit_TCS34725* colorSensor;
-  long nextUpdate = 0;
-  uint8_t nextOperation = OPERATION_LED_ON;
   void (*colorChangedCallback)(uint8_t color) = nullptr;  
-  uint16_t bg_r, bg_g, bg_b, bg_c;
   bool working = false;
+  long nextBrokenUpdate = 0;
 
   uint8_t lastColor = COLOR_WOOD;
 
   void readColor(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* c) {  
-    colorSensor->getRawData(r, g, b, c);    
+    // Don't use the commented out function, as it uses a delay internally
+    //colorSensor->getRawData(r, g, b, c);    
+
+    *c = colorSensor->read16(TCS34725_CDATAL);
+    *r = colorSensor->read16(TCS34725_RDATAL);
+    *g = colorSensor->read16(TCS34725_GDATAL);
+    *b = colorSensor->read16(TCS34725_BDATAL);  
   }
 
   void readMagneticField() {
@@ -70,15 +72,22 @@ class TrackSensor {
 
   TrackSensor()
   {    
-    colorSensor = new Adafruit_TCS34725();
+    // TODO: Try different integration times and gains
+    //colorSensor = new Adafruit_TCS34725();
+    colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X);
 
-    // COLOR-SENSOR LED
-    pinMode(PIN_COLOR_SENSOR_LED, OUTPUT);
-    digitalWrite(PIN_COLOR_SENSOR_LED, true);
+    // Setup interrupt pin
+    pinMode(PIN_COLOR_SENSOR_INTERRUPT, INPUT); //TCS interrupt output is Active-LOW and Open-Drain. Pin has a soldered on pullup resistor
+    attachInterrupt(digitalPinToInterrupt(PIN_COLOR_SENSOR_INTERRUPT), colorSensorInterrupt, FALLING);
 
     // Initialize color sensor
     if (colorSensor->begin()) {
       logger->Log("Color Sensor initialized!");
+
+      // Turn on COLOR-SENSOR LED
+      pinMode(PIN_COLOR_SENSOR_LED, OUTPUT);
+      digitalWrite(PIN_COLOR_SENSOR_LED, true);
+
       working = true;
       
     } else {
@@ -89,96 +98,71 @@ class TrackSensor {
 
   void Loop()
   {    
+    if (interrupt) {
+      //logger->Log("Interrupted!");
 
-    if(millis() > nextUpdate) {
       if(!working) {
-        logger->Log("ColorSensor broken!");
-        nextUpdate = millis() + 1000;
-        return;
+        if(millis() > nextBrokenUpdate) {
+          logger->Log("ColorSensor broken!");
+          nextBrokenUpdate = millis() + 1000;
+          return;
+        }
       }
-   
 
-      switch(nextOperation) {
-        case OPERATION_MEASURE_BACKGROUND:          
-          readColor(&bg_r, &bg_g, &bg_b, &bg_c);
-          
-          /*
-          logger->Log("Background:");
-          logger->Logf("red %d", bg_r);
-          logger->Logf("green %d", bg_g);
-          logger->Logf("blue %d", bg_b);
-          */
+      uint16_t r, g, b, c;          
+      readColor(&r, &g, &b, &c);
+      
+      /*
+      logger->Log("Color Value:");
+      logger->Logf("red %d", r);
+      logger->Logf("green %d", g);
+      logger->Logf("blue %d", b);
+      */
 
-          nextOperation = OPERATION_LED_ON;
-          nextUpdate = millis() + MEASURE_WAIT_INTERVAL;
-        break;
+      uint8_t rgb[3];
+      rgb[0] = clamp(r, 0, 255);
+      rgb[1] = clamp(g, 0, 255);
+      rgb[2] = clamp(b, 0, 255);
 
-        case OPERATION_LED_ON:
-          digitalWrite(PIN_COLOR_SENSOR_LED, true);
-          nextOperation = OPERATION_MEASURE_COLOR;
-          nextUpdate = millis() + LED_SWITCH_WAIT_INTERVAL;
-        break;
+      /*
+      logger->Log("Adjusted Value:");        
+      logger->Logf("red %d", rgb[0]);
+      logger->Logf("green %d", rgb[1]);
+      logger->Logf("blue %d", rgb[2]);
+      */
+      
+      float labConverted[3];
+      rgb2lab(rgb, labConverted);
 
-        case OPERATION_MEASURE_COLOR:
-          uint16_t r, g, b, c;          
-          readColor(&r, &g, &b, &c);
-          
-          /*
-          logger->Log("Color Value:");
-          logger->Logf("red %d", r);
-          logger->Logf("green %d", g);
-          logger->Logf("blue %d", b);
-          */
+      /*
+      logger->Log("Lab Values:");
+      logger->Logf("%f", labConverted[0]);
+      logger->Logf("%f", labConverted[1]);
+      logger->Logf("%f", labConverted[2]);
+      */
 
-          uint8_t rgb[3];
-          rgb[0] = clamp((r - bg_r) * BRIGHTNESS_MULTIPLIER, 0, 255);
-          rgb[1] = clamp((g - bg_g) * BRIGHTNESS_MULTIPLIER, 0, 255);
-          rgb[2] = clamp((b - bg_b) * BRIGHTNESS_MULTIPLIER, 0, 255);
+      uint8_t classifiedColor;
+      classifiedColor = classifyColor(labConverted);
+      //logger->Logf("Detected color %d", classifiedColor);
 
-          /*logger->Log("Adjusted Value:");        
-          logger->Logf("red %d", rgb[0]);
-          logger->Logf("green %d", rgb[1]);
-          logger->Logf("blue %d", rgb[2]);
-          */
-          float labConverted[3];
-          rgb2lab(rgb, labConverted);
-    
-          /*logger->Log("Lab Values:");
-          
-          logger->Logf("%f", labConverted[0]);
-          logger->Logf("%f", labConverted[1]);
-          logger->Logf("%f", labConverted[2]);*/
-
-          uint8_t classifiedColor;
-          classifiedColor = classifyColor(labConverted);
-          //logger->Logf("Detected color %d", classifiedColor);
-
-          if(classifiedColor != lastColor) {
-            lastColor = classifiedColor;
-            
-            logger->Logf("Detected new color %d", classifiedColor);
-            if(colorChangedCallback != nullptr) {
-              colorChangedCallback(classifiedColor);
-            }
-          }
-
-          nextOperation = OPERATION_LED_OFF;
-          nextUpdate = millis() + MEASURE_WAIT_INTERVAL;
-        break;
-
-        case OPERATION_LED_OFF:
-          digitalWrite(PIN_COLOR_SENSOR_LED, false);
-          nextOperation = OPERATION_MEASURE_BACKGROUND;
-          nextUpdate = millis() + WAIT_INTERVAL;
-        break;
+      if(classifiedColor != lastColor) {
+        lastColor = classifiedColor;
+        
+        logger->Logf("Detected new color %d", classifiedColor);
+        if(colorChangedCallback != nullptr) {
+          colorChangedCallback(classifiedColor);
+        }
       }
-    }
+        
+      colorSensor->clearInterrupt();
+      interrupt = false;
+     }
   }
 
-  void onColorChangeDetected(void (*_callback) (uint8_t color))
-  {		
-    this->colorChangedCallback = _callback;	
-  }
+void onColorChangeDetected(void (*_callback) (uint8_t color))
+{		
+  this->colorChangedCallback = _callback;	
+}
 
 uint8_t classifyColor(const float lab[3]) {  
   float deltaMin = 1000000;
@@ -201,6 +185,24 @@ uint8_t classifyColor(const float lab[3]) {
   if(delta < deltaMin) {
     deltaMin = delta;
     color = COLOR_YELLOW;
+  }
+
+  delta = deltaE(lab, LAB_BLUE);  
+  if(delta < deltaMin) {
+    deltaMin = delta;
+    color = COLOR_BLUE;
+  }
+
+  delta = deltaE(lab, LAB_GREEN);  
+  if(delta < deltaMin) {
+    deltaMin = delta;
+    color = COLOR_GREEN;
+  }
+
+  delta = deltaE(lab, LAB_BLACK);  
+  if(delta < deltaMin) {
+    deltaMin = delta;
+    color = COLOR_BLACK;
   }
 
   // ...
