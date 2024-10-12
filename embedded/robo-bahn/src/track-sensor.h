@@ -20,17 +20,19 @@
 
 #define COLOR_WOOD 0
 #define COLOR_BLACK 1
-#define COLOR_RED 2
-#define COLOR_YELLOW 3
-#define COLOR_GREEN 4
-#define COLOR_BLUE 5
+#define COLOR_WHITE 2
+#define COLOR_RED 3
+#define COLOR_YELLOW 4
+#define COLOR_GREEN 5
+#define COLOR_BLUE 6
 
-const float LAB_WOOD[] = {77.52, -7.01, 24.47};
-const float LAB_RED[] = {36.77, 46.03, 27.51};
-const float LAB_YELLOW[] = {93.00, -19.94, 63.85};
-const float LAB_BLUE[] = {44.77, -10.77, -24.40};
-const float LAB_GREEN[] = {35.95, -23.92, 14.81};
+const float LAB_WOOD[] = {27.67, 1.21, 14.61};
 const float LAB_BLACK[] = {0, 0, 0};
+const float LAB_WHITE[] = {91.73, -20.98, 15.95};
+const float LAB_RED[] = {17.35, 28.18, 17.46};
+const float LAB_YELLOW[] = {56.13, 2.43, 46.49};
+const float LAB_BLUE[] = {19.5, -6.74, -11.59}; 
+const float LAB_GREEN[] = {8.89, -10.81, 6.09};
 
 volatile boolean interrupt = false;
 void colorSensorInterrupt() 
@@ -74,7 +76,7 @@ class TrackSensor {
   {    
     // TODO: Try different integration times and gains
     //colorSensor = new Adafruit_TCS34725();
-    colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X);
+    colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_24MS, TCS34725_GAIN_1X);
 
     // Setup interrupt pin
     pinMode(PIN_COLOR_SENSOR_INTERRUPT, INPUT); //TCS interrupt output is Active-LOW and Open-Drain. Pin has a soldered on pullup resistor
