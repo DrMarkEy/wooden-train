@@ -14,6 +14,10 @@
 // https://github.com/adafruit/Adafruit_TCS34725/blob/master/examples/colorview/colorview.ino
 // https://de.wikipedia.org/wiki/Lab-Farbraum
 
+// Wood is only detected if the distance to it is half as much as to all other colors
+// This is to prevent detecting white as wood accidentally
+#define WOOD_EXTRA_DISTANCE_FACTOR 2
+
 #define COLOR_WOOD 0
 #define COLOR_BLACK 1
 #define COLOR_WHITE 2
@@ -167,7 +171,7 @@ uint8_t classifyColor(const float lab[3]) {
   float delta;
   uint8_t color;
 
-  delta = deltaE(lab, LAB_WOOD);  
+  delta = deltaE(lab, LAB_WOOD) * WOOD_EXTRA_DISTANCE_FACTOR;  
   if(delta < deltaMin) {
     deltaMin = delta;
     color = COLOR_WOOD;
