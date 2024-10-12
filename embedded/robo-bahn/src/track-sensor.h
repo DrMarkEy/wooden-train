@@ -183,6 +183,12 @@ uint8_t classifyColor(const float lab[3]) {
     color = COLOR_BLACK;
   }
 
+  delta = deltaE(lab, LAB_WHITE);  
+  if(delta < deltaMin) {
+    deltaMin = delta;
+    color = COLOR_WHITE;
+  }
+
   delta = deltaE(lab, LAB_RED);  
   if(delta < deltaMin) {
     deltaMin = delta;
