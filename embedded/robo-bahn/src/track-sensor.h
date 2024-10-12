@@ -148,12 +148,18 @@ class TrackSensor {
       //logger->Logf("Detected color %d", classifiedColor);
 
       if(classifiedColor != lastColor) {
-        lastColor = classifiedColor;
-        
-        logger->Logf("Detected new color %d", classifiedColor);
-        if(colorChangedCallback != nullptr) {
-          colorChangedCallback(classifiedColor);
+        logger->Logf("Detected color %d", classifiedColor);
+
+        // Only white followed by a color (other than black and wood) is a signal
+        if(lastColor == COLOR_WHITE && classifiedColor != COLOR_BLACK && classifiedColor != COLOR_WOOD) {          
+          logger->Logf("Detected color signal %d", classifiedColor);
+          
+          if(colorChangedCallback != nullptr) {
+            colorChangedCallback(classifiedColor);
+          }
         }
+        
+        lastColor = classifiedColor;        
       }
         
       colorSensor->clearInterrupt();
