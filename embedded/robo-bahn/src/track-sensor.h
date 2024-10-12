@@ -11,10 +11,6 @@
 #include <http-logger.h>
 #include <library.h>
 
-#define WAIT_INTERVAL 10
-#define LED_SWITCH_WAIT_INTERVAL 10
-#define MEASURE_WAIT_INTERVAL 0
-
 // https://github.com/adafruit/Adafruit_TCS34725/blob/master/examples/colorview/colorview.ino
 // https://de.wikipedia.org/wiki/Lab-Farbraum
 
