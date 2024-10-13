@@ -205,7 +205,8 @@ class ColorSensor {
         integrationStep = 0;
         r_acc = 0;
         g_acc = 0;
-        b_acc = 0;        
+        b_acc = 0;
+        c_acc = 0;
       }
         
       colorSensor->clearInterrupt();
