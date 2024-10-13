@@ -14,8 +14,7 @@
 // https://github.com/adafruit/Adafruit_TCS34725/blob/master/examples/colorview/colorview.ino
 // https://de.wikipedia.org/wiki/Lab-Farbraum
 
-// Manually integrate over 3 measurements, as the automatic integration of the sensor would only allow integration 10 measurements, which is too much
-#define INTEGRATION_STEPS 3
+#define INTEGRATION_CYCLES 3
 
 // Wood is only detected if the distance to it is half as much as to all other colors
 // This is to prevent detecting white as wood accidentally
@@ -29,13 +28,13 @@
 //#define COLOR_GREEN 5  // Deactivated for now, because produces to many false positives...
 #define COLOR_BLUE 6
 
-const float LAB_WOOD[] = {33.5, 3.7, 15.8};
-const float LAB_BLACK[] = {2.5, 0, 0};
-const float LAB_WHITE[] = {78.2, -15.2, 17.9};
-const float LAB_RED[] = {17.2, 25.4, 13.6};
-//const float LAB_YELLOW[] = {56.5, 2.6, 45.1};
-const float LAB_BLUE[] = {22.0, -6.0, -10.5}; 
-//const float LAB_GREEN[] = {23.1, 12.9, 8.5};
+const float LAB_WOOD[] = {36.4, -4.0, 12.2};
+const float LAB_BLACK[] = {1.6, 0, 0};
+const float LAB_WHITE[] = {96.4, -17.3, -4.6};
+const float LAB_RED[] = {15.9, 25.6, 14,1};
+//const float LAB_YELLOW[] = {};
+const float LAB_BLUE[] = {18.4, -5.4, -14.2}; 
+//const float LAB_GREEN[] = {};
 
 volatile boolean interrupt = false;
 void colorSensorInterrupt() 
@@ -50,17 +49,12 @@ class ColorSensor {
   void (*measurementCallback)(uint8_t color) = nullptr;  
   bool working = false;
   long nextBrokenUpdate = 0;
-  uint8_t integrationStep = 0;
-  uint16_t r_acc, g_acc, b_acc, c_acc;     
+  uint16_t r_acc, g_acc, b_acc;
+  uint8_t integrationCycle = 0;
 
-  void readColor(uint16_t* r, uint16_t* g, uint16_t* b, uint16_t* c) {  
-    // Don't use the commented out function, as it uses a delay internally
-    //colorSensor->getRawData(r, g, b, c);    
-
-    *c = colorSensor->read16(TCS34725_CDATAL);
-    *r = colorSensor->read16(TCS34725_RDATAL);
-    *g = colorSensor->read16(TCS34725_GDATAL);
-    *b = colorSensor->read16(TCS34725_BDATAL);  
+  void readColor(uint16_t* r, uint16_t* g, uint16_t* b) {  
+    uint16_t c;
+    colorSensor->getRawData(r, g, b, &c);    
   }
 
   uint8_t classifyColor(const float lab[3]) {  
@@ -117,15 +111,9 @@ class ColorSensor {
 
   public:
 
-  ColorSensor(uint8_t interruptPin, uint8_t ledPin)
+  ColorSensor(uint8_t ledPin)
   {           
-    // Only the shortest integration time is able to measure the small lego tiles
-    // Actually, 3*2.4 ms would also work, but the next biggest integration time that can be set is 10*2.4ms 
     colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_4X);
-
-    // Setup interrupt pin
-    pinMode(interruptPin, INPUT); //TCS interrupt output is Active-LOW and Open-Drain. Pin has a soldered on pullup resistor
-    attachInterrupt(digitalPinToInterrupt(interruptPin), colorSensorInterrupt, FALLING);
 
     // Initialize color sensor
     if (colorSensor->begin()) {
@@ -136,84 +124,77 @@ class ColorSensor {
       digitalWrite(ledPin, true);
 
       working = true;
-      
+
+
     } else {
       logger->Log("No TCS34725 found ... check your connections");      
       working = false;
     }
   }
 
-  void Loop()
-  {    
-    if (interrupt) {
-      //logger->Log("Interrupted!");
+  void Loop() {
 
-      if(!working) {
-        if(millis() > nextBrokenUpdate) {
-          logger->Log("ColorSensor broken!");
-          nextBrokenUpdate = millis() + 1000;
-          return;
-        }
-      }      
-
-      // Measure
-      uint16_t r, g, b, c;          
-      readColor(&r, &g, &b, &c);
-      
-      // Integrate
-      r_acc += r;
-      g_acc += g;
-      b_acc += b;
-      c_acc += c;
-      integrationStep++;
-
-      if(integrationStep == INTEGRATION_STEPS) {
-        /*
-        logger->Log("Color Value:");
-        logger->Logf("red %d", r);
-        logger->Logf("green %d", g);
-        logger->Logf("blue %d", b);
-        */
-
-        uint8_t rgb[3];
-        rgb[0] = clamp(r_acc, 0, 255);
-        rgb[1] = clamp(g_acc, 0, 255);
-        rgb[2] = clamp(b_acc, 0, 255);
-
-        /*
-        logger->Log("Adjusted Value:");        
-        logger->Logf("red %d", rgb[0]);
-        logger->Logf("green %d", rgb[1]);
-        logger->Logf("blue %d", rgb[2]);
-        */
-      
-        float labConverted[3];
-        rgb2lab(rgb, labConverted);
-
-        /*
-        logger->Log("Lab Values:");
-        logger->Logf("%f", labConverted[0]);
-        logger->Logf("%f", labConverted[1]);
-        logger->Logf("%f", labConverted[2]);
-        */
-
-        uint8_t classifiedColor = classifyColor(labConverted);
-        //logger->Logf("Detected color %d", classifiedColor);
- 
-        if(measurementCallback != nullptr) {
-          measurementCallback(classifiedColor);
-        }
-
-        integrationStep = 0;
-        r_acc = 0;
-        g_acc = 0;
-        b_acc = 0;
-        c_acc = 0;
+    if(!working) {
+      if(millis() > nextBrokenUpdate) {
+        logger->Log("ColorSensor broken!");
+        nextBrokenUpdate = millis() + 1000;
+        return;
       }
-        
-      colorSensor->clearInterrupt();
-      interrupt = false;
-     }
+    }      
+
+    // Measure
+    uint16_t r, g, b;          
+    readColor(&r, &g, &b);
+
+    r_acc += r;
+    g_acc += g;
+    b_acc += b;
+    integrationCycle++;
+
+    if(integrationCycle == INTEGRATION_CYCLES) {
+      /*
+      logger->Log("Color Value:");
+      logger->Logf("red %d", r);
+      logger->Logf("green %d", g);
+      logger->Logf("blue %d", b);
+      */
+
+      uint8_t rgb[3];
+      rgb[0] = clamp(r_acc, 0, 255);
+      rgb[1] = clamp(g_acc, 0, 255);
+      rgb[2] = clamp(b_acc, 0, 255);
+
+      /*
+      logger->Log("Adjusted Value:");        
+      logger->Logf("red %d", rgb[0]);
+      logger->Logf("green %d", rgb[1]);
+      logger->Logf("blue %d", rgb[2]);
+      */
+    
+      float labConverted[3];
+      rgb2lab(rgb, labConverted);
+
+      /*
+      logger->Log("Lab Values:");
+      logger->Logf("%f", labConverted[0]);
+      logger->Logf("%f", labConverted[1]);
+      logger->Logf("%f", labConverted[2]);
+      */
+
+      uint8_t classifiedColor = classifyColor(labConverted);
+
+      //if(classifiedColor != 0)
+       // logger->Logf("Detected color %d", classifiedColor);
+
+      if(measurementCallback != nullptr) {
+        measurementCallback(classifiedColor);
+      }
+
+      r_acc = 0;
+      g_acc = 0;
+      b_acc = 0;
+      integrationCycle = 0;
+    }
   }
 
   void onMeasurement(void (*_callback) (uint8_t color))

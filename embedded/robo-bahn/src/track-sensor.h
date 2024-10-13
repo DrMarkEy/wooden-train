@@ -8,21 +8,26 @@
 #include <Arduino.h>
 
 #include <color-sensor.h>
+#include <cyclic-buffer.h>
 #include <http-logger.h>
 #include <library.h>
 
 class TrackSensor;
 extern TrackSensor* trackSensor;
 
+#define COLOR_IRRELEVANT 255
+static const uint8_t SIGNAL_STOP_COLORS[3] = {COLOR_WHITE, COLOR_RED, COLOR_IRRELEVANT};
+static const uint8_t SIGNAL_STOP_COLORS_2[3] = {COLOR_WHITE, COLOR_IRRELEVANT, COLOR_RED};
+
+#define SIGNAL_STOP 1
+
 class TrackSensor {
 
   private:
   ColorSensor* colorSensor;
-  void (*colorChangedCallback)(uint8_t color) = nullptr;  
-  bool working = false;
-  long nextBrokenUpdate = 0;
-
-  uint8_t lastColor = COLOR_WOOD;
+  void (*colorSignalCallback)(uint8_t color) = nullptr;
+  CyclicBuffer<uint8_t, 3> lastMeasurements = CyclicBuffer<uint8_t, 3>(COLOR_WOOD);
+  uint8_t measurementCounter = 0;
 
   void readMagneticField() {
 
@@ -35,27 +40,31 @@ class TrackSensor {
   }
 
   void colorMeasurement(uint8_t classifiedColor) {
-    if(classifiedColor != lastColor) {
-      logger->Logf("Detected color %d", classifiedColor);
+    lastMeasurements.add(classifiedColor);
+    measurementCounter ++;
 
-      // Only white followed by a color (other than black and wood) is a signal
-      if(lastColor == COLOR_WHITE && classifiedColor != COLOR_BLACK && classifiedColor != COLOR_WOOD) {          
-        logger->Logf("Detected color signal %d", classifiedColor);
-        
-        if(colorChangedCallback != nullptr) {
-          colorChangedCallback(classifiedColor);
+    if(checkSignalMatch(SIGNAL_STOP_COLORS) || checkSignalMatch(SIGNAL_STOP_COLORS_2)) {
+      logger->Logf("Detected stop signal!");
+      colorSignalCallback(SIGNAL_STOP);
+    }
+  }
+
+  bool checkSignalMatch(const uint8_t* signal) {
+    for(uint8_t i = 0; i < 3; i++) {
+      if(signal[i] != COLOR_IRRELEVANT) {
+        if(lastMeasurements[i] != signal[i]) {
+          return false;
         }
       }
-      
-      lastColor = classifiedColor;        
     }
+    return true;
   }
 
   public:
 
   TrackSensor()
   {    
-    colorSensor = new ColorSensor(PIN_COLOR_SENSOR_INTERRUPT, PIN_COLOR_SENSOR_LED);
+    colorSensor = new ColorSensor(PIN_COLOR_SENSOR_LED);
     colorSensor->onMeasurement([](uint8_t color) {
       trackSensor->colorMeasurement(color);
     });
@@ -66,9 +75,15 @@ class TrackSensor {
     colorSensor->Loop();
   }
 
-  void onColorChangeDetected(void (*_callback) (uint8_t color))
+  uint8_t resetMeasurementCount() {
+    uint8_t result = measurementCounter;
+    measurementCounter = 0;
+    return result;
+  }
+
+  void onColorSignalDetected(void (*_callback) (uint8_t color))
   {		
-    this->colorChangedCallback = _callback;	
+    this->colorSignalCallback = _callback;	
   }
 };
 #endif
