@@ -22,17 +22,17 @@
 #define COLOR_BLACK 1
 #define COLOR_WHITE 2
 #define COLOR_RED 3
-#define COLOR_YELLOW 4
-#define COLOR_GREEN 5
+//#define COLOR_YELLOW 4 // Deactivated for now, because produces to many false positives...
+//#define COLOR_GREEN 5  // Deactivated for now, because produces to many false positives...
 #define COLOR_BLUE 6
 
 const float LAB_WOOD[] = {27.67, 1.21, 14.61};
 const float LAB_BLACK[] = {0, 0, 0};
-const float LAB_WHITE[] = {91.73, -20.98, 15.95};
-const float LAB_RED[] = {17.35, 28.18, 17.46};
-const float LAB_YELLOW[] = {56.13, 2.43, 46.49};
+const float LAB_WHITE[] = {68.10, -14.61, 11.95};
+const float LAB_RED[] = {11.52, 21.14, 11.27};
+//const float LAB_YELLOW[] = {38.97, 2.35, 34.24};
 const float LAB_BLUE[] = {19.5, -6.74, -11.59}; 
-const float LAB_GREEN[] = {8.89, -10.81, 6.09};
+//const float LAB_GREEN[] = {8.89, -10.81, 6.09};
 
 volatile boolean interrupt = false;
 void colorSensorInterrupt() 
@@ -201,11 +201,11 @@ uint8_t classifyColor(const float lab[3]) {
     color = COLOR_RED;
   }
 
-  delta = deltaE(lab, LAB_YELLOW);  
+  /*delta = deltaE(lab, LAB_YELLOW);  
   if(delta < deltaMin) {
     deltaMin = delta;
     color = COLOR_YELLOW;
-  }
+  }*/
 
   delta = deltaE(lab, LAB_BLUE);  
   if(delta < deltaMin) {
@@ -213,11 +213,11 @@ uint8_t classifyColor(const float lab[3]) {
     color = COLOR_BLUE;
   }
 
-  delta = deltaE(lab, LAB_GREEN);  
+  /*delta = deltaE(lab, LAB_GREEN);  
   if(delta < deltaMin) {
     deltaMin = delta;
     color = COLOR_GREEN;
-  }
+  }*/
 
   // ...
 
