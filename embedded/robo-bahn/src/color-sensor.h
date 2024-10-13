@@ -19,7 +19,7 @@
 
 // Wood is only detected if the distance to it is half as much as to all other colors
 // This is to prevent detecting white as wood accidentally
-#define WOOD_EXTRA_DISTANCE_FACTOR 2
+#define WOOD_EXTRA_DISTANCE_FACTOR 1
 
 #define COLOR_WOOD 0
 #define COLOR_BLACK 1
@@ -29,13 +29,13 @@
 //#define COLOR_GREEN 5  // Deactivated for now, because produces to many false positives...
 #define COLOR_BLUE 6
 
-const float LAB_WOOD[] = {76.2, 8.4, 30.0};
-const float LAB_BLACK[] = {6.4, 0.6, 0.9};
-const float LAB_WHITE[] = {100.0, 0.0, 0.0};
-const float LAB_RED[] = {44.9, 53.0, 32.7};
-//const float LAB_YELLOW[] = {97.8, -16.7, 60.9};
-const float LAB_BLUE[] = {51.6, -11.0, -20.4}; 
-//const float LAB_GREEN[] = {49.9, -28.0, 18.4};
+const float LAB_WOOD[] = {33.5, 3.7, 15.8};
+const float LAB_BLACK[] = {2.5, 0, 0};
+const float LAB_WHITE[] = {78.2, -15.2, 17.9};
+const float LAB_RED[] = {17.2, 25.4, 13.6};
+//const float LAB_YELLOW[] = {56.5, 2.6, 45.1};
+const float LAB_BLUE[] = {22.0, -6.0, -10.5}; 
+//const float LAB_GREEN[] = {23.1, 12.9, 8.5};
 
 volatile boolean interrupt = false;
 void colorSensorInterrupt() 
@@ -119,7 +119,9 @@ class ColorSensor {
 
   ColorSensor(uint8_t interruptPin, uint8_t ledPin)
   {           
-    colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_24MS, TCS34725_GAIN_1X);
+    // Only the shortest integration time is able to measure the small lego tiles
+    // Actually, 3*2.4 ms would also work, but the next biggest integration time that can be set is 10*2.4ms 
+    colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_4X);
 
     // Setup interrupt pin
     pinMode(interruptPin, INPUT); //TCS interrupt output is Active-LOW and Open-Drain. Pin has a soldered on pullup resistor

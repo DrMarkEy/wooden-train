@@ -83,9 +83,9 @@ void setup() {
   });
 
   trackSensor = new TrackSensor();
-  trackSensor->onColorChangeDetected([](uint8_t color) {
+  trackSensor->onColorSignalDetected([](uint8_t color) {
     // TODO: Replace with gradually slowing down?!?
-    if(color == COLOR_RED) {
+    if(color == SIGNAL_STOP) {
       engine->setSpeed(0);
     }
 
