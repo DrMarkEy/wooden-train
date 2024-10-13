@@ -105,7 +105,8 @@ void setup() {
 
 
 // the loop function runs over and over again forever
-void loop() {    
+long countTimer = millis();
+void loop() {
   LOG_DURATION(logger, "Wifi Loop", wifi->Loop());
 
   LOG_DURATION(logger, "OTA Update check", 
@@ -117,4 +118,10 @@ void loop() {
   LOG_DURATION(logger, "Lights", lights->Loop());
   LOG_DURATION(logger, "SoundPlayer", soundPlayer->Loop());
   LOG_DURATION(logger, "TrackSensor", trackSensor->Loop());
+
+  if(millis() - countTimer > 1000) {
+    countTimer = millis();
+    uint8_t measurements = trackSensor->resetMeasurementCount();
+    logger->Logf("Measured %d colors", measurements);
+  }
 }
