@@ -29,13 +29,13 @@
 //#define COLOR_GREEN 5  // Deactivated for now, because produces to many false positives...
 #define COLOR_BLUE 6
 
-const float LAB_WOOD[] = {27.67, 1.21, 14.61};
-const float LAB_BLACK[] = {0, 0, 0};
-const float LAB_WHITE[] = {68.10, -14.61, 11.95};
-const float LAB_RED[] = {11.52, 21.14, 11.27};
-//const float LAB_YELLOW[] = {38.97, 2.35, 34.24};
-const float LAB_BLUE[] = {19.5, -6.74, -11.59}; 
-//const float LAB_GREEN[] = {8.89, -10.81, 6.09};
+const float LAB_WOOD[] = {76.2, 8.4, 30.0};
+const float LAB_BLACK[] = {6.4, 0.6, 0.9};
+const float LAB_WHITE[] = {100.0, 0.0, 0.0};
+const float LAB_RED[] = {44.9, 53.0, 32.7};
+//const float LAB_YELLOW[] = {97.8, -16.7, 60.9};
+const float LAB_BLUE[] = {51.6, -11.0, -20.4}; 
+//const float LAB_GREEN[] = {49.9, -28.0, 18.4};
 
 volatile boolean interrupt = false;
 void colorSensorInterrupt() 
@@ -188,12 +188,12 @@ class ColorSensor {
         float labConverted[3];
         rgb2lab(rgb, labConverted);
 
-      /*
+        /*
         logger->Log("Lab Values:");
         logger->Logf("%f", labConverted[0]);
         logger->Logf("%f", labConverted[1]);
         logger->Logf("%f", labConverted[2]);
-      */
+        */
 
         uint8_t classifiedColor = classifyColor(labConverted);
         //logger->Logf("Detected color %d", classifiedColor);
