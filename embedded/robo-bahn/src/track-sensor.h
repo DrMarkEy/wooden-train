@@ -26,7 +26,7 @@ class TrackSensor {
   private:
   ColorSensor* colorSensor;
   void (*colorSignalCallback)(uint8_t color) = nullptr;
-  CyclicBuffer<uint8_t, 3> lastMeasurements = CyclicBuffer<uint8_t, 3>(COLOR_WOOD);
+  CyclicBuffer<uint8_t, 80> lastMeasurements = CyclicBuffer<uint8_t, 80>(COLOR_WOOD);
   uint8_t measurementCounter = 0;
 
   void readMagneticField() {
@@ -75,7 +75,9 @@ class TrackSensor {
     colorSensor->Loop();
   }
 
-  uint8_t resetMeasurementCount() {
+  uint8_t resetMeasurementCount() {    
+    lastMeasurements.print();
+
     uint8_t result = measurementCounter;
     measurementCounter = 0;
     return result;

@@ -14,7 +14,7 @@
 // https://github.com/adafruit/Adafruit_TCS34725/blob/master/examples/colorview/colorview.ino
 // https://de.wikipedia.org/wiki/Lab-Farbraum
 
-#define INTEGRATION_CYCLES 3
+#define INTEGRATION_CYCLES 2
 
 // Wood is only detected if the distance to it is half as much as to all other colors
 // This is to prevent detecting white as wood accidentally
@@ -28,12 +28,12 @@
 //#define COLOR_GREEN 5  // Deactivated for now, because produces to many false positives...
 #define COLOR_BLUE 6
 
-const float LAB_WOOD[] = {36.4, -4.0, 12.2};
-const float LAB_BLACK[] = {1.6, 0, 0};
-const float LAB_WHITE[] = {96.4, -17.3, -4.6};
-const float LAB_RED[] = {15.9, 25.6, 14,1};
+const float LAB_WOOD[] = {24.5, -2.6, 9.5};
+const float LAB_BLACK[] = {1.1, 0.1, -0.4};
+const float LAB_WHITE[] = {71.5, -20.9, 3.6};
+const float LAB_RED[] = {8.8, 17.3, 8.1};
 //const float LAB_YELLOW[] = {};
-const float LAB_BLUE[] = {18.4, -5.4, -14.2}; 
+const float LAB_BLUE[] = {13.8, -5.6, -9.4}; 
 //const float LAB_GREEN[] = {};
 
 volatile boolean interrupt = false;

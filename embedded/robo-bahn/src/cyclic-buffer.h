@@ -45,6 +45,16 @@ public:
       }
     }
 
+    void print() {
+      String result = "Last Measurements: ";
+      
+      for(uint8_t i = 0; i < N; i++) {
+        result += String(array[i]) + " ";
+      }
+      
+      logger->Log(result);
+    }
+
     /* // TODO: UNTESTED!
     bool matches(T[] comparisonArray, uint8_t length) {
       for(int i = 0; i < length; i++) {        
