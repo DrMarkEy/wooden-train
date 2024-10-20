@@ -55,5 +55,5 @@ class ButtonController {
   {
     return !digitalRead(PIN_REVERSE);
   }
-};
+} buttonController;
 #endif
