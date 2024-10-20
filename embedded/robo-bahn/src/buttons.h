@@ -10,8 +10,8 @@
 
 #define DEBOUNCE_DELAY 600
 
-bool interruptTriggered = false;
-void IRAM_ATTR ISR() {
+static bool interruptTriggered = false;
+static void IRAM_ATTR ISR() {
     interruptTriggered = true;
 }
 
