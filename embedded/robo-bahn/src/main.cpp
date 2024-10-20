@@ -23,7 +23,7 @@ void setup() {
   logger->Log("Baureihe 101, Version ");
   logger->Log(VERSION_CODE);
   
-  wifi.Setup();
+  wifi.Run();
 
   wifi.onWifiConnected([]() {
     logger->setWifiConnector(&wifi);
@@ -106,16 +106,6 @@ void setup() {
 // the loop function runs over and over again forever
 long countTimer = millis();
 void loop() {
-  wifi.Loop();
-
-  //LOG_DURATION(logger, "OTA Update check", 
-    if(wifi.isInOTAUpdate()) 
-      return;
-  //);
-  //*/
-
-
-  //LOG_DURATION(logger, "Buttons", );
   /*LOG_DURATION(logger, "Lights", lights->Loop());
   */
 

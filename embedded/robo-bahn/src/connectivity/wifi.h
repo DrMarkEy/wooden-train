@@ -18,21 +18,20 @@
 #include <config.h>
 
 
-#define WIFI_STATE_OFF 0
+#define WIFI_STATE_UNINITIALIZED 0
 #define WIFI_STATE_CONNECTING 1
 #define WIFI_STATE_CONNECTED 2
 
+
+static void CheckWifiStateTaskFunction (void* parameter);
 
 class WifiConnector
 {
 
   private:
-  char wifiState = WIFI_STATE_OFF;
-  unsigned long nextWifiUpdate = 0;
-  unsigned long nextWifiConnectionRetry = 0;
+  char wifiState = WIFI_STATE_UNINITIALIZED;
   bool inOTAUpdate = false;
   void (*wifiConnectedCallback)() = nullptr;
-
 
   void initialize_ota() {
 
@@ -72,13 +71,23 @@ class WifiConnector
     ArduinoOTA.begin();
   }
 
-
-
   public:
 
   WifiConnector() {}
+  
+  void Run() {
+    xTaskCreatePinnedToCore(
+      CheckWifiStateTaskFunction,
+      "Check Wifi state",
+      4096,
+      NULL,//( void * ) &buttonController,
+      1, // Priority
+      NULL,
+      1 // Core affinity
+    );
+  }
 
-  void Setup() {
+  void setup() {
     WiFi.setHostname(DEFAULT_WIFI_HOSTNAME);
 
     // Station mode: Connect as a wifi client to a wifi router
@@ -90,17 +99,16 @@ class WifiConnector
     WiFi.begin(DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASSWORD);
 
     wifiState = WIFI_STATE_CONNECTING;
-    nextWifiConnectionRetry = millis() + WIFI_RETRY_INTERVAL;
 
     // Log ota running partition
     const esp_partition_t* runningPartition = esp_ota_get_running_partition();
     if (runningPartition != NULL) {
-      Serial.printf("Boot-Partition Label: %s", runningPartition->label);
-      Serial.printf("Boot-Partition Typ: %d", runningPartition->type);
-      Serial.printf("Boot-Partition Adresse: 0x%X", runningPartition->address);
-      Serial.printf("Boot-Partition Größe: %d Bytes", runningPartition->size);
+      Serial.printf("Boot-Partition Label: %s\n", runningPartition->label);
+      Serial.printf("Boot-Partition Typ: %d\n", runningPartition->type);
+      Serial.printf("Boot-Partition Adresse: 0x%X\n", runningPartition->address);
+      Serial.printf("Boot-Partition Größe: %d Bytes\n", runningPartition->size);
     } else {
-      Serial.printf("Fehler beim Abrufen der Boot-Partition-Informationen");
+      Serial.printf("Fehler beim Abrufen der Boot-Partition-Informationen\n");
     }
 
     /*  if( running_partition != ota0 ) {
@@ -114,55 +122,54 @@ class WifiConnector
     return this->inOTAUpdate;
   }
 
-  void Loop() {
+  void updateWifiState() {
     
-    ArduinoOTA.handle();
+    //ArduinoOTA.handle();
 
-    if(millis() > nextWifiUpdate) {
+   
+     // Was not connected and trying to reconnect since last check
+    if(wifiState == WIFI_STATE_CONNECTING) {
+
+      // Is now connected
+      if(WiFi.status() == WL_CONNECTED) {
+        Serial.print("WiFi connected: ");
+        Serial.println(WiFi.localIP());
+
+        Serial.println("Checking for newer OTA version...");
+        initialize_ota();
     
-      if(wifiState == WIFI_STATE_CONNECTING) {
-
-        if(WiFi.status() == WL_CONNECTED) {
-           Serial.print("WiFi connected: ");
-           Serial.println(WiFi.localIP());
-
-           // TODO: Connect to Websocket-server!
-
-
-
-          Serial.println("Checking for newer OTA version...");
-          initialize_ota();
-
-         
-           wifiState = WIFI_STATE_CONNECTED;     
-           if(wifiConnectedCallback != nullptr) {
-             wifiConnectedCallback();
-           }    
+        wifiState = WIFI_STATE_CONNECTED;     
+        if(wifiConnectedCallback != nullptr) {
+          wifiConnectedCallback();
         }
-        else {
 
-          if(millis() > nextWifiConnectionRetry) {
-            Serial.println("Retrying WiFi connection..");
-            WiFi.disconnect();
-            WiFi.reconnect();
-            nextWifiConnectionRetry = millis() + WIFI_RETRY_INTERVAL;
-          }
-
-          Serial.print('.');
-        }
+        vTaskDelay(WIFI_CHECK_INTERVAL / portTICK_PERIOD_MS);
       }
-      else if(wifiState == WIFI_STATE_CONNECTED) {
+      else { // Still not connected
+        Serial.printf("Wifi not connected. Will retry in %d ms.", WIFI_RETRY_INTERVAL);
+        Serial.println();
         
-        if ((WiFi.status() != WL_CONNECTED)) {          
-          Serial.println("Lost WiFi Connection.");          
-          nextWifiConnectionRetry = 0;
-
-          wifiState = WIFI_STATE_CONNECTING;
-        }
+        WiFi.disconnect();
+        WiFi.reconnect();
+        
+        vTaskDelay(WIFI_RETRY_INTERVAL / portTICK_PERIOD_MS);
+        
+        Serial.println("Retrying WiFi connection...");                
       }
-    
-      // In any case: Recheck the WiFi state after 200 ms
-      nextWifiUpdate = millis() + WIFI_CHECK_INTERVAL;
+    }
+    // Wifi was connected on last check
+    else if(wifiState == WIFI_STATE_CONNECTED) {
+      
+      // Wifi is now disconnected
+      if ((WiFi.status() != WL_CONNECTED)) {          
+        Serial.println("Lost WiFi Connection.");                  
+        wifiState = WIFI_STATE_CONNECTING;        
+        // Immediately start on top in the next task iteration
+      }
+      else {
+        // Wifi is still connected: Recheck after waiting time
+        vTaskDelay(WIFI_CHECK_INTERVAL / portTICK_PERIOD_MS);
+      }
     }
   }
 
@@ -194,4 +201,12 @@ class WifiConnector
   }
 } extern wifi;
 
+static void CheckWifiStateTaskFunction (void* parameter) {  
+  wifi.setup();
+  vTaskDelay(WIFI_INITIAL_CONNECTING_TIME / portTICK_PERIOD_MS);
+
+  while(1) {    
+    wifi.updateWifiState();
+  }
+}
 #endif

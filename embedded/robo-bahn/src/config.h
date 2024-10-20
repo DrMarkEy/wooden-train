@@ -20,7 +20,8 @@
 #define DEFAULT_WIFI_HOSTNAME "Baureihe 101-03" // The ESP32 Hostname string is allowed to have only letters, numbers, and the dash symbol!!
 
 #define WIFI_CHECK_INTERVAL 200
-#define WIFI_RETRY_INTERVAL 30000
+#define WIFI_INITIAL_CONNECTING_TIME 2500
+#define WIFI_RETRY_INTERVAL 10000
 #define WIFI_CONNECTION_MAXIMUM_RETRY 5
 
 #define LOGGING_SERVER_IP "192.168.10.29"
