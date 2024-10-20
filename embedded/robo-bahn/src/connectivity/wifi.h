@@ -76,7 +76,9 @@ class WifiConnector
 
   public:
 
-  WifiConnector() {
+  WifiConnector() {}
+
+  void Setup() {
     WiFi.setHostname(DEFAULT_WIFI_HOSTNAME);
 
     // Station mode: Connect as a wifi client to a wifi router
@@ -190,6 +192,6 @@ class WifiConnector
     http.end();
 
   }
-};
+} extern wifi;
 
 #endif

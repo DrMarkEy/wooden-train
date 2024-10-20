@@ -10,7 +10,7 @@
 
 
 BluetoothConnector bluetooth;
-//WifiConnector* wifi;
+WifiConnector wifi;
 
 Engine* engine;
 ButtonController buttonController;
@@ -22,13 +22,13 @@ void setup() {
   logger = new Logger();
   logger->Log("Baureihe 101, Version ");
   logger->Log(VERSION_CODE);
-  /*
-  wifi = new WifiConnector();
+  
+  wifi.Setup();
 
-  wifi->onWifiConnected([]() {
-    logger->setWifiConnector(wifi);
+  wifi.onWifiConnected([]() {
+    logger->setWifiConnector(&wifi);
     logger->Log("Http Logger Ready!");
-  });*/
+  });
 
   engine = new Engine();
 
@@ -106,13 +106,13 @@ void setup() {
 // the loop function runs over and over again forever
 long countTimer = millis();
 void loop() {
-  /*LOG_DURATION(logger, "Wifi Loop", wifi->Loop());
+  wifi.Loop();
 
-  LOG_DURATION(logger, "OTA Update check", 
-    if(wifi->isInOTAUpdate()) 
+  //LOG_DURATION(logger, "OTA Update check", 
+    if(wifi.isInOTAUpdate()) 
       return;
-  );
-  */
+  //);
+  //*/
 
 
   //LOG_DURATION(logger, "Buttons", );
