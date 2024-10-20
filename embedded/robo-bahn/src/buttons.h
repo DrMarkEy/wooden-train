@@ -21,8 +21,9 @@ class ButtonController {
   void (*buttonPressedCallback)() = nullptr;
 
   public:
-  ButtonController()
-  {
+  ButtonController(){}
+
+  void Setup() {
     // initialize pins as an input
     pinMode(PIN_PUSH_BUTTON, INPUT);
     pinMode(PIN_REVERSE, INPUT);

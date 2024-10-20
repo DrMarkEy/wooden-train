@@ -33,6 +33,7 @@ void setup() {
 
   engine = new Engine();
 
+  buttonController.Setup();
   buttonController.onButtonPressed([]() {
     if(engine->getSpeed() == 0) {
       if(buttonController.isReversed()) {
