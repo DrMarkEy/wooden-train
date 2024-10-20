@@ -22,8 +22,10 @@
 #define WIFI_STATE_CONNECTING 1
 #define WIFI_STATE_CONNECTED 2
 
-
+static void checkOtaTaskFunction(void* parameter);
 static void CheckWifiStateTaskFunction (void* parameter);
+class WifiConnector;
+extern WifiConnector wifi;
 
 class WifiConnector
 {
@@ -33,9 +35,7 @@ class WifiConnector
   bool inOTAUpdate = false;
   void (*wifiConnectedCallback)() = nullptr;
 
-  void initialize_ota() {
-
-    static WifiConnector* me = this;
+  void initialize_ota() {    
   
     ArduinoOTA
     .onStart([]() {
@@ -45,20 +45,20 @@ class WifiConnector
       else // U_SPIFFS
         type = "filesystem";
 
-      me->inOTAUpdate = true;
+      wifi.inOTAUpdate = true;
 
       // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
       Serial.println("Start updating " + type);
     })
     .onEnd([]() {
       Serial.println("\nOTA-Update finished!");
-      me->inOTAUpdate = false;
+      wifi.inOTAUpdate = false;
     })
     .onProgress([](unsigned int progress, unsigned int total) {
       Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
     })
     .onError([](ota_error_t error) {
-      me->inOTAUpdate = false;
+      wifi.inOTAUpdate = false;
 
       Serial.printf("Error[%u]: ", error);
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
@@ -69,6 +69,16 @@ class WifiConnector
     });
 
     ArduinoOTA.begin();
+
+    xTaskCreatePinnedToCore(
+      checkOtaTaskFunction,
+      "Check OTA Update",
+      2048,
+      NULL,// parameter
+      5, // HIGH Priority
+      NULL,
+      1 // Core affinity
+    );
   }
 
   public:
@@ -79,8 +89,8 @@ class WifiConnector
     xTaskCreatePinnedToCore(
       CheckWifiStateTaskFunction,
       "Check Wifi state",
-      4096,
-      NULL,//( void * ) &buttonController,
+      2048,
+      NULL,//parameter
       1, // Priority
       NULL,
       1 // Core affinity
@@ -122,10 +132,15 @@ class WifiConnector
     return this->inOTAUpdate;
   }
 
-  void updateWifiState() {
-    
-    //ArduinoOTA.handle();
+  void checkOtaUpdate() {
+    ArduinoOTA.handle();
 
+    if(!this->inOTAUpdate) {
+      vTaskDelay(OTA_CHECK_INTERVAL / portTICK_PERIOD_MS);
+    }
+  }
+
+  void updateWifiState() {    
    
      // Was not connected and trying to reconnect since last check
     if(wifiState == WIFI_STATE_CONNECTING) {
@@ -207,6 +222,12 @@ static void CheckWifiStateTaskFunction (void* parameter) {
 
   while(1) {    
     wifi.updateWifiState();
+  }
+}
+
+static void checkOtaTaskFunction (void* parameter) {  
+  while(1) {    
+    wifi.checkOtaUpdate();
   }
 }
 #endif
