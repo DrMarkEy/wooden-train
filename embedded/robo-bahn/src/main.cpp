@@ -116,7 +116,6 @@ void loop() {
   );
   */
 
-  buttonController.Loop();
 
   //LOG_DURATION(logger, "Buttons", );
   /*LOG_DURATION(logger, "Lights", lights->Loop());

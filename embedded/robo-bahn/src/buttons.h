@@ -23,9 +23,17 @@ class ButtonController {
   public:
   ButtonController(){}
   void Setup();
-  void Loop();
+  void checkButtonState();
   void onButtonPressed(void (*_callback) ());
   bool isReversed();
 
 } extern buttonController;
+
+static void TaskFunction (void* parameter) {  
+  while(1) {    
+    buttonController.checkButtonState();
+    vTaskDelay(100);    
+  }
+}
+
 #endif
