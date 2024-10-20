@@ -10,9 +10,9 @@
 
 #define DEBOUNCE_DELAY 600
 
-static void TaskFunction (void* parameter);
+static void ButtonTaskFunction (void* parameter);
 
-static bool interruptTriggered = false;
+static volatile bool interruptTriggered = false;
 static void IRAM_ATTR ISR() {
     interruptTriggered = true;
 }
@@ -33,7 +33,7 @@ class ButtonController {
   attachInterrupt(PIN_PUSH_BUTTON, ISR, RISING);
 
   xTaskCreatePinnedToCore(
-      TaskFunction,
+      ButtonTaskFunction,
       "Check Button State",
       1024,
       NULL,//( void * ) &buttonController,
@@ -70,10 +70,10 @@ class ButtonController {
 
 } extern buttonController;
 
-static void TaskFunction (void* parameter) {  
+static void ButtonTaskFunction (void* parameter) {  
   while(1) {    
     buttonController.checkButtonState();
-    vTaskDelay(100);    
+    vTaskDelay(100 / portTICK_PERIOD_MS);    
   }
 }
 
