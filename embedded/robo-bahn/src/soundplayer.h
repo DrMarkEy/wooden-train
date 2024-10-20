@@ -6,8 +6,7 @@
 #define soundplayer_h
 
 #include <Arduino.h>
-
-
+#include <config.h>
 
 class SoundPlayer {
 
@@ -20,7 +19,7 @@ class SoundPlayer {
 
   SoundPlayer()
   {
-   
+     
   }
 
 
@@ -44,5 +43,5 @@ class SoundPlayer {
       tone(PIN_SPEAKER, nextNote, nextLength);
     }
   }
-};
+} extern soundPlayer;
 #endif

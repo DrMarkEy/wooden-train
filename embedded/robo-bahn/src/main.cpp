@@ -1,6 +1,6 @@
 //#include <Arduino.h>
 #include <engine.h>
-//#include <soundplayer.h>
+#include <soundplayer.h>
 //#include <lights.h>
 #include <buttons.h>
 //#include <connectivity/wifi.h>
@@ -14,7 +14,7 @@
 
 Engine* engine;
 ButtonController buttonController;
-//SoundPlayer* soundPlayer;
+SoundPlayer soundPlayer;
 //Lights* lights;
 //TrackSensor* trackSensor;
 
@@ -97,11 +97,9 @@ void setup() {
   });  
 
   lights = new Lights();
-  lights->setGlobalColor(255, 0, 0);
+  lights->setGlobalColor(255, 0, 0);*/
 
-  soundPlayer = new SoundPlayer();
-  soundPlayer->playSound(1);
-  */
+  soundPlayer.playSound(1);
 }
 
 
@@ -119,7 +117,10 @@ void loop() {
 
   //LOG_DURATION(logger, "Buttons", );
   /*LOG_DURATION(logger, "Lights", lights->Loop());
-  LOG_DURATION(logger, "SoundPlayer", soundPlayer->Loop());
+  */
+
+soundPlayer.Loop();
+ /*
   LOG_DURATION(logger, "TrackSensor", trackSensor->Loop());
 
   if(millis() - countTimer > 1000) {
