@@ -38,6 +38,7 @@ Serial.println("Running!");
 
   buttonController.Setup();
   buttonController.onButtonPressed([]() {
+
     if(engine->getSpeed() == 0) {
       if(buttonController.isReversed()) {
         engine->setDirection(false);
@@ -122,7 +123,6 @@ void loop() {
   /*LOG_DURATION(logger, "Lights", lights->Loop());
   */
 
-soundPlayer.Loop();
  /*
   LOG_DURATION(logger, "TrackSensor", trackSensor->Loop());
 
