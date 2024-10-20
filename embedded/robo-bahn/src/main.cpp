@@ -13,7 +13,7 @@
 //WifiConnector* wifi;
 
 Engine* engine;
-ButtonController* buttons;
+ButtonController buttonController;
 //SoundPlayer* soundPlayer;
 //Lights* lights;
 //TrackSensor* trackSensor;
@@ -33,10 +33,9 @@ void setup() {
 
   engine = new Engine();
 
-  buttons = new ButtonController();  
-  buttons->onButtonPressed([]() {
+  buttonController.onButtonPressed([]() {
     if(engine->getSpeed() == 0) {
-      if(buttons->isReversed()) {
+      if(buttonController.isReversed()) {
         engine->setDirection(false);
         engine->setSpeed(255);      
       }
@@ -116,7 +115,7 @@ void loop() {
   );
   */
 
-  buttons->Loop();
+  buttonController.Loop();
 
   //LOG_DURATION(logger, "Buttons", );
   /*LOG_DURATION(logger, "Lights", lights->Loop());
