@@ -19,7 +19,10 @@ SoundPlayer soundPlayer;
 //TrackSensor* trackSensor;
 
 void setup() {
-
+  delay(500);
+    Serial.begin(SERIAL_BAUD_RATE);
+    delay(500);
+Serial.println("Running!");
   /*logger = new Logger();
   logger->Log("Baureihe 101, Version ");
   logger->Log(VERSION_CODE);
