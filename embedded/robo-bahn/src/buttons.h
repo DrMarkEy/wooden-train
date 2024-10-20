@@ -22,38 +22,10 @@ class ButtonController {
 
   public:
   ButtonController(){}
+  void Setup();
+  void Loop();
+  void onButtonPressed(void (*_callback) ());
+  bool isReversed();
 
-  void Setup() {
-    // initialize pins as an input
-    pinMode(PIN_PUSH_BUTTON, INPUT);
-    pinMode(PIN_REVERSE, INPUT);
-    
-    attachInterrupt(PIN_PUSH_BUTTON, ISR, RISING);
-  }
-
-  void Loop()
-  {
-    if(interruptTriggered) {
-      // Debounce Button Press
-      if(xTaskGetTickCount() - lastButtonPressTick >  DEBOUNCE_DELAY / portTICK_PERIOD_MS) {
-        lastButtonPressTick = xTaskGetTickCount();
-
-        if(buttonPressedCallback != nullptr)
-          buttonPressedCallback();
-      }
-
-      interruptTriggered = false;
-    }
-  }
-
-  void onButtonPressed(void (*_callback) ())
-  {		
-    this->buttonPressedCallback = _callback;	
-  }
-
-  bool isReversed()
-  {
-    return !digitalRead(PIN_REVERSE);
-  }
-} buttonController;
+} extern buttonController;
 #endif

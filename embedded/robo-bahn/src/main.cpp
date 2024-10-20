@@ -13,7 +13,7 @@
 //WifiConnector* wifi;
 
 Engine* engine;
-extern ButtonController buttonController;
+ButtonController buttonController;
 //SoundPlayer* soundPlayer;
 //Lights* lights;
 //TrackSensor* trackSensor;
