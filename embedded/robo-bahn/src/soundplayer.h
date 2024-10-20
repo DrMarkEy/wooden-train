@@ -55,7 +55,7 @@ class SoundPlayer {
     );
   }
 
-  void continueMelody()
+  bool continueMelody()
   {
     //Serial.println("Searching melody!");
     if(currentMelody != NULL) {
@@ -85,15 +85,21 @@ class SoundPlayer {
       if(currentPosition >= melodyLength) {
         //Serial.println("Stopping task!");
         currentMelody = NULL;
-        vTaskDelete(NULL);        
+        return false;
       }
+
+      return true;
     }
+
+    return false; // Should normally never happen...
   }
 } extern soundPlayer;
 
 static void SoundTaskFunction (void* parameter) {  
   while(1) {    
-    soundPlayer.continueMelody();    
+    if(!soundPlayer.continueMelody()) {
+      vTaskDelete(NULL);
+    }
   }
 }
 
