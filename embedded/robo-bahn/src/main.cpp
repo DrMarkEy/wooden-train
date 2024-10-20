@@ -1,26 +1,26 @@
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <engine.h>
-#include <soundplayer.h>
-#include <lights.h>
+//#include <soundplayer.h>
+//#include <lights.h>
 #include <buttons.h>
-#include <connectivity/wifi.h>
-#include <connectivity/bluetooth.h>
-#include <http-logger.h>
-#include <track-sensor.h>
+//#include <connectivity/wifi.h>
+//#include <connectivity/bluetooth.h>
+//#include <http-logger.h>
+//#include <track-sensor.h>
 
 
-BluetoothConnector* bluetooth;
-WifiConnector* wifi;
+//BluetoothConnector* bluetooth;
+//WifiConnector* wifi;
 
 Engine* engine;
 ButtonController* buttons;
-SoundPlayer* soundPlayer;
-Lights* lights;
-TrackSensor* trackSensor;
+//SoundPlayer* soundPlayer;
+//Lights* lights;
+//TrackSensor* trackSensor;
 
 void setup() {
 
-  logger = new Logger();
+  /*logger = new Logger();
   logger->Log("Baureihe 101, Version ");
   logger->Log(VERSION_CODE);
   
@@ -29,7 +29,7 @@ void setup() {
   wifi->onWifiConnected([]() {
     logger->setWifiConnector(wifi);
     logger->Log("Http Logger Ready!");
-  });
+  });*/
 
   engine = new Engine();
 
@@ -49,7 +49,7 @@ void setup() {
       engine->setSpeed(0);
     }
   });
-  
+  /*
   bluetooth = new BluetoothConnector();
 
   bluetooth->onSpeedChanged([](byte* array, byte len){
@@ -93,7 +93,7 @@ void setup() {
     sensorColor[1] = 10;
     sensorColor[2] = 255;
     sensorColor[3] = 50;
-    bluetooth->setSensorColor(sensorColor);*/
+    bluetooth->setSensorColor(sensorColor);* /
   });  
 
   lights = new Lights();
@@ -101,21 +101,25 @@ void setup() {
 
   soundPlayer = new SoundPlayer();
   soundPlayer->playSound(1);
+  */
 }
 
 
 // the loop function runs over and over again forever
 long countTimer = millis();
 void loop() {
-  LOG_DURATION(logger, "Wifi Loop", wifi->Loop());
+  /*LOG_DURATION(logger, "Wifi Loop", wifi->Loop());
 
   LOG_DURATION(logger, "OTA Update check", 
     if(wifi->isInOTAUpdate()) 
       return;
   );
-  
-  LOG_DURATION(logger, "Buttons", buttons->Loop());
-  LOG_DURATION(logger, "Lights", lights->Loop());
+  */
+
+  buttons->Loop();
+
+  //LOG_DURATION(logger, "Buttons", );
+  /*LOG_DURATION(logger, "Lights", lights->Loop());
   LOG_DURATION(logger, "SoundPlayer", soundPlayer->Loop());
   LOG_DURATION(logger, "TrackSensor", trackSensor->Loop());
 
@@ -123,5 +127,5 @@ void loop() {
     countTimer = millis();
     uint8_t measurements = trackSensor->resetMeasurementCount();
     logger->Logf("Measured %d colors", measurements);
-  }
+  }*/
 }
