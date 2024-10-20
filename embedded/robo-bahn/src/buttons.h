@@ -8,6 +8,11 @@
 #include <Arduino.h>
 #include <config.h>
 
+bool interruptTriggered = false;
+void IRAM_ATTR ISR() {
+    interruptTriggered = true;
+}
+
 class ButtonController {
 
   public:
@@ -18,11 +23,17 @@ class ButtonController {
     pinMode(PIN_PUSH_BUTTON, INPUT);
     pinMode(PIN_REVERSE, INPUT);
     
+    attachInterrupt(PIN_PUSH_BUTTON, ISR, RISING);
   }
 
   void Loop()
   {
-    track_button_state(PIN_PUSH_BUTTON, &start_button_pressed, this->buttonPressedCallback, this->buttonReleasedCallback);
+    if(interruptTriggered) {
+      if(buttonPressedCallback != nullptr)
+        buttonPressedCallback();
+
+      interruptTriggered = false;
+    }
   }
 
   void onButtonPressed(void (*_callback) ())
@@ -30,10 +41,10 @@ class ButtonController {
     this->buttonPressedCallback = _callback;	
   }
 
-  void onButtonReleased(void (*_callback) ())
+  /*void onButtonReleased(void (*_callback) ())
   {		
     this->buttonReleasedCallback = _callback;	
-  }
+  }*/
 
   bool isReversed()
   {
@@ -41,12 +52,11 @@ class ButtonController {
   }
 
   private:
-
   bool start_button_pressed = false;
   void (*buttonPressedCallback)() = nullptr;
-  void (*buttonReleasedCallback)() = nullptr;
+  //void (*buttonReleasedCallback)() = nullptr;
 
-  void track_button_state(unsigned char buttonPin, bool* buttonStateVariable, void (*onPressed) (), void (*onReleased) ()) {
+  /*void track_button_state(unsigned char buttonPin, bool* buttonStateVariable, void (*onPressed) (), void (*onReleased) ()) {
    if(!*buttonStateVariable && digitalRead(buttonPin))
    {
       *buttonStateVariable = true;
@@ -61,6 +71,6 @@ class ButtonController {
       if(onReleased != nullptr)
         onReleased();
    }
-  }
+  }*/
 };
 #endif
