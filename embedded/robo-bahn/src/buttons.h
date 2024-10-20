@@ -8,6 +8,8 @@
 #include <Arduino.h>
 #include <config.h>
 
+#define DEBOUNCE_DELAY 600
+
 bool interruptTriggered = false;
 void IRAM_ATTR ISR() {
     interruptTriggered = true;
@@ -29,8 +31,13 @@ class ButtonController {
   void Loop()
   {
     if(interruptTriggered) {
-      if(buttonPressedCallback != nullptr)
-        buttonPressedCallback();
+      // Debounce Button Press
+      if(xTaskGetTickCount() - lastButtonPressTick >  DEBOUNCE_DELAY / portTICK_PERIOD_MS) {
+        lastButtonPressTick = xTaskGetTickCount();
+
+        if(buttonPressedCallback != nullptr)
+          buttonPressedCallback();
+      }
 
       interruptTriggered = false;
     }
@@ -52,7 +59,7 @@ class ButtonController {
   }
 
   private:
-  bool start_button_pressed = false;
+  bool lastButtonPressTick = 0;
   void (*buttonPressedCallback)() = nullptr;
   //void (*buttonReleasedCallback)() = nullptr;
 
