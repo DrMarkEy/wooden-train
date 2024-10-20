@@ -16,9 +16,11 @@ void IRAM_ATTR ISR() {
 }
 
 class ButtonController {
+  private:
+  bool lastButtonPressTick = 0;
+  void (*buttonPressedCallback)() = nullptr;
 
   public:
-
   ButtonController()
   {
     // initialize pins as an input
@@ -52,9 +54,5 @@ class ButtonController {
   {
     return !digitalRead(PIN_REVERSE);
   }
-
-  private:
-  bool lastButtonPressTick = 0;
-  void (*buttonPressedCallback)() = nullptr;
 };
 #endif
