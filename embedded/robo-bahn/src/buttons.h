@@ -48,11 +48,6 @@ class ButtonController {
     this->buttonPressedCallback = _callback;	
   }
 
-  /*void onButtonReleased(void (*_callback) ())
-  {		
-    this->buttonReleasedCallback = _callback;	
-  }*/
-
   bool isReversed()
   {
     return !digitalRead(PIN_REVERSE);
@@ -61,23 +56,5 @@ class ButtonController {
   private:
   bool lastButtonPressTick = 0;
   void (*buttonPressedCallback)() = nullptr;
-  //void (*buttonReleasedCallback)() = nullptr;
-
-  /*void track_button_state(unsigned char buttonPin, bool* buttonStateVariable, void (*onPressed) (), void (*onReleased) ()) {
-   if(!*buttonStateVariable && digitalRead(buttonPin))
-   {
-      *buttonStateVariable = true;
-
-      if(onPressed != nullptr)
-        onPressed();
-   }
-   else if(*buttonStateVariable && !digitalRead(buttonPin))
-   {
-      *buttonStateVariable = false;
-
-      if(onReleased != nullptr)
-        onReleased();
-   }
-  }*/
 };
 #endif
