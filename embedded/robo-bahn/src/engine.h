@@ -11,7 +11,7 @@
 class Engine {
 
   private:
-  byte speed;
+  byte speed = 0;
   bool forward = true;
 
   void update() {
