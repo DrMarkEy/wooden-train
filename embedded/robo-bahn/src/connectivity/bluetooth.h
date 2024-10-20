@@ -650,9 +650,11 @@ class BluetoothConnector
 
   public:    			
 	
-	BluetoothConnector()
+	BluetoothConnector()    
 	{
-    	
+    }
+
+    void Setup() {    	
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     
 	    // TODO: Eventually adjust settings to be even faster!
@@ -737,6 +739,6 @@ class BluetoothConnector
 	{		
         updateCharacteristicValue(gattsProfile.color_reading_char, color, 4);
 	}
-};
+} extern bluetooth;
 
 #endif

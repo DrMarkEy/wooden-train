@@ -3,13 +3,13 @@
 #include <soundplayer.h>
 //#include <lights.h>
 #include <buttons.h>
-//#include <connectivity/wifi.h>
-//#include <connectivity/bluetooth.h>
-//#include <http-logger.h>
+#include <connectivity/wifi.h>
+#include <connectivity/bluetooth.h>
+#include <http-logger.h>
 //#include <track-sensor.h>
 
 
-//BluetoothConnector* bluetooth;
+BluetoothConnector bluetooth;
 //WifiConnector* wifi;
 
 Engine* engine;
@@ -19,14 +19,10 @@ SoundPlayer soundPlayer;
 //TrackSensor* trackSensor;
 
 void setup() {
-  delay(500);
-    Serial.begin(SERIAL_BAUD_RATE);
-    delay(500);
-Serial.println("Running!");
-  /*logger = new Logger();
+  logger = new Logger();
   logger->Log("Baureihe 101, Version ");
   logger->Log(VERSION_CODE);
-  
+  /*
   wifi = new WifiConnector();
 
   wifi->onWifiConnected([]() {
@@ -53,27 +49,26 @@ Serial.println("Running!");
       engine->setSpeed(0);
     }
   });
-  /*
-  bluetooth = new BluetoothConnector();
-
-  bluetooth->onSpeedChanged([](byte* array, byte len){
+  
+  bluetooth.Setup();
+  bluetooth.onSpeedChanged([](byte* array, byte len){
     byte speed = array[0];
     engine->setSpeed(speed);
     logger->Log("Set speed "+String(speed));    
   });
 
-  bluetooth->onColorChanged([](byte* array, byte len){
+  bluetooth.onColorChanged([](byte* array, byte len){
     logger->Log("Set color " + String(array[0]) + "," + String(array[1]) + "," + String(array[2]));    
-    lights->setDirectionColorWithColoredBacklights(true, array[0], array[1], array[2]);
+    //lights->setDirectionColorWithColoredBacklights(true, array[0], array[1], array[2]);
   });
 
-  bluetooth->onCommand([](byte* buffer, byte bufferSize)
+  bluetooth.onCommand([](byte* buffer, byte bufferSize)
   {
     
     if(buffer[0] == BLUETOOTH_COMMAND_WHISTLE) 
     {
       logger->Log("Whistle!");
-      soundPlayer->playSound(1);
+      soundPlayer.playSound(1);
     }
     else if(buffer[0] == BLUETOOTH_COMMAND_REVERSE) 
     {
@@ -86,6 +81,7 @@ Serial.println("Running!");
     }
   });
 
+/*/
   trackSensor = new TrackSensor();
   trackSensor->onColorSignalDetected([](uint8_t color) {
     // TODO: Replace with gradually slowing down?!?
