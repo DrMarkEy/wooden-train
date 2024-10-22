@@ -148,7 +148,7 @@ class WifiConnector
 
       // Is now connected
       if(WiFi.status() == WL_CONNECTED) {
-        logger.Log("WiFi connected: "+Wifi.localIP());
+        logger.Log("WiFi connected: "+WiFi.localIP());
         logger.Log("Checking for newer OTA version...");
         initialize_ota();
     
