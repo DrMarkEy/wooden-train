@@ -7,6 +7,13 @@
 
 //#define ENABLE_LOG_DURATION
 
+
+#define LOGGING_QUEUE_LENGTH 10
+#define LOGGING_QUEUE_ENTRY_LENGTH 255
+static QueueHandle_t loggingQueue;
+
+
+
 class Logger {
   private:
 
@@ -20,6 +27,8 @@ class Logger {
 
   void Setup() {
     Serial.begin(SERIAL_BAUD_RATE);
+    loggingQueue = xQueueCreate(LOGGING_QUEUE_LENGTH, LOGGING_QUEUE_ENTRY_LENGTH);
+
   }
   
   void setWifiConnector(WifiConnector* _wifiConnector) {
@@ -27,10 +36,17 @@ class Logger {
   }
 
   void Log(String str) {
+    if(str.length() >= LOGGING_QUEUE_ENTRY_LENGTH) {
+      Serial.println("MESSAGE EXCEEDED CHAR LIMIT:");
     Serial.println(str);    
 
     if(wifiConnector != nullptr)
       wifiConnector->sendHttpLog(str);
+
+    if(xQueueSend(loggingQueue, (void*) &str, 10) != pdTRUE) {
+      Serial.println("Queue Full!"); // Absurd using serial here...
+    }    
+
   }
 
   void LogDuration(String msg, void (*runnable) ()) {
