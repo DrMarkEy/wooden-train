@@ -229,36 +229,36 @@ static uint8_t adv_config_done = 0;
 static characteristic* findCharacteristic(uint16_t char_handle)
 {  
   /*
-  logger->Logf("CHAR HANDLE %d", char_handle);
-  logger->Logf("speed HANDLE %d", gattsProfile.speed_char.char_handle);
-  logger->Logf("light color HANDLE %d", gattsProfile.light_color_char.char_handle);
-  logger->Logf("command HANDLE %d", gattsProfile.command_char.char_handle);*/
+  logger.Logf("CHAR HANDLE %d", char_handle);
+  logger.Logf("speed HANDLE %d", gattsProfile.speed_char.char_handle);
+  logger.Logf("light color HANDLE %d", gattsProfile.light_color_char.char_handle);
+  logger.Logf("command HANDLE %d", gattsProfile.command_char.char_handle);*/
 
   characteristic* chara;
   if(gattsProfile.speed_char.char_handle == char_handle)
   {
-    logger->Log("Found speed characteristic!");
+    logger.Log("Found speed characteristic!");
     return &gattsProfile.speed_char;
   }
   else if(gattsProfile.light_color_char.char_handle == char_handle)
   {
-    logger->Log("Found light color characteristic!");
+    logger.Log("Found light color characteristic!");
     return &gattsProfile.light_color_char;
   }
   else if(gattsProfile.command_char.char_handle == char_handle)
   {
-    logger->Log("Found command characteristic!");
+    logger.Log("Found command characteristic!");
     return &gattsProfile.command_char;
   } 
   else if(gattsProfile.color_reading_char.char_handle == char_handle)
   {
-    logger->Log("Found color reading characteristic!");
+    logger.Log("Found color reading characteristic!");
     return &gattsProfile.color_reading_char;
   } 
   
   else
   {
-    logger->Log("Encountered unknown characteristic!");
+    logger.Log("Encountered unknown characteristic!");
     return nullptr;
   }   
 }
@@ -269,27 +269,27 @@ static characteristic* findCharacteristic(byte uuid128[16])
   characteristic* chara;
   if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16))
   {
-    logger->Log("Found speed characteristic!");
+    logger.Log("Found speed characteristic!");
     return &gattsProfile.speed_char;
   }
   else if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID, 16))
   {
-     logger->Log("Found light color characteristic!");
+     logger.Log("Found light color characteristic!");
     return &gattsProfile.light_color_char;
   }
   else if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16))
   {
-    logger->Log("Found command characteristic!");
+    logger.Log("Found command characteristic!");
     return &gattsProfile.command_char;
   } 
   else if(equalContent(uuid128, BLUETOOTH_CHARACTERISTIC_COLOR_READING_UUID, 16))
   {
-    logger->Log("Found color reading characteristic!");
+    logger.Log("Found color reading characteristic!");
     return &gattsProfile.color_reading_char;
   } 
   else
   {
-    logger->Log("Encountered unknown characteristic!");
+    logger.Log("Encountered unknown characteristic!");
     return nullptr;
   }   
 }
@@ -300,7 +300,7 @@ static void registerCharacteristic(byte characteristicId) {
         
         // ------- Create speed characteristic ---------
         case 1: {            
-            logger->Log("Registering engine speed characteristic...");
+            logger.Log("Registering engine speed characteristic...");
             gattsProfile.speed_char.char_uuid.len = ESP_UUID_LEN_128;
 	        memcpy(gattsProfile.speed_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID, 16);            
 
@@ -310,14 +310,14 @@ static void registerCharacteristic(byte characteristicId) {
                                                         engineSpeedPropertyFlags,
                                                         &engineSpeedInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
             if (add_char_ret){
-                logger->Logf("add char failed, error code =%x",add_char_ret);
+                logger.Logf("add char failed, error code =%x",add_char_ret);
             }
             break;
         }
 
         // ------- Create light color characteristic ---------
         case 2: {            
-            logger->Log("Registering light color characteristic...");
+            logger.Log("Registering light color characteristic...");
             gattsProfile.light_color_char.char_uuid.len = ESP_UUID_LEN_128;
 		    memcpy(gattsProfile.light_color_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID, 16);            
 
@@ -327,14 +327,14 @@ static void registerCharacteristic(byte characteristicId) {
                                                         lightColorPropertyFlags,
                                                         &lightColorInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
             if (add_char_ret){
-                logger->Logf("add char failed, error code =%x",add_char_ret);
+                logger.Logf("add char failed, error code =%x",add_char_ret);
             }
             break;
         }
 
         // ------- Create command characteristic ---------
         case 3: {            
-            logger->Log("Registering command characteristic...");
+            logger.Log("Registering command characteristic...");
             gattsProfile.command_char.char_uuid.len = ESP_UUID_LEN_128;
 		    memcpy(gattsProfile.command_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_COMMAND_UUID, 16);            
 
@@ -344,7 +344,7 @@ static void registerCharacteristic(byte characteristicId) {
                                                         commandPropertyFlags,
                                                         &commandInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
             if (add_char_ret){
-                logger->Logf("add char failed, error code =%x",add_char_ret);
+                logger.Logf("add char failed, error code =%x",add_char_ret);
             }
             break;
         }
@@ -352,7 +352,7 @@ static void registerCharacteristic(byte characteristicId) {
         // ------- Color reading characteristic ---------
         case 4: {            
 
-            logger->Log("Registering color reading characteristic...");
+            logger.Log("Registering color reading characteristic...");
             gattsProfile.color_reading_char.char_uuid.len = ESP_UUID_LEN_128;
 		    memcpy(gattsProfile.color_reading_char.char_uuid.uuid.uuid128, BLUETOOTH_CHARACTERISTIC_COLOR_READING_UUID, 16);            
 
@@ -362,13 +362,13 @@ static void registerCharacteristic(byte characteristicId) {
                                                         colorReadingPropertyFlags,
                                                         &colorReadingInitialValue, NULL);//&attr_control); // Note: Change ESP_GATT_AUTO_RSP to NULL if manual response is wanted
             if (add_char_ret){
-                logger->Logf("add char failed, error code =%x",add_char_ret);
+                logger.Logf("add char failed, error code =%x",add_char_ret);
             }
             break;
         }
 
         case 5: {
-            logger->Log("All characteristics registered.");
+            logger.Log("All characteristics registered.");
         }
     }
 }
@@ -380,7 +380,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
     switch (event) {
         case ESP_GATTS_REG_EVT:
 		{
-             logger->Logf("REGISTER_APP_EVT, status %d, app_id %d", param->reg.status, param->reg.app_id);
+             logger.Logf("REGISTER_APP_EVT, status %d, app_id %d", param->reg.status, param->reg.app_id);
              gattsProfile.service_id.is_primary = true;
              gattsProfile.service_id.id.inst_id = 0x00;
              gattsProfile.service_id.id.uuid.len = ESP_UUID_LEN_128;
@@ -391,14 +391,14 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             //config adv data
             esp_err_t ret = esp_ble_gap_config_adv_data(&adv_data);
             if (ret){
-                logger->Log("config adv data failed, error code = "+ret);
+                logger.Log("config adv data failed, error code = "+ret);
             }
             adv_config_done |= adv_config_flag;
 
             //config scan response data
             ret = esp_ble_gap_config_adv_data(&scan_rsp_data);
             if (ret){
-                logger->Log("config scan response data failed, error code = "+ ret);
+                logger.Log("config scan response data failed, error code = "+ ret);
             }
             adv_config_done |= scan_rsp_config_flag;
 
@@ -409,7 +409,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 
 		case ESP_GATTS_CREATE_EVT:
 		{
-            logger->Logf("CREATE_SERVICE_EVT, status %d,  service_handle %d", param->create.status, param->create.service_handle);
+            logger.Logf("CREATE_SERVICE_EVT, status %d,  service_handle %d", param->create.status, param->create.service_handle);
             gattsProfile.service_handle = param->create.service_handle;
 
             esp_ble_gatts_start_service(gattsProfile.service_handle);
@@ -425,7 +425,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             const uint8_t *prf_char;
             
             characteristic* chara = findCharacteristic(param->add_char.char_uuid.uuid.uuid128);
-            logger->Logf("ADD_CHAR_EVT, status %d,  attr_handle %d, service_handle %d, characteristic id %d",
+            logger.Logf("ADD_CHAR_EVT, status %d,  attr_handle %d, service_handle %d, characteristic id %d",
                 param->add_char.status, param->add_char.attr_handle, param->add_char.service_handle, chara->id);
 
             chara->char_handle = param->add_char.attr_handle;
@@ -436,18 +436,18 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
             
             esp_err_t get_attr_ret = esp_ble_gatts_get_attr_value(param->add_char.attr_handle,  &length, &prf_char);
             if (get_attr_ret == ESP_FAIL){
-                logger->Log("ILLEGAL HANDLE");
+                logger.Log("ILLEGAL HANDLE");
             }
 			
-            logger->Logf("the gatts demo char length = %x", length);
+            logger.Logf("the gatts demo char length = %x", length);
             for(int i = 0; i < length; i++){
-                logger->Logf("prf_char[%x] = %x", i, prf_char[i]);
+                logger.Logf("prf_char[%x] = %x", i, prf_char[i]);
             }
 
 
             esp_err_t add_descr_ret = esp_ble_gatts_add_char_descr(gattsProfile.service_handle, &chara->descr_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, NULL, NULL);//&attr_control);
             if (add_descr_ret){
-                logger->Logf("add char descr failed, error code =%x", add_descr_ret);
+                logger.Logf("add char descr failed, error code =%x", add_descr_ret);
 			}
         }
         break;
@@ -457,7 +457,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 		{
             // TODO: A characteristic descriptor is always added to the last characteristic.
             // Thus, we can only create the next characteristic after THIS event has fired...
-            logger->Logf("ADD_DESCR_EVT, status %d, attr_handle %d, service_handle %d",
+            logger.Logf("ADD_DESCR_EVT, status %d, attr_handle %d, service_handle %d",
                 param->add_char_descr.status, param->add_char_descr.attr_handle,  
                 param->add_char_descr.service_handle);
             
@@ -482,7 +482,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
           conn_params.timeout = 400;     // timeout = 400*10ms = 4000ms  
 		  */
 
-          logger->Logf("ESP_GATTS_CONNECT_EVT, conn_id %d, remote %02x:%02x:%02x:%02x:%02x:%02x:",  
+          logger.Logf("ESP_GATTS_CONNECT_EVT, conn_id %d, remote %02x:%02x:%02x:%02x:%02x:%02x:",  
              param->connect.conn_id,  
              param->connect.remote_bda[0],  
              param->connect.remote_bda[1],  
@@ -501,7 +501,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 
 		case ESP_GATTS_READ_EVT: 
 		{
-          logger->Logf("GATT_READ_EVT, conn_id %d, trans_id %d, handle %d",  
+          logger.Logf("GATT_READ_EVT, conn_id %d, trans_id %d, handle %d",  
               param->read.conn_id, param->read.trans_id, param->read.handle);  
 
 
@@ -524,20 +524,20 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
         }
 
 		case ESP_GATTS_WRITE_EVT: {                          
-          logger->Logf("GATT_WRITE_EVT, conn_id %d, trans_id %d, handle %d", param->write.conn_id, param->write.trans_id, param->write.handle);
+          logger.Logf("GATT_WRITE_EVT, conn_id %d, trans_id %d, handle %d", param->write.conn_id, param->write.trans_id, param->write.handle);
           
           // Note: this method is also called when notifications are enabled. 
           // In this case, the given write.handle does not refer to a characteristic and findCharacteristic will return nullptr!
 
           if (param->write.is_prep){
-            logger->Log("Received not implemented long send event!");
+            logger.Log("Received not implemented long send event!");
           }
           else {
 
-             logger->Logf("Written value, value len %d, value:", param->write.len);
+             logger.Logf("Written value, value len %d, value:", param->write.len);
              // Log buffer value 
              for(byte i = 0; i < param->write.len; i++) {
-               logger->Log(String(param->write.value[i]));             
+               logger.Log(String(param->write.value[i]));             
              }
 
 
@@ -547,7 +547,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
               if (chara == nullptr && /*heart_rate_handle_table[IDX_CHAR_CFG_A] == param->write.handle && */param->write.len == 2){
                     uint16_t descr_value = param->write.value[1]<<8 | param->write.value[0];
                     if (descr_value == 0x0001){
-                        logger->Log("notify enable");
+                        logger.Log("notify enable");
                         uint8_t notify_data[15];
                         for (int i = 0; i < sizeof(notify_data); ++i)
                         {
@@ -574,7 +574,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 
         case ESP_GATTS_EXEC_WRITE_EVT:  
         {
-          logger->Log("Received unsupported Write exec command!");  
+          logger.Log("Received unsupported Write exec command!");  
           esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, NULL);            
           break;
         }
@@ -605,18 +605,18 @@ class BluetoothConnector
         case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
             //advertising start complete event to indicate advertising start successfully or failed
             if (param->adv_start_cmpl.status != ESP_BT_STATUS_SUCCESS) {
-                logger->Log("Advertising start failed");
+                logger.Log("Advertising start failed");
             }
             break;
         case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT:
             if (param->adv_stop_cmpl.status != ESP_BT_STATUS_SUCCESS) {
-                logger->Log("Advertising stop failed");
+                logger.Log("Advertising stop failed");
             } else {
-                logger->Log("Stop adv successfully");
+                logger.Log("Stop adv successfully");
             }
             break;
         case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
-             logger->Logf( "update connection params status = %d, min_int = %d, max_int = %d, conn_int = %d, latency = %d, timeout = %d",
+             logger.Logf( "update connection params status = %d, min_int = %d, max_int = %d, conn_int = %d, latency = %d, timeout = %d",
                   param->update_conn_params.status,
                   param->update_conn_params.min_int,
                   param->update_conn_params.max_int,
@@ -630,9 +630,9 @@ class BluetoothConnector
     }
 
     void updateCharacteristicValue(characteristic chara, uint8_t* buffer, uint16_t length) {
-        logger->Logf("Updating characteristic %d to values", chara.id);
+        logger.Logf("Updating characteristic %d to values", chara.id);
         for(uint8_t i = 0; i < length; i++) {
-            logger->Logf("%d", buffer[i]);
+            logger.Logf("%d", buffer[i]);
         }
         
 // Helpful: https://www.esp32.com/viewtopic.php?f=13&t=11228&p=45738&hilit=ble+notify#p45738 ??
@@ -640,11 +640,11 @@ class BluetoothConnector
         esp_err_t result = esp_ble_gatts_set_attr_value(chara.char_handle, length, buffer); 
 
         if (result) {
-            logger->Log("indicate failed");		    
+            logger.Log("indicate failed");		    
         }
         esp_err_t result2 = esp_ble_gatts_send_indicate(gattsProfile.gatts_if, gattsProfile.conn_id, chara.char_handle, length, buffer, false);
         if (result2) {
-            logger->Log("send failed");		    
+            logger.Log("send failed");		    
         }
     }
 
@@ -665,50 +665,50 @@ class BluetoothConnector
 
         esp_err_t ret = esp_bt_controller_init(&bt_cfg);
         if (ret) {
-            logger->Log("BluetoothConnector initialize controller failed!");
-		    logger->Log("BluetoothConnector initialize controller failed:"+ String(ret));
+            logger.Log("BluetoothConnector initialize controller failed!");
+		    logger.Log("BluetoothConnector initialize controller failed:"+ String(ret));
             return;
         }
 
         //Note: ESP_BT_MODE_BLE is not yet working
         ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
         if (ret != ESP_OK) {
-            logger->Log("BluetoothConnector enable controller failed");
+            logger.Log("BluetoothConnector enable controller failed");
             return;
         }
         ret = esp_bluedroid_init();
         if (ret) {
-            logger->Log("BluetoothConnector init bluetooth failed");
+            logger.Log("BluetoothConnector init bluetooth failed");
             return;
         }
         ret = esp_bluedroid_enable();
         if (ret) {
-            logger->Log("BluetoothConnector enable bluetooth failed");
+            logger.Log("BluetoothConnector enable bluetooth failed");
             return;
         }
 
         ret = esp_ble_gatts_register_callback(gatts_profile_a_event_handler);
         if (ret){
-            logger->Log("gatts register error, error code = " + ret);
+            logger.Log("gatts register error, error code = " + ret);
             return;
         }
         ret = esp_ble_gap_register_callback(gap_event_handler);
         if (ret){
-            logger->Log("gap register error, error code = " + ret);
+            logger.Log("gap register error, error code = " + ret);
             return;
         }
         ret = esp_ble_gatts_app_register(0);
         if (ret){
-            logger->Log("gatts app register error, error code = " + ret);
+            logger.Log("gatts app register error, error code = " + ret);
             return;
         }
 
         esp_err_t local_mtu_ret = esp_ble_gatt_set_local_mtu(512);
         if (local_mtu_ret){
-            logger->Log("set local  MTU failed, error code = " + local_mtu_ret);
+            logger.Log("set local  MTU failed, error code = " + local_mtu_ret);
         }
 
-	    logger->Log("Bluetooth initialization finished!");    
+	    logger.Log("Bluetooth initialization finished!");    
         
         // Initialize sensor color as zero
         uint8_t sensorColor[4];

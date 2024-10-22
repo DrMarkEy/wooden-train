@@ -15,6 +15,10 @@ class Logger {
   public:
 
   Logger() {
+    
+  }
+
+  void Setup() {
     Serial.begin(SERIAL_BAUD_RATE);
   }
   
@@ -68,10 +72,7 @@ class Logger {
     Serial.write(buffer, len);    
   }
 
-};
-
-static Logger* logger;
-
+} extern logger;
 
 #ifdef ENABLE_LOG_DURATION
     #define LOG_DURATION(logger, name, lambda) logger->LogDuration(name, [](){lambda;})

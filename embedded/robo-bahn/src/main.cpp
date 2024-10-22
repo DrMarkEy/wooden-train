@@ -8,6 +8,7 @@
 #include <http-logger.h>
 //#include <track-sensor.h>
 
+Logger logger;
 
 BluetoothConnector bluetooth;
 WifiConnector wifi;
@@ -18,16 +19,16 @@ SoundPlayer soundPlayer;
 //Lights* lights;
 //TrackSensor* trackSensor;
 
-void setup() {
-  logger = new Logger();
-  logger->Log("Baureihe 101, Version ");
-  logger->Log(VERSION_CODE);
+void setup() {    
+  logger.Setup();
+  logger.Log("Baureihe 101, Version ");
+  logger.Log(VERSION_CODE);
   
   wifi.Run();
 
   wifi.onWifiConnected([]() {
-    logger->setWifiConnector(&wifi);
-    logger->Log("Http Logger Ready!");
+    logger.setWifiConnector(&wifi);
+    logger.Log("Http Logger Ready!");
   });
 
   engine = new Engine();
@@ -54,11 +55,11 @@ void setup() {
   bluetooth.onSpeedChanged([](byte* array, byte len){
     byte speed = array[0];
     engine->setSpeed(speed);
-    logger->Log("Set speed "+String(speed));    
+    logger.Log("Set speed "+String(speed));    
   });
 
   bluetooth.onColorChanged([](byte* array, byte len){
-    logger->Log("Set color " + String(array[0]) + "," + String(array[1]) + "," + String(array[2]));    
+    logger.Log("Set color " + String(array[0]) + "," + String(array[1]) + "," + String(array[2]));    
     //lights->setDirectionColorWithColoredBacklights(true, array[0], array[1], array[2]);
   });
 
@@ -67,7 +68,7 @@ void setup() {
     
     if(buffer[0] == BLUETOOTH_COMMAND_WHISTLE) 
     {
-      logger->Log("Whistle!");
+      logger.Log("Whistle!");
       soundPlayer.playSound(1);
     }
     else if(buffer[0] == BLUETOOTH_COMMAND_REVERSE) 
