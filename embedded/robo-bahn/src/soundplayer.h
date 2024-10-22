@@ -57,22 +57,22 @@ class SoundPlayer {
 
   bool continueMelody()
   {
-    //Serial.println("Searching melody!");
+    //logger.Log("Searching melody!");
     if(currentMelody != NULL) {
-      /*Serial.println("Found one!!");
+      /*logger.Log("Found one!!");
 
-      Serial.println("current Position:");
-      Serial.println(currentPosition);
+      logger.Log("current Position:");
+      logger.Log(currentPosition);
 
-      Serial.println("melody length:");
-      Serial.println(melodyLength);*/
+      logger.Log("melody length:");
+      logger.Log(melodyLength);*/
 
       Note currentNote = currentMelody[currentPosition];      
 
-/*      Serial.println("Current note:");
-      Serial.println(currentNote.pitch);
-      Serial.println(currentNote.duration);
-      Serial.println(currentNote.pause);*/
+/*      logger.Log("Current note:");
+      logger.Log(currentNote.pitch);
+      logger.Log(currentNote.duration);
+      logger.Log(currentNote.pause);*/
       tone(PIN_SPEAKER, currentNote.pitch, currentNote.duration);
       
       // Wait for the duration of the note + pause
@@ -83,7 +83,7 @@ class SoundPlayer {
       
       currentPosition++;
       if(currentPosition >= melodyLength) {
-        //Serial.println("Stopping task!");
+        //logger.Log("Stopping task!");
         currentMelody = NULL;
         return false;
       }

@@ -9,9 +9,21 @@
 
 
 #define LOGGING_QUEUE_LENGTH 10
-#define LOGGING_QUEUE_ENTRY_LENGTH 255
 static QueueHandle_t loggingQueue;
 
+static void LoggerTaskFunction(void* parameter) {
+  String* heapString = NULL;
+  while(1) {
+    if(xQueueReceive(loggingQueue, (void*) &heapString, 50) == pdTRUE) {
+      String stackString = *heapString;
+      Serial.println("REC: ");
+      Serial.print(stackString);
+      Serial.println("/REC");
+      delete heapString;
+    }
+    vTaskDelay(100 / portTICK_PERIOD_MS); //Waiting happens already in the receive function ??
+  }
+}
 
 
 class Logger {
@@ -27,8 +39,17 @@ class Logger {
 
   void Setup() {
     Serial.begin(SERIAL_BAUD_RATE);
-    loggingQueue = xQueueCreate(LOGGING_QUEUE_LENGTH, LOGGING_QUEUE_ENTRY_LENGTH);
+    loggingQueue = xQueueCreate(LOGGING_QUEUE_LENGTH, sizeof(String*));
 
+    xTaskCreatePinnedToCore(
+      LoggerTaskFunction,
+      "Log message",
+      2500,
+      NULL,
+      1, // Priority
+      NULL,
+      1 // Core affinity
+    );
   }
   
   void setWifiConnector(WifiConnector* _wifiConnector) {
@@ -36,17 +57,13 @@ class Logger {
   }
 
   void Log(String str) {
-    if(str.length() >= LOGGING_QUEUE_ENTRY_LENGTH) {
-      Serial.println("MESSAGE EXCEEDED CHAR LIMIT:");
-    Serial.println(str);    
 
-    if(wifiConnector != nullptr)
-      wifiConnector->sendHttpLog(str);
+//Serial.println(str);
+    String* heapString = new String(str);
 
-    if(xQueueSend(loggingQueue, (void*) &str, 10) != pdTRUE) {
+    if(xQueueSend(loggingQueue, (void*) &heapString, 10) != pdTRUE) {
       Serial.println("Queue Full!"); // Absurd using serial here...
     }    
-
   }
 
   void LogDuration(String msg, void (*runnable) ()) {

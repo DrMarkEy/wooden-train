@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include <config.h>
+#include <http-logger.h>
 
 #define BRIGHTNESS_CORRECTION_RED 1
 #define BRIGHTNESS_CORRECTION_GREEN 1
@@ -67,19 +68,19 @@ class Lights
    }
 
    void activateLEDs(bool r, bool g, bool b, byte ledMask) {
-      /*Serial.print("L: ");
+      /*logger.Log("L: ");
       
       if(r)
-      Serial.print("r");
+      logger.Log("r");
 
       if(g)
-      Serial.print("g");
+      logger.Log("g");
 
       if(b)
-      Serial.print("b");
+      logger.Log("b");
 
-      Serial.print(":");
-      Serial.println(ledMask);
+      logger.Log(":");
+      logger.Log(ledMask);
 
 */
 
@@ -142,39 +143,39 @@ class Lights
     for(byte i = 0; i < 6; i++) {
       byte ledMask = 1 << i;
 
-      Serial.print("Red: ");
-      Serial.println(String(ledMask));
+      logger.Log("Red: ");
+      logger.Log(String(ledMask));
       setDutyCycleLevel(r[i], 0, ledMask);
-      Serial.print("Green: ");
-      Serial.println(String(ledMask));
+      logger.Log("Green: ");
+      logger.Log(String(ledMask));
       setDutyCycleLevel(g[i], 1, ledMask);
-      Serial.print("Blue: ");
-      Serial.println(String(ledMask));
+      logger.Log("Blue: ");
+      logger.Log(String(ledMask));
       setDutyCycleLevel(b[i], 2, ledMask);
     }
     
      // TODO: Apply color correction!
 
-    Serial.print("Duty-Cycle: ");
+    logger.Log("Duty-Cycle: ");
     for(byte i = 0; i < DUTY_CYCLE_LENGTH; i++) {
-      Serial.print(String(dutyCycle[i]));
-      Serial.print(", ");
+      logger.Log(String(dutyCycle[i]));
+      logger.Log(", ");
     }
-    Serial.println("");
+    logger.Log("");
    }
 
    void setDutyCycleLevel(byte colorValue, byte colorOffset, byte ledMask) {
       byte rLevel = (colorValue - 1) / 17;
       
       for(byte s = 0; s <= rLevel; s++) {
-        Serial.print("Entry: ");
-        Serial.print(rLevel);
-        Serial.print(", ");
-        Serial.print(s);
-        Serial.print(", ");
-        Serial.print(pattern[rLevel][s]);
-        Serial.print(", ");
-        Serial.println(pattern[rLevel][s] * 3 + colorOffset);
+        logger.Log("Entry: ");
+        logger.Log(String(rLevel));
+        logger.Log(", ");
+        logger.Log(String(s));
+        logger.Log(", ");
+        logger.Log(String(pattern[rLevel][s]));
+        logger.Log(", ");
+        logger.Log(String(pattern[rLevel][s] * 3 + colorOffset));
 
         dutyCycle[pattern[rLevel][s] * 3 + colorOffset] += ledMask;
       }

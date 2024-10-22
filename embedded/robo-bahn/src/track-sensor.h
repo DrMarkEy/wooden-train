@@ -32,11 +32,11 @@ class TrackSensor {
   void readMagneticField() {
 
     // Hall-Sensor-Test
-    /*Serial.print("Left: ");
-    Serial.println(analogRead(2));
+    /*logger.Log("Left: ");
+    logger.Log(analogRead(2));
 
-    Serial.print("Right: ");
-    Serial.println(analogRead(15));*/
+    logger.Log("Right: ");
+    logger.Log(analogRead(15));*/
   }
 
   void colorMeasurement(uint8_t classifiedColor) {

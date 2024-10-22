@@ -15,6 +15,7 @@
 #include "esp_system.h"
 #include "esp_ota_ops.h"
 
+#include <http-logger.h>
 #include <config.h>
 
 
@@ -48,24 +49,24 @@ class WifiConnector
       wifi.inOTAUpdate = true;
 
       // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      Serial.println("Start updating " + type);
+      logger.Log("Start updating " + type);
     })
     .onEnd([]() {
-      Serial.println("\nOTA-Update finished!");
+      logger.Log("\nOTA-Update finished!");
       wifi.inOTAUpdate = false;
     })
     .onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+      logger.Logf("Progress: %u%%\r", (progress / (total / 100)));
     })
     .onError([](ota_error_t error) {
       wifi.inOTAUpdate = false;
 
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+      logger.Logf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) logger.Log("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) logger.Log("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) logger.Log("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) logger.Log("Receive Failed");
+      else if (error == OTA_END_ERROR) logger.Log("End Failed");
     });
 
     ArduinoOTA.begin();
@@ -103,8 +104,8 @@ class WifiConnector
     // Station mode: Connect as a wifi client to a wifi router
     WiFi.mode(WIFI_STA);
 
-    Serial.print("Connecting to ");
-    Serial.println(DEFAULT_WIFI_SSID);
+    logger.Log("Connecting to ");
+    logger.Log(DEFAULT_WIFI_SSID);
 
     WiFi.begin(DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASSWORD);
 
@@ -113,12 +114,12 @@ class WifiConnector
     // Log ota running partition
     const esp_partition_t* runningPartition = esp_ota_get_running_partition();
     if (runningPartition != NULL) {
-      Serial.printf("Boot-Partition Label: %s\n", runningPartition->label);
-      Serial.printf("Boot-Partition Typ: %d\n", runningPartition->type);
-      Serial.printf("Boot-Partition Adresse: 0x%X\n", runningPartition->address);
-      Serial.printf("Boot-Partition Größe: %d Bytes\n", runningPartition->size);
+      logger.Logf("Boot-Partition Label: %s\n", runningPartition->label);
+      logger.Logf("Boot-Partition Typ: %d\n", runningPartition->type);
+      logger.Logf("Boot-Partition Adresse: 0x%X\n", runningPartition->address);
+      logger.Logf("Boot-Partition Größe: %d Bytes\n", runningPartition->size);
     } else {
-      Serial.printf("Fehler beim Abrufen der Boot-Partition-Informationen\n");
+      logger.Logf("Fehler beim Abrufen der Boot-Partition-Informationen\n");
     }
 
     /*  if( running_partition != ota0 ) {
@@ -147,10 +148,8 @@ class WifiConnector
 
       // Is now connected
       if(WiFi.status() == WL_CONNECTED) {
-        Serial.print("WiFi connected: ");
-        Serial.println(WiFi.localIP());
-
-        Serial.println("Checking for newer OTA version...");
+        logger.Log("WiFi connected: "+Wifi.localIP());
+        logger.Log("Checking for newer OTA version...");
         initialize_ota();
     
         wifiState = WIFI_STATE_CONNECTED;     
@@ -161,15 +160,14 @@ class WifiConnector
         vTaskDelay(WIFI_CHECK_INTERVAL / portTICK_PERIOD_MS);
       }
       else { // Still not connected
-        Serial.printf("Wifi not connected. Will retry in %d ms.", WIFI_RETRY_INTERVAL);
-        Serial.println();
+        logger.Logf("Wifi not connected. Will retry in %d ms.", WIFI_RETRY_INTERVAL);        
         
         WiFi.disconnect();
         WiFi.reconnect();
         
         vTaskDelay(WIFI_RETRY_INTERVAL / portTICK_PERIOD_MS);
         
-        Serial.println("Retrying WiFi connection...");                
+        logger.Log("Retrying WiFi connection...");                
       }
     }
     // Wifi was connected on last check
@@ -177,7 +175,7 @@ class WifiConnector
       
       // Wifi is now disconnected
       if ((WiFi.status() != WL_CONNECTED)) {          
-        Serial.println("Lost WiFi Connection.");                  
+        logger.Log("Lost WiFi Connection.");                  
         wifiState = WIFI_STATE_CONNECTING;        
         // Immediately start on top in the next task iteration
       }
@@ -200,14 +198,13 @@ class WifiConnector
     text = urlEncode(text);    
     String url = "http://" LOGGING_SERVER_IP ":" LOGGING_SERVER_PORT "/log/"+text;
     http.begin(url);
-    Serial.println(url);
+    logger.Log(url);
 
     // Send HTTP GET request
     int httpResponseCode = http.GET();
       
     if (httpResponseCode<0) {
-      Serial.print("Error code: ");
-      Serial.println(httpResponseCode);
+      logger.Logf("Error code: %d", httpResponseCode);
     }
 
     // Free resources
