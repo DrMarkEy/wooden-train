@@ -28,7 +28,7 @@ static void CheckWifiStateTaskFunction (void* parameter);
 class WifiConnector;
 extern WifiConnector wifi;
 
-class WifiConnector
+class WifiConnector: public IWifiLogger
 {
 
   private:
@@ -197,8 +197,7 @@ class WifiConnector
 
     text = urlEncode(text);    
     String url = "http://" LOGGING_SERVER_IP ":" LOGGING_SERVER_PORT "/log/"+text;
-    http.begin(url);
-    logger.Log(url);
+    http.begin(url);    
 
     // Send HTTP GET request
     int httpResponseCode = http.GET();

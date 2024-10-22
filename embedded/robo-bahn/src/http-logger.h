@@ -7,29 +7,20 @@
 
 //#define ENABLE_LOG_DURATION
 
-
-#define LOGGING_QUEUE_LENGTH 10
+#define LOGGING_QUEUE_LENGTH 50
 static QueueHandle_t loggingQueue;
 
-static void LoggerTaskFunction(void* parameter) {
-  String* heapString = NULL;
-  while(1) {
-    if(xQueueReceive(loggingQueue, (void*) &heapString, 50) == pdTRUE) {
-      String stackString = *heapString;
-      Serial.println("REC: ");
-      Serial.print(stackString);
-      Serial.println("/REC");
-      delete heapString;
-    }
-    vTaskDelay(100 / portTICK_PERIOD_MS); //Waiting happens already in the receive function ??
-  }
-}
+class IWifiLogger {
+  public:
+    virtual void sendHttpLog(String str) = 0;
+};
 
+static void LoggerTaskFunction(void* parameter);
 
 class Logger {
   private:
 
-  WifiConnector* wifiConnector = nullptr;
+  IWifiLogger* wifiConnector = nullptr;
 
   public:
 
@@ -44,7 +35,7 @@ class Logger {
     xTaskCreatePinnedToCore(
       LoggerTaskFunction,
       "Log message",
-      2500,
+      2048,
       NULL,
       1, // Priority
       NULL,
@@ -52,9 +43,14 @@ class Logger {
     );
   }
   
-  void setWifiConnector(WifiConnector* _wifiConnector) {
+  void setWifiConnector(IWifiLogger* _wifiConnector) {
     this->wifiConnector = _wifiConnector;
   }
+
+  IWifiLogger* getWifiConnector() {
+    return this->wifiConnector;
+  }
+
 
   void Log(String str) {
 
@@ -106,6 +102,24 @@ class Logger {
   }
 
 } extern logger;
+
+static void LoggerTaskFunction(void* parameter) {
+  String* heapString = NULL;
+  while(1) {
+    if(xQueueReceive(loggingQueue, (void*) &heapString, 20) == pdTRUE) {
+      String stackString = *heapString;
+      Serial.print(stackString);
+      
+      if(logger.getWifiConnector() != NULL) {
+        logger.getWifiConnector()->sendHttpLog(stackString);
+      }
+      
+      delete heapString;
+    }
+    vTaskDelay(20 / portTICK_PERIOD_MS); //Waiting happens already in the receive function ??
+  }
+}
+
 
 #ifdef ENABLE_LOG_DURATION
     #define LOG_DURATION(logger, name, lambda) logger->LogDuration(name, [](){lambda;})
