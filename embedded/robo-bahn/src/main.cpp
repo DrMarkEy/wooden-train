@@ -1,4 +1,4 @@
-//#include <Arduino.h>
+#include <Arduino.h>
 #include <engine.h>
 #include <soundplayer.h>
 //#include <lights.h>
@@ -6,7 +6,7 @@
 #include <connectivity/wifi.h>
 #include <connectivity/bluetooth.h>
 #include <http-logger.h>
-//#include <track-sensor.h>
+#include <track-sensor.h>
 
 Logger logger;
 
@@ -17,7 +17,7 @@ Engine* engine;
 ButtonController buttonController;
 SoundPlayer soundPlayer;
 //Lights* lights;
-//TrackSensor* trackSensor;
+TrackSensor* trackSensor;
 
 void setup() {    
   logger.Setup();
@@ -82,7 +82,7 @@ void setup() {
     }
   });
 
-/*/
+
   trackSensor = new TrackSensor();
   trackSensor->onColorSignalDetected([](uint8_t color) {
     // TODO: Replace with gradually slowing down?!?
@@ -94,9 +94,9 @@ void setup() {
     sensorColor[1] = 10;
     sensorColor[2] = 255;
     sensorColor[3] = 50;
-    bluetooth->setSensorColor(sensorColor);* /
+    bluetooth->setSensorColor(sensorColor);*/
   });  
-
+  /*
   lights = new Lights();
   lights->setGlobalColor(255, 0, 0);*/
 
@@ -110,12 +110,12 @@ void loop() {
   /*LOG_DURATION(logger, "Lights", lights->Loop());
   */
 
- /*
+ 
   LOG_DURATION(logger, "TrackSensor", trackSensor->Loop());
 
   if(millis() - countTimer > 1000) {
     countTimer = millis();
     uint8_t measurements = trackSensor->resetMeasurementCount();
-    logger->Logf("Measured %d colors", measurements);
-  }*/
+    logger.Logf("Measured %d colors", measurements);
+  }
 }
