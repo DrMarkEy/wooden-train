@@ -58,7 +58,7 @@ class Logger {
     String* heapString = new String(str);
 
     if(xQueueSend(loggingQueue, (void*) &heapString, 10) != pdTRUE) {
-      Serial.println("Queue Full!"); // Absurd using serial here...
+      //Serial.println("Queue Full!"); // Absurd using serial here...
     }    
   }
 
