@@ -8,16 +8,21 @@
 #include <Arduino.h>
 
 #include <color-sensor.h>
-#include <cyclic-buffer.h>
+#include "CircularBuffer.hpp"
 #include <http-logger.h>
 #include <library.h>
 
 class TrackSensor;
 extern TrackSensor* trackSensor;
 
+#define COLOR_BUFFER_SIZE 80
+
 #define COLOR_IRRELEVANT 255
-static const uint8_t SIGNAL_STOP_COLORS[3] = {COLOR_WHITE, COLOR_RED, COLOR_IRRELEVANT};
-static const uint8_t SIGNAL_STOP_COLORS_2[3] = {COLOR_WHITE, COLOR_IRRELEVANT, COLOR_RED};
+#define SIGNAL_CODE_LENGTH 5
+static const uint8_t SIGNAL_STOP_COLORS[SIGNAL_CODE_LENGTH]   = {COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_WHITE, COLOR_RED};
+static const uint8_t SIGNAL_STOP_COLORS_2[SIGNAL_CODE_LENGTH] = {COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_WHITE, COLOR_IRRELEVANT, COLOR_RED};
+static const uint8_t SIGNAL_STOP_COLORS_3[SIGNAL_CODE_LENGTH] = {COLOR_IRRELEVANT, COLOR_WHITE, COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_RED};
+static const uint8_t SIGNAL_STOP_COLORS_4[SIGNAL_CODE_LENGTH] = {COLOR_WHITE, COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_RED};
 
 #define SIGNAL_STOP 1
 
@@ -26,7 +31,7 @@ class TrackSensor {
   private:
   ColorSensor* colorSensor;
   void (*colorSignalCallback)(uint8_t color) = nullptr;
-  CyclicBuffer<uint8_t, 80> lastMeasurements = CyclicBuffer<uint8_t, 80>(COLOR_WOOD);
+  CircularBuffer<uint8_t, COLOR_BUFFER_SIZE> lastColorMeasurements;
   uint8_t measurementCounter = 0;
 
   void readMagneticField() {
@@ -40,19 +45,19 @@ class TrackSensor {
   }
 
   void colorMeasurement(uint8_t classifiedColor) {
-    lastMeasurements.add(classifiedColor);
+    lastColorMeasurements.push(classifiedColor);
     measurementCounter ++;
 
-    if(checkSignalMatch(SIGNAL_STOP_COLORS) || checkSignalMatch(SIGNAL_STOP_COLORS_2)) {
-      logger->Logf("Detected stop signal!");
+    if(checkSignalMatch(SIGNAL_STOP_COLORS) || checkSignalMatch(SIGNAL_STOP_COLORS_2) || checkSignalMatch(SIGNAL_STOP_COLORS_3) || checkSignalMatch(SIGNAL_STOP_COLORS_4)) {
+      logger.Logf("Detected stop signal!");
       colorSignalCallback(SIGNAL_STOP);
     }
   }
 
   bool checkSignalMatch(const uint8_t* signal) {
-    for(uint8_t i = 0; i < 3; i++) {
+    for(uint8_t i = 0; i < SIGNAL_CODE_LENGTH; i++) {
       if(signal[i] != COLOR_IRRELEVANT) {
-        if(lastMeasurements[i] != signal[i]) {
+        if(lastColorMeasurements[COLOR_BUFFER_SIZE - SIGNAL_CODE_LENGTH + i] != signal[i]) {
           return false;
         }
       }
@@ -68,6 +73,11 @@ class TrackSensor {
     colorSensor->onMeasurement([](uint8_t color) {
       trackSensor->colorMeasurement(color);
     });
+
+    // Initialize buffer with COLOR_WOOD
+    for(uint8_t i = 0; i < COLOR_BUFFER_SIZE; i++) {
+      lastColorMeasurements.push(COLOR_WOOD);
+    }    
   }
 
   void Loop()
@@ -75,8 +85,13 @@ class TrackSensor {
     colorSensor->Loop();
   }
 
-  uint8_t resetMeasurementCount() {    
-    lastMeasurements.print();
+  uint8_t resetMeasurementCount() {
+    String str = "";
+    for(uint8_t i = 0; i < COLOR_BUFFER_SIZE; i++) {
+      str += String(lastColorMeasurements[i]);
+      str += " ";
+    }
+    logger.Log(str);
 
     uint8_t result = measurementCounter;
     measurementCounter = 0;
