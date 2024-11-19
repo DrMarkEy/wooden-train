@@ -6,6 +6,7 @@
 #define colorsensor_h
 
 #include <Arduino.h>
+#include <SPI.h>
 #include "Adafruit_TCS34725.h"
 
 #include <http-logger.h>
@@ -14,7 +15,7 @@
 // https://github.com/adafruit/Adafruit_TCS34725/blob/master/examples/colorview/colorview.ino
 // https://de.wikipedia.org/wiki/Lab-Farbraum
 
-#define INTEGRATION_CYCLES 2
+#define INTEGRATION_CYCLES 5
 
 // Wood is only detected if the distance to it is half as much as to all other colors
 // This is to prevent detecting white as wood accidentally
@@ -28,12 +29,12 @@
 //#define COLOR_GREEN 5  // Deactivated for now, because produces to many false positives...
 #define COLOR_BLUE 6
 
-const float LAB_WOOD[] = {24.5, -2.6, 9.5};
-const float LAB_BLACK[] = {1.1, 0.1, -0.4};
-const float LAB_WHITE[] = {71.5, -20.9, 3.6};
-const float LAB_RED[] = {8.8, 17.3, 8.1};
+const float LAB_WOOD[] = {14.9, -1.7, 8.9};
+const float LAB_BLACK[] = {1.3, 0.0, 0.0};
+const float LAB_WHITE[] = {43.6, 11.2, 7.1};
+const float LAB_RED[] = {5.4, 11.9, 4.2};
 //const float LAB_YELLOW[] = {};
-const float LAB_BLUE[] = {13.8, -5.6, -9.4}; 
+//const float LAB_BLUE[] = {}; 
 //const float LAB_GREEN[] = {};
 
 volatile boolean interrupt = false;
@@ -92,11 +93,11 @@ class ColorSensor {
       color = COLOR_YELLOW;
     }*/
 
-    delta = deltaE(lab, LAB_BLUE);  
+    /*delta = deltaE(lab, LAB_BLUE);  
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_BLUE;
-    }
+    }*/
 
     /*delta = deltaE(lab, LAB_GREEN);  
     if(delta < deltaMin) {
@@ -113,11 +114,11 @@ class ColorSensor {
 
   ColorSensor(uint8_t ledPin)
   {           
-    colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_4X);
+    colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_1X);
 
     // Initialize color sensor
     if (colorSensor->begin()) {
-      logger->Log("Color Sensor initialized!");
+      logger.Log("Color Sensor initialized!");
 
       // Turn on COLOR-SENSOR LED
       pinMode(ledPin, OUTPUT);
@@ -127,7 +128,7 @@ class ColorSensor {
 
 
     } else {
-      logger->Log("No TCS34725 found ... check your connections");      
+      logger.Log("No TCS34725 found ... check your connections");      
       working = false;
     }
   }
@@ -136,7 +137,7 @@ class ColorSensor {
 
     if(!working) {
       if(millis() > nextBrokenUpdate) {
-        logger->Log("ColorSensor broken!");
+        logger.Log("ColorSensor broken!");
         nextBrokenUpdate = millis() + 1000;
         return;
       }
@@ -174,12 +175,7 @@ class ColorSensor {
       float labConverted[3];
       rgb2lab(rgb, labConverted);
 
-      /*
-      logger->Log("Lab Values:");
-      logger->Logf("%f", labConverted[0]);
-      logger->Logf("%f", labConverted[1]);
-      logger->Logf("%f", labConverted[2]);
-      */
+      //logger.Logf("Lab Values:\n%f \n%f \n %f\n", labConverted[0], labConverted[1], labConverted[2]);      
 
       uint8_t classifiedColor = classifyColor(labConverted);
 
