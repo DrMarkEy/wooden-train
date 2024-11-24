@@ -84,10 +84,27 @@ void setup() {
 
 
   trackSensor = new TrackSensor();
-  trackSensor->onColorSignalDetected([](uint8_t color) {
+  trackSensor->onColorSignalDetected([](uint8_t signal) {
     // TODO: Replace with gradually slowing down?!?
-    if(color == SIGNAL_STOP) {
+    if(signal == SIGNAL_STOP) {
       engine->setSpeed(0);
+    }
+    else if(signal == SIGNAL_WAIT) {
+      byte oldSpeed = engine->getSpeed();
+      engine->stop();
+      delay(2500);
+      engine->setSpeed(oldSpeed);
+    }
+    else if(signal == SIGNAL_HONK) {
+      soundPlayer.playSound(1);
+    }
+    else if(signal == SIGNAL_REVERSE) {
+      byte oldSpeed = engine->getSpeed();
+      engine->stop();
+      delay(100);
+      engine->setDirection(!engine->getDirection());
+      delay(100);
+      engine->setSpeed(oldSpeed);
     }
 
     /*sensorColor[0] = color;

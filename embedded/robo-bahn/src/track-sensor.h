@@ -18,21 +18,29 @@ extern TrackSensor* trackSensor;
 #define COLOR_BUFFER_SIZE 80
 
 #define COLOR_IRRELEVANT 255
-#define SIGNAL_CODE_LENGTH 5
-static const uint8_t SIGNAL_STOP_COLORS[SIGNAL_CODE_LENGTH]   = {COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_WHITE, COLOR_RED};
-static const uint8_t SIGNAL_STOP_COLORS_2[SIGNAL_CODE_LENGTH] = {COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_WHITE, COLOR_IRRELEVANT, COLOR_RED};
-static const uint8_t SIGNAL_STOP_COLORS_3[SIGNAL_CODE_LENGTH] = {COLOR_IRRELEVANT, COLOR_WHITE, COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_RED};
-static const uint8_t SIGNAL_STOP_COLORS_4[SIGNAL_CODE_LENGTH] = {COLOR_WHITE, COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_IRRELEVANT, COLOR_RED};
 
 #define SIGNAL_STOP 1
+#define SIGNAL_WAIT 2
+#define SIGNAL_HONK 3
+#define SIGNAL_REVERSE 4
 
 class TrackSensor {
 
   private:
   ColorSensor* colorSensor;
   void (*colorSignalCallback)(uint8_t color) = nullptr;
+
+  // For debugging
   CircularBuffer<uint8_t, COLOR_BUFFER_SIZE> lastColorMeasurements;
   uint8_t measurementCounter = 0;
+
+  // The least MEASURED color value. The color sensor measures a color in every step. Only colors that are measured at least 2 times count as detected.
+  uint8_t lastMeasuredColor = COLOR_IRRELEVANT;
+  // The currently detected color value. Is only updated when a different color is detected (i.e. measured two times in a row)
+  uint8_t currentDetectedColor = COLOR_IRRELEVANT;
+  // The previously detected color. Changes only if currentDetectedColor is updated to a new color.
+  uint8_t previouslyDetectedColor = COLOR_IRRELEVANT;  
+  // Note: previouslyDetectedColor is always different from currentDetectedColor, as these values only update when different.
 
   void readMagneticField() {
 
@@ -45,26 +53,51 @@ class TrackSensor {
   }
 
   void colorMeasurement(uint8_t classifiedColor) {
+    // Only for debugging
     lastColorMeasurements.push(classifiedColor);
     measurementCounter ++;
 
-    if(checkSignalMatch(SIGNAL_STOP_COLORS) || checkSignalMatch(SIGNAL_STOP_COLORS_2) || checkSignalMatch(SIGNAL_STOP_COLORS_3) || checkSignalMatch(SIGNAL_STOP_COLORS_4)) {
-      logger.Logf("Detected stop signal!");
-      colorSignalCallback(SIGNAL_STOP);
-    }
-  }
+    // ---- Actual detection logic ----
+    // If the color was already measured in the previous step => count it as detected
+    if(lastMeasuredColor == classifiedColor) {
+      // The color is not already the currently detected one
+      if(classifiedColor != currentDetectedColor) {
+        previouslyDetectedColor = currentDetectedColor;
+        currentDetectedColor = classifiedColor;
 
-  bool checkSignalMatch(const uint8_t* signal) {
-    for(uint8_t i = 0; i < SIGNAL_CODE_LENGTH; i++) {
-      if(signal[i] != COLOR_IRRELEVANT) {
-        if(lastColorMeasurements[COLOR_BUFFER_SIZE - SIGNAL_CODE_LENGTH + i] != signal[i]) {
-          return false;
-        }
+        onNewColorDetected();
       }
     }
-    return true;
+    else // The color is different from the one in the previous step
+    {
+      lastMeasuredColor = classifiedColor;
+    }    
   }
 
+  void onNewColorDetected() {
+    if(previouslyDetectedColor == COLOR_WHITE) {
+      if(currentDetectedColor == COLOR_RED) {
+        logger.Logf("Detected stop signal!");
+        colorSignalCallback(SIGNAL_STOP);
+      }
+
+      if(currentDetectedColor == COLOR_YELLOW) {
+        logger.Logf("Detected wait signal!");
+        colorSignalCallback(SIGNAL_WAIT);
+      }
+
+      if(currentDetectedColor == COLOR_GREEN) {
+        logger.Logf("Detected honk signal!");
+        colorSignalCallback(SIGNAL_HONK);
+      }
+
+      if(currentDetectedColor == COLOR_BLUE) {
+        logger.Logf("Detected reverse signal!");
+        colorSignalCallback(SIGNAL_REVERSE);
+      }
+    }    
+  }
+  
   public:
 
   TrackSensor()

@@ -15,27 +15,36 @@
 // https://github.com/adafruit/Adafruit_TCS34725/blob/master/examples/colorview/colorview.ino
 // https://de.wikipedia.org/wiki/Lab-Farbraum
 
-#define INTEGRATION_CYCLES 5
+#define INTEGRATION_CYCLES 2
 
 // Wood is only detected if the distance to it is half as much as to all other colors
 // This is to prevent detecting white as wood accidentally
 #define WOOD_EXTRA_DISTANCE_FACTOR 1
+#define BLACK_EXTRA_DISTANCE_FACTOR 1
+#define WHITE_EXTRA_DISTANCE_FACTOR 1
+#define RED_EXTRA_DISTANCE_FACTOR 1
+#define YELLOW_EXTRA_DISTANCE_FACTOR 1
+#define GREEN_EXTRA_DISTANCE_FACTOR 1
+#define BLUE_EXTRA_DISTANCE_FACTOR 1
+#define MAGENTA_EXTRA_DISTANCE_FACTOR 1
 
 #define COLOR_WOOD 0
 #define COLOR_BLACK 1
 #define COLOR_WHITE 2
 #define COLOR_RED 3
-//#define COLOR_YELLOW 4 // Deactivated for now, because produces to many false positives...
-//#define COLOR_GREEN 5  // Deactivated for now, because produces to many false positives...
+#define COLOR_YELLOW 4
+#define COLOR_GREEN 5
 #define COLOR_BLUE 6
+#define COLOR_MAGENTA 7
 
-const float LAB_WOOD[] = {14.9, -1.7, 8.9};
-const float LAB_BLACK[] = {1.3, 0.0, 0.0};
-const float LAB_WHITE[] = {43.6, 11.2, 7.1};
-const float LAB_RED[] = {5.4, 11.9, 4.2};
-//const float LAB_YELLOW[] = {};
-//const float LAB_BLUE[] = {}; 
-//const float LAB_GREEN[] = {};
+const float LAB_WOOD[] = {4.0, 0.1, 1.9};
+const float LAB_BLACK[] = {1.1, 0.0, 0.0};
+const float LAB_WHITE[] = {19.3, -6.0, 3.6}; 
+const float LAB_RED[] = {2.4, 3.4, 1.3};
+const float LAB_YELLOW[] = {15.8, -8.6, 17.0};
+const float LAB_GREEN[] = {4.6, -4.5, 2.7};
+const float LAB_BLUE[] = {2.8, -0.8, -3.7};
+const float LAB_MAGENTA[] = {4.4, 4.9, -0.4};
 
 volatile boolean interrupt = false;
 void colorSensorInterrupt() 
@@ -69,43 +78,47 @@ class ColorSensor {
       color = COLOR_WOOD;
     }
 
-    delta = deltaE(lab, LAB_BLACK);  
+    delta = deltaE(lab, LAB_BLACK) * BLACK_EXTRA_DISTANCE_FACTOR;
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_BLACK;
     }
 
-    delta = deltaE(lab, LAB_WHITE);  
+    delta = deltaE(lab, LAB_WHITE) * WHITE_EXTRA_DISTANCE_FACTOR;
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_WHITE;
     }
 
-    delta = deltaE(lab, LAB_RED);  
+    delta = deltaE(lab, LAB_RED) * RED_EXTRA_DISTANCE_FACTOR;  
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_RED;
     }
 
-    /*delta = deltaE(lab, LAB_YELLOW);  
+    delta = deltaE(lab, LAB_YELLOW) * YELLOW_EXTRA_DISTANCE_FACTOR;  
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_YELLOW;
-    }*/
+    }
 
-    /*delta = deltaE(lab, LAB_BLUE);  
-    if(delta < deltaMin) {
-      deltaMin = delta;
-      color = COLOR_BLUE;
-    }*/
-
-    /*delta = deltaE(lab, LAB_GREEN);  
+    delta = deltaE(lab, LAB_GREEN) * GREEN_EXTRA_DISTANCE_FACTOR;  
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_GREEN;
-    }*/
+    }
 
-    // ...
+    delta = deltaE(lab, LAB_BLUE) * BLUE_EXTRA_DISTANCE_FACTOR;
+    if(delta < deltaMin) {
+      deltaMin = delta;
+      color = COLOR_BLUE;
+    }
+
+    delta = deltaE(lab, LAB_MAGENTA) * MAGENTA_EXTRA_DISTANCE_FACTOR;
+    if(delta < deltaMin) {
+      deltaMin = delta;
+      color = COLOR_MAGENTA;
+    }
 
     return color;
   }
