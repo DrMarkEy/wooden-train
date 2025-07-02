@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lädt...</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 40px;
+    }
+
+    .progress-container {
+      width: 80%;
+      max-width: 500px;
+      height: 25px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background-color: white;
+      border-radius: 15px;
+      transition: width 0.25s ease;
+    }
+  </style>
+</head>
+<body>
+  <h1>Lädt...</h1>
+  <div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <script>
+    const progressBar = document.getElementById('progress-bar');
+    const duration = 25000; // 25 Sekunden
+    const startTime = Date.now();
+
+    function updateProgress() {
+      const elapsed = Date.now() - startTime;
+      const percent = Math.min((elapsed / duration) * 100, 100);
+      progressBar.style.width = percent + '%';
+
+      if (percent < 100) {
+        requestAnimationFrame(updateProgress);
+      } else {
+        window.location.href = 'http://localhost:8080';
+      }
+    }
+
+    requestAnimationFrame(updateProgress);
+  </script>
+</body>
+</html>
