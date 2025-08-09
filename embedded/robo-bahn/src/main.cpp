@@ -19,11 +19,11 @@ SoundPlayer soundPlayer;
 //Lights* lights;
 TrackSensor* trackSensor;
 
-void setup() {    
+void setup() {
   logger.Setup();
   logger.Log("Baureihe 101, Version ");
   logger.Log(VERSION_CODE);
-  
+
   wifi.Run();
 
   wifi.onWifiConnected([]() {
@@ -39,41 +39,41 @@ void setup() {
     if(engine->getSpeed() == 0) {
       if(buttonController.isReversed()) {
         engine->setDirection(false);
-        engine->setSpeed(255);      
+        engine->setSpeed(255);
       }
       else {
         engine->setDirection(true);
         engine->setSpeed(255);
       }
     }
-    else {      
+    else {
       engine->setSpeed(0);
     }
   });
-  
+
   bluetooth.Setup();
-  bluetooth.onSpeedChanged([](byte* array, byte len){
-    byte speed = array[0];
+  bluetooth.onSpeedChanged([](uint8_t* array, size_t len){
+    uint8_t speed = array[0];
     engine->setSpeed(speed);
-    logger.Log("Set speed "+String(speed));    
+    logger.Log("Set speed "+String(speed));
   });
 
-  bluetooth.onColorChanged([](byte* array, byte len){
-    logger.Log("Set color " + String(array[0]) + "," + String(array[1]) + "," + String(array[2]));    
+  bluetooth.onColorChanged([](uint8_t* array, size_t len){
+    logger.Log("Set color " + String(array[0]) + "," + String(array[1]) + "," + String(array[2]));
     //lights->setDirectionColorWithColoredBacklights(true, array[0], array[1], array[2]);
   });
 
-  bluetooth.onCommand([](byte* buffer, byte bufferSize)
+  bluetooth.onCommand([](uint8_t* buffer, size_t bufferSize)
   {
-    
-    if(buffer[0] == BLUETOOTH_COMMAND_WHISTLE) 
+
+    if(buffer[0] == BLUETOOTH_COMMAND_WHISTLE)
     {
       logger.Log("Whistle!");
       soundPlayer.playSound(1);
     }
-    else if(buffer[0] == BLUETOOTH_COMMAND_REVERSE) 
+    else if(buffer[0] == BLUETOOTH_COMMAND_REVERSE)
     {
-      byte oldSpeed = engine->getSpeed();
+      uint8_t oldSpeed = engine->getSpeed();
       engine->stop();
       delay(100);
       engine->setDirection(!engine->getDirection());
@@ -112,7 +112,7 @@ void setup() {
     sensorColor[2] = 255;
     sensorColor[3] = 50;
     bluetooth->setSensorColor(sensorColor);*/
-  });  
+  });
   /*
   lights = new Lights();
   lights->setGlobalColor(255, 0, 0);*/
@@ -127,7 +127,7 @@ void loop() {
   /*LOG_DURATION(logger, "Lights", lights->Loop());
   */
 
- 
+
   LOG_DURATION(logger, "TrackSensor", trackSensor->Loop());
 
   if(millis() - countTimer > 1000) {

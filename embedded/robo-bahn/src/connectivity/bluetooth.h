@@ -1,6 +1,6 @@
 /*
   bluetooth.h - Allows controlling the train via BLE (NimBLE-Arduino)
-  Refactored July 2025
+  Migrated to NimBLE July 2025
   Original by Marc Mendler, August 2023
 */
 #ifndef bluetooth_h
@@ -9,15 +9,7 @@
 #include <NimBLEDevice.h>
 #include <http-logger.h>
 #include <config.h>
-
-#define BLUETOOTH_CONNECTION_ESTABLISHED 1
-#define BLUETOOTH_CONNECTION_TERMINATED 2
-
-#define BLUETOOTH_COMMAND_NONE 3
-#define BLUETOOTH_COMMAND_START 4
-#define BLUETOOTH_COMMAND_STOP 5
-#define BLUETOOTH_COMMAND_REVERSE 6
-#define BLUETOOTH_COMMAND_WHISTLE 7
+#include <user-command.hpp>
 
 #define BLUETOOTH_COMMAND_COUNT 7
 
@@ -28,15 +20,50 @@
 #define BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID   "c8d7e25c-3447-11ee-be56-0242ac120002"
 #define BLUETOOTH_CHARACTERISTIC_COLOR_READING_UUID "45cfdad3-4f02-4e5c-aa16-1c513dc76a3c"
 
+static void connectCallback();
+static void disconnectCallback();
+static void userCommandCallback(UserCommand* command);
+
+class ServerCallbacks : public NimBLEServerCallbacks {
+  void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
+    ESP_LOGI(TAG, "BLE client address %s connected.", connInfo.getAddress().toString().c_str());
+    connectCallback();
+  }
+
+  void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) {
+    ESP_LOGI(TAG, "BLE client address %s disconnected.", connInfo.getAddress().toString().c_str());
+    disconnectCallback();
+  }
+};
+
+
+class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
+    ESP_LOGI(TAG, "Client sent write request to characteristic %s", pCharacteristic->getUUID().toString().c_str());
+    NimBLEAttValue value = pCharacteristic->getValue();
+
+    uint8_t buffer[value.length() - 1];
+    memcpy(buffer, value.c_str() + 1, value.length() - 1);
+
+    UserCommand* command = new UserCommand(value.c_str()[0], buffer, value.length() - 1);
+    command->print();
+    userCommandCallback(command);
+  }
+};
+
 class BluetoothConnector : public NimBLECharacteristicCallbacks, public NimBLEServerCallbacks {
 public:
     BluetoothConnector() {}
 
     void Setup() {
+        // Disable authentication stuff for better performance
+        NimBLEDevice::setSecurityAuth(false);
+
+        // Init device with device name
         NimBLEDevice::init(DEFAULT_WIFI_HOSTNAME);
 
         NimBLEServer *pServer = NimBLEDevice::createServer();
-        pServer->setCallbacks(this);
+        pServer->setCallbacks(new ServerCallbacks);
 
         NimBLEService *pService = pServer->createService(BLUETOOTH_SERVICE_MAIN_UUID);
 
@@ -85,7 +112,13 @@ public:
 
         NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
         pAdvertising->addServiceUUID(BLUETOOTH_SERVICE_MAIN_UUID);
-        pAdvertising->setScanResponse(true);
+
+        // Set name also in scanResponseData
+        NimBLEAdvertisementData scanResponseData;
+        scanResponseData.setName(DEFAULT_WIFI_HOSTNAME);
+        pAdvertising->setScanResponseData(scanResponseData);
+
+
         pAdvertising->start();
 
         logger.Log("Bluetooth initialization finished!");
@@ -115,35 +148,41 @@ public:
     }
 
     // Set command value
-    void setCommand(uint8_t command) {
+    /*void setCommand(uint8_t command) {
         if (pCommandChar) pCommandChar->setValue(&command, 1);
-    }
+    }*/
 
 protected:
     // NimBLECharacteristicCallbacks overrides
-    void onWrite(NimBLECharacteristic *pCharacteristic) override {
+    void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
+        ESP_LOGI(TAG, "Client sent write request to characteristic %s", pCharacteristic->getUUID().toString().c_str());
+
         std::string uuid = pCharacteristic->getUUID().toString();
         std::string value = pCharacteristic->getValue();
 
         if (uuid == BLUETOOTH_CHARACTERISTIC_COMMAND_UUID && commandCallback) {
             commandCallback((uint8_t*)value.data(), value.length());
+
+
+/*
+        NimBLEAttValue value = pCharacteristic->getValue();
+
+        uint8_t buffer[value.length() - 1];
+        memcpy(buffer, value.c_str() + 1, value.length() - 1);
+
+        UserCommand* command = new UserCommand(value.c_str()[0], buffer, value.length() - 1);
+        command->print();
+        userCommandCallback(command);*/
+
+
+
         } else if (uuid == BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID && speedCallback) {
             speedCallback((uint8_t*)value.data(), value.length());
         } else if (uuid == BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID && colorCallback) {
             colorCallback((uint8_t*)value.data(), value.length());
         }
         // Color reading characteristic is only written by the device itself
-    }
 
-    // NimBLEServerCallbacks overrides
-    void onConnect(NimBLEServer* pServer) override {
-        logger.Log("BLE client connected");
-        if (connectionCallback) connectionCallback(BLUETOOTH_CONNECTION_ESTABLISHED);
-    }
-    void onDisconnect(NimBLEServer* pServer) override {
-        logger.Log("BLE client disconnected");
-        if (connectionCallback) connectionCallback(BLUETOOTH_CONNECTION_TERMINATED);
-        NimBLEDevice::startAdvertising();
     }
 
 public:
@@ -152,7 +191,27 @@ public:
         connectionCallback = callback;
     }
 
+    void onClientConnect() {
+        if(connectionCallback != nullptr) {
+            connectionCallback(BLUETOOTH_CONNECTION_ESTABLISHED);
+        }
+    }
+
+    void onClientDisconnect() {
+        if(connectionCallback != nullptr) {
+            connectionCallback(BLUETOOTH_CONNECTION_TERMINATED);
+        }
+        pAdvertising->start();
+    }
+
+  void onCommandReceived(UserCommand* userCommand) {
+
+  }
+
+
 private:
+    NimBLEAdvertising *pAdvertising;
+
     NimBLECharacteristic *pSpeedChar = nullptr;
     NimBLECharacteristic *pLightColorChar = nullptr;
     NimBLECharacteristic *pCommandChar = nullptr;
@@ -165,5 +224,18 @@ private:
 };
 
 extern BluetoothConnector bluetooth;
+
+void connectCallback() {
+  bluetooth.onClientConnect();
+}
+
+void disconnectCallback() {
+  bluetooth.onClientDisconnect();
+}
+
+void userCommandCallback(UserCommand* command) {
+  bluetooth.onCommandReceived(command);
+}
+
 
 #endif
