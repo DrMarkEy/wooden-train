@@ -3,16 +3,16 @@ import BLEConnection from './BLEConnection.js';
 import {UUIDS} from './Enums.js';
 
 let TRAIN_COMMAND = {
-  START: 4,    
-  STOP: 5,
-  REVERSE: 6,
-  WHISTLE: 7
+  START: 3,
+  STOP: 4,
+  REVERSE: 5,
+  WHISTLE: 6
 };
 
 
 class TrainConnection extends BLEConnection {
   constructor(device, server) {
-    super(device, server);    
+    super(device, server);
   }
 
   async setup() {
@@ -25,7 +25,7 @@ class TrainConnection extends BLEConnection {
     this.commandCharacteristic = await service.getCharacteristic(UUIDS.train.command);
     this.colorReadingCharacteristic = await service.getCharacteristic(UUIDS.train.colorReading);
 
-    //await this.colorReadingCharacteristic.startNotifications();    
+    //await this.colorReadingCharacteristic.startNotifications();
 
     this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', this.colorReadingReceived);
 
@@ -36,31 +36,31 @@ class TrainConnection extends BLEConnection {
     super.setup();
   }
 
-  async setSpeed(speed) 
-  {        
-    if(this.connected) {   
-        
-      if(this.engineCharacteristicLock) 
+  async setSpeed(speed)
+  {
+    if(this.connected) {
+
+      if(this.engineCharacteristicLock)
       {
         this.requestedEngineSpeed = speed;
         console.log("Requested speed of ", speed);
       }
       else
-      { 
+      {
         this.engineCharacteristicLock = true;
         console.log('Set speed to', speed);
 
-        let speedValue = new Uint8Array([speed]);          
+        let speedValue = new Uint8Array([speed]);
 
         try
         {
-          await this.engineSpeedCharacteristic.writeValue(speedValue);            
+          await this.engineSpeedCharacteristic.writeValue(speedValue);
           this.engineCharacteristicLock = false;
           //console.log('Released speed lock');
 
           if(this.requestedEngineSpeed !== undefined) {
             let speed = this.requestedEngineSpeed;
-            this.requestedEngineSpeed = undefined;              
+            this.requestedEngineSpeed = undefined;
             this.setSpeed(speed);
           }
         }
@@ -73,8 +73,8 @@ class TrainConnection extends BLEConnection {
   }
 
   async setLightsColor(led1, led2, led3, led4, led5, led6) {
-    if(this.connected) {   
-            
+    if(this.connected) {
+
       let colorsValue = new Uint8Array([
         led1.r, led1.g, led1.b,
         led2.r, led2.g, led2.b,
@@ -82,7 +82,7 @@ class TrainConnection extends BLEConnection {
         led4.r, led4.g, led4.b,
         led5.r, led5.g, led5.b,
         led6.r, led6.g, led6.b
-      ]);          
+      ]);
 
       try
       {
@@ -100,18 +100,18 @@ class TrainConnection extends BLEConnection {
     //Convert argument to array
     if(!Array.isArray(command))
       command = [command];
-      
+
     let commandValue = new Uint8Array(command);
-      
+
     try
     {
       this.commandCharacteristic.writeValue(commandValue);
-        
+
       /*
       if(answerCode !== undefined)
       {
         let thi = this;
-        this.pendingCommandAnswer = answerCode;          
+        this.pendingCommandAnswer = answerCode;
         return new Promise((resolve) => setTimeout(function() {thi.checkModuleAnswer(resolve, answerCode);}, 100));
       }*/
     }
@@ -134,7 +134,7 @@ class TrainConnection extends BLEConnection {
     }
   }
 
-  colorReadingReceived(e) 
+  colorReadingReceived(e)
   {
     console.log("Received color reading!", e);
   }
