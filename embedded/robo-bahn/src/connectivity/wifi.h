@@ -36,8 +36,8 @@ class WifiConnector: public IWifiLogger
   bool inOTAUpdate = false;
   void (*wifiConnectedCallback)() = nullptr;
 
-  void initialize_ota() {    
-  
+  void initialize_ota() {
+
     ArduinoOTA
     .onStart([]() {
       String type;
@@ -85,7 +85,7 @@ class WifiConnector: public IWifiLogger
   public:
 
   WifiConnector() {}
-  
+
   void Run() {
     xTaskCreatePinnedToCore(
       CheckWifiStateTaskFunction,
@@ -141,18 +141,18 @@ class WifiConnector: public IWifiLogger
     }
   }
 
-  void updateWifiState() {    
-   
+  void updateWifiState() {
+
      // Was not connected and trying to reconnect since last check
     if(wifiState == WIFI_STATE_CONNECTING) {
 
       // Is now connected
       if(WiFi.status() == WL_CONNECTED) {
-        logger.Log("WiFi connected: "+WiFi.localIP());
+        logger.Log("WiFi connected: " + String(WiFi.localIP().toString()));
         logger.Log("Checking for newer OTA version...");
         initialize_ota();
-    
-        wifiState = WIFI_STATE_CONNECTED;     
+
+        wifiState = WIFI_STATE_CONNECTED;
         if(wifiConnectedCallback != nullptr) {
           wifiConnectedCallback();
         }
@@ -160,23 +160,23 @@ class WifiConnector: public IWifiLogger
         vTaskDelay(WIFI_CHECK_INTERVAL / portTICK_PERIOD_MS);
       }
       else { // Still not connected
-        logger.Logf("Wifi not connected. Will retry in %d ms.", WIFI_RETRY_INTERVAL);        
-        
+        logger.Logf("Wifi not connected. Will retry in %d ms.", WIFI_RETRY_INTERVAL);
+
         WiFi.disconnect();
         WiFi.reconnect();
-        
+
         vTaskDelay(WIFI_RETRY_INTERVAL / portTICK_PERIOD_MS);
-        
-        logger.Log("Retrying WiFi connection...");                
+
+        logger.Log("Retrying WiFi connection...");
       }
     }
     // Wifi was connected on last check
     else if(wifiState == WIFI_STATE_CONNECTED) {
-      
+
       // Wifi is now disconnected
-      if ((WiFi.status() != WL_CONNECTED)) {          
-        logger.Log("Lost WiFi Connection.");                  
-        wifiState = WIFI_STATE_CONNECTING;        
+      if ((WiFi.status() != WL_CONNECTED)) {
+        logger.Log("Lost WiFi Connection.");
+        wifiState = WIFI_STATE_CONNECTING;
         // Immediately start on top in the next task iteration
       }
       else {
@@ -187,21 +187,21 @@ class WifiConnector: public IWifiLogger
   }
 
   void onWifiConnected(void (*_callback) ())
-  {		
-    this->wifiConnectedCallback = _callback;	
+  {
+    this->wifiConnectedCallback = _callback;
   }
 
   void sendHttpLog(String text) {
-    
+
     HTTPClient http;
 
-    text = urlEncode(text);    
+    text = urlEncode(text);
     String url = "http://" LOGGING_SERVER_IP ":" LOGGING_SERVER_PORT "/log/"+text;
-    http.begin(url);    
+    http.begin(url);
 
     // Send HTTP GET request
     int httpResponseCode = http.GET();
-      
+
     if (httpResponseCode<0) {
       logger.Logf("Error code: %d", httpResponseCode);
     }
@@ -212,17 +212,17 @@ class WifiConnector: public IWifiLogger
   }
 } extern wifi;
 
-static void CheckWifiStateTaskFunction (void* parameter) {  
+static void CheckWifiStateTaskFunction (void* parameter) {
   wifi.setup();
   vTaskDelay(WIFI_INITIAL_CONNECTING_TIME / portTICK_PERIOD_MS);
 
-  while(1) {    
+  while(1) {
     wifi.updateWifiState();
   }
 }
 
-static void checkOtaTaskFunction (void* parameter) {  
-  while(1) {    
+static void checkOtaTaskFunction (void* parameter) {
+  while(1) {
     wifi.checkOtaUpdate();
   }
 }

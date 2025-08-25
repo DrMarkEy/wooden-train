@@ -39,7 +39,7 @@
 
 const float LAB_WOOD[] = {4.0, 0.1, 1.9};
 const float LAB_BLACK[] = {1.1, 0.0, 0.0};
-const float LAB_WHITE[] = {19.3, -6.0, 3.6}; 
+const float LAB_WHITE[] = {19.3, -6.0, 3.6};
 const float LAB_RED[] = {2.4, 3.4, 1.3};
 const float LAB_YELLOW[] = {15.8, -8.6, 17.0};
 const float LAB_GREEN[] = {4.6, -4.5, 2.7};
@@ -47,7 +47,7 @@ const float LAB_BLUE[] = {2.8, -0.8, -3.7};
 const float LAB_MAGENTA[] = {4.4, 4.9, -0.4};
 
 volatile boolean interrupt = false;
-void colorSensorInterrupt() 
+void colorSensorInterrupt()
 {
   interrupt = true;
 }
@@ -56,23 +56,23 @@ class ColorSensor {
 
   private:
   Adafruit_TCS34725* colorSensor;
-  void (*measurementCallback)(uint8_t color) = nullptr;  
+  void (*measurementCallback)(uint8_t color) = nullptr;
   bool working = false;
   long nextBrokenUpdate = 0;
   uint16_t r_acc, g_acc, b_acc;
   uint8_t integrationCycle = 0;
 
-  void readColor(uint16_t* r, uint16_t* g, uint16_t* b) {  
+  void readColor(uint16_t* r, uint16_t* g, uint16_t* b) {
     uint16_t c;
-    colorSensor->getRawData(r, g, b, &c);    
+    colorSensor->getRawData(r, g, b, &c);
   }
 
-  uint8_t classifyColor(const float lab[3]) {  
+  uint8_t classifyColor(const float lab[3]) {
     float deltaMin = 1000000;
     float delta;
     uint8_t color;
 
-    delta = deltaE(lab, LAB_WOOD) * WOOD_EXTRA_DISTANCE_FACTOR;  
+    delta = deltaE(lab, LAB_WOOD) * WOOD_EXTRA_DISTANCE_FACTOR;
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_WOOD;
@@ -90,19 +90,19 @@ class ColorSensor {
       color = COLOR_WHITE;
     }
 
-    delta = deltaE(lab, LAB_RED) * RED_EXTRA_DISTANCE_FACTOR;  
+    delta = deltaE(lab, LAB_RED) * RED_EXTRA_DISTANCE_FACTOR;
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_RED;
     }
 
-    delta = deltaE(lab, LAB_YELLOW) * YELLOW_EXTRA_DISTANCE_FACTOR;  
+    delta = deltaE(lab, LAB_YELLOW) * YELLOW_EXTRA_DISTANCE_FACTOR;
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_YELLOW;
     }
 
-    delta = deltaE(lab, LAB_GREEN) * GREEN_EXTRA_DISTANCE_FACTOR;  
+    delta = deltaE(lab, LAB_GREEN) * GREEN_EXTRA_DISTANCE_FACTOR;
     if(delta < deltaMin) {
       deltaMin = delta;
       color = COLOR_GREEN;
@@ -126,7 +126,7 @@ class ColorSensor {
   public:
 
   ColorSensor(uint8_t ledPin)
-  {           
+  {
     colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_1X);
 
     // Initialize color sensor
@@ -141,7 +141,7 @@ class ColorSensor {
 
 
     } else {
-      logger.Log("No TCS34725 found ... check your connections");      
+      logger.Log("No TCS34725 found ... check your connections");
       working = false;
     }
   }
@@ -152,12 +152,13 @@ class ColorSensor {
       if(millis() > nextBrokenUpdate) {
         logger.Log("ColorSensor broken!");
         nextBrokenUpdate = millis() + 1000;
-        return;
       }
-    }      
+
+      return;
+    }
 
     // Measure
-    uint16_t r, g, b;          
+    uint16_t r, g, b;
     readColor(&r, &g, &b);
 
     r_acc += r;
@@ -179,16 +180,16 @@ class ColorSensor {
       rgb[2] = clamp(b_acc, 0, 255);
 
       /*
-      logger->Log("Adjusted Value:");        
+      logger->Log("Adjusted Value:");
       logger->Logf("red %d", rgb[0]);
       logger->Logf("green %d", rgb[1]);
       logger->Logf("blue %d", rgb[2]);
       */
-    
+
       float labConverted[3];
       rgb2lab(rgb, labConverted);
 
-      //logger.Logf("Lab Values:\n%f \n%f \n %f\n", labConverted[0], labConverted[1], labConverted[2]);      
+      //logger.Logf("Lab Values:\n%f \n%f \n %f\n", labConverted[0], labConverted[1], labConverted[2]);
 
       uint8_t classifiedColor = classifyColor(labConverted);
 
@@ -207,8 +208,8 @@ class ColorSensor {
   }
 
   void onMeasurement(void (*_callback) (uint8_t color))
-  {		
-    this->measurementCallback = _callback;	
+  {
+    this->measurementCallback = _callback;
   }
 };
 
