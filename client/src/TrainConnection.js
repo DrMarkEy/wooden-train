@@ -24,10 +24,15 @@ class TrainConnection extends BLEConnection {
     this.lightColorCharacteristic = await service.getCharacteristic(UUIDS.train.lightColor);
     this.commandCharacteristic = await service.getCharacteristic(UUIDS.train.command);
     this.colorReadingCharacteristic = await service.getCharacteristic(UUIDS.train.colorReading);
+    this.operationModeCharacteristic = await service.getCharacteristic(UUIDS.train.operationMode);
 
     //await this.colorReadingCharacteristic.startNotifications();
 
     this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', this.colorReadingReceived);
+
+    await this.operationModeCharacteristic.startNotifications();
+    this.operationModeCharacteristic.addEventListener('characteristicvaluechanged', this.operationModeChanged);
+
 
     this.engineCharacteristicLock = false;
     this.requestedEngineSpeed = 0;
@@ -134,9 +139,26 @@ class TrainConnection extends BLEConnection {
     }
   }
 
+  async readOperationMode() {
+    try
+    {
+      let result = await this.operationModeCharacteristic.readValue();
+      console.log('operation mode', result.getUint8());
+    }
+    catch(ex)
+    {
+      console.error("Error reading operation mode!");
+    }
+  }
+
   colorReadingReceived(e)
   {
     console.log("Received color reading!", e);
+  }
+
+  operationModeChanged(e)
+  {
+    console.log("Operation mode changed!", e);
   }
 }
 

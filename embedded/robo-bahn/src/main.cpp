@@ -118,6 +118,7 @@ void setup() {
   lights->setGlobalColor(255, 0, 0);*/
 
   soundPlayer.playSound(1);
+  bluetooth.setOperationMode(2);
 }
 
 

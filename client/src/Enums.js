@@ -1,10 +1,11 @@
-let UUIDS = {	
+let UUIDS = {
   train: {
-	  service: "566804f6-368b-44a4-a375-ce8789eb1dd8",	
+	  service: "566804f6-368b-44a4-a375-ce8789eb1dd8",
 	  engineSpeed: "c045fb9c-3447-11ee-be56-0242ac120002",
   	lightColor: "c8d7e25c-3447-11ee-be56-0242ac120002",
     command: "3804213f-d6ad-458e-977c-4f9f1b9f6b9a",
-    colorReading: "45cfdad3-4f02-4e5c-aa16-1c513dc76a3c"
+    colorReading: "45cfdad3-4f02-4e5c-aa16-1c513dc76a3c",
+    operationMode: "522df05c-fd6c-49cd-8fb7-ea6beb9018f1"
   }
 /*
 	moduleInfos: "9be5491f-198c-4d6b-9f97-7634d63fd30f",

@@ -19,6 +19,7 @@
 #define BLUETOOTH_CHARACTERISTIC_COMMAND_UUID       "3804213f-d6ad-458e-977c-4f9f1b9f6b9a"
 #define BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID   "c8d7e25c-3447-11ee-be56-0242ac120002"
 #define BLUETOOTH_CHARACTERISTIC_COLOR_READING_UUID "45cfdad3-4f02-4e5c-aa16-1c513dc76a3c"
+#define BLUETOOTH_CHARACTERISTIC_OPERATION_MODE_UUID "522df05c-fd6c-49cd-8fb7-ea6beb9018f1"
 
 static void connectCallback();
 static void disconnectCallback();
@@ -95,6 +96,13 @@ public:
         );
         pColorReadingChar->setCallbacks(this);
 
+        // Operation mode characteristic (with notify)
+        pOperationModeChar = pService->createCharacteristic(
+            BLUETOOTH_CHARACTERISTIC_OPERATION_MODE_UUID,
+            NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY
+        );
+        pColorReadingChar->setCallbacks(this);
+
         // Set initial values
         uint8_t zeroSpeed = 0;
         pSpeedChar->setValue(&zeroSpeed, 1);
@@ -107,6 +115,9 @@ public:
 
         uint8_t zeroReading[4] = {0};
         pColorReadingChar->setValue(zeroReading, 4);
+
+        pOperationMode[0] = 23;
+        pOperationModeChar->setValue(pOperationMode, 1);
 
         pService->start();
 
@@ -134,6 +145,15 @@ public:
         if (pColorReadingChar) {
             pColorReadingChar->setValue(color, 4);
             pColorReadingChar->notify();
+        }
+    }
+
+    // Set operation mode and notify
+    void setOperationMode(uint8_t operationMode) {
+        if (pOperationModeChar) {
+            pOperationMode[0] = operationMode;
+            pOperationModeChar->setValue(pOperationMode, 1);
+            pOperationModeChar->notify();
         }
     }
 
@@ -212,10 +232,13 @@ public:
 private:
     NimBLEAdvertising *pAdvertising;
 
+    uint8_t pOperationMode[1];
+
     NimBLECharacteristic *pSpeedChar = nullptr;
     NimBLECharacteristic *pLightColorChar = nullptr;
     NimBLECharacteristic *pCommandChar = nullptr;
     NimBLECharacteristic *pColorReadingChar = nullptr;
+    NimBLECharacteristic *pOperationModeChar = nullptr;
 
     void (*commandCallback)(uint8_t*, size_t) = nullptr;
     void (*speedCallback)(uint8_t*, size_t) = nullptr;
