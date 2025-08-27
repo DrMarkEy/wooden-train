@@ -19,7 +19,7 @@ static void IRAM_ATTR ISR() {
 
 class ButtonController {
   private:
-  bool lastButtonPressTick = 0;
+  TickType_t lastButtonPressTick = 0;
   void (*buttonPressedCallback)() = nullptr;
 
   public:
@@ -42,7 +42,7 @@ class ButtonController {
       1 // Core affinity
     );
 }
-  
+
   void checkButtonState()
   {
     if(interruptTriggered) {
@@ -59,8 +59,8 @@ class ButtonController {
   }
 
   void onButtonPressed(void (*_callback) ())
-  {		
-    this->buttonPressedCallback = _callback;	
+  {
+    this->buttonPressedCallback = _callback;
   }
 
   bool isReversed()
@@ -70,10 +70,10 @@ class ButtonController {
 
 } extern buttonController;
 
-static void ButtonTaskFunction (void* parameter) {  
-  while(1) {    
+static void ButtonTaskFunction (void* parameter) {
+  while(1) {
     buttonController.checkButtonState();
-    vTaskDelay(100 / portTICK_PERIOD_MS);    
+    vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
 
