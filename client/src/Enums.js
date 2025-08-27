@@ -12,6 +12,17 @@ let UUIDS = {
 	commandAnswers: "b399bd6d-fbce-4488-ae82-314a0195db4d",*/
 };
 
+const COLOR_CODES = {
+  WOOD: 0,
+  BLACK: 1,
+  WHITE: 2,
+  RED: 3,
+  YELLOW: 4,
+  GREEN: 5,
+  BLUE: 6,
+  MAGENTA: 7
+};
+
 let MIDI_CONTROLS = {
   device: 176,
   speed1: 2,

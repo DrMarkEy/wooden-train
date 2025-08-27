@@ -19,6 +19,8 @@ SoundPlayer soundPlayer;
 //Lights* lights;
 TrackSensor* trackSensor;
 
+uint8_t lastDetectedSensorColor[1];
+
 void setup() {
   logger.Setup();
   logger.Log("Baureihe 101, Version ");
@@ -84,6 +86,11 @@ void setup() {
 
 
   trackSensor = new TrackSensor();
+  trackSensor->onColorChangeDetected([](uint8_t color) {
+    lastDetectedSensorColor[0] = {color};
+    bluetooth.setSensorColor(lastDetectedSensorColor);
+  });
+
   trackSensor->onColorSignalDetected([](uint8_t signal) {
     // TODO: Replace with gradually slowing down?!?
     if(signal == SIGNAL_STOP) {
@@ -107,11 +114,6 @@ void setup() {
       engine->setSpeed(oldSpeed);
     }
 
-    /*sensorColor[0] = color;
-    sensorColor[1] = 10;
-    sensorColor[2] = 255;
-    sensorColor[3] = 50;
-    bluetooth->setSensorColor(sensorColor);*/
   });
   /*
   lights = new Lights();

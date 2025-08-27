@@ -28,7 +28,8 @@ class TrackSensor {
 
   private:
   ColorSensor* colorSensor;
-  void (*colorSignalCallback)(uint8_t color) = nullptr;
+  void (*colorChangedCallback)(uint8_t color) = nullptr;
+  void (*colorSignalCallback)(uint8_t signal) = nullptr;
 
   // For debugging
   CircularBuffer<uint8_t, COLOR_BUFFER_SIZE> lastColorMeasurements;
@@ -39,7 +40,7 @@ class TrackSensor {
   // The currently detected color value. Is only updated when a different color is detected (i.e. measured two times in a row)
   uint8_t currentDetectedColor = COLOR_IRRELEVANT;
   // The previously detected color. Changes only if currentDetectedColor is updated to a new color.
-  uint8_t previouslyDetectedColor = COLOR_IRRELEVANT;  
+  uint8_t previouslyDetectedColor = COLOR_IRRELEVANT;
   // Note: previouslyDetectedColor is always different from currentDetectedColor, as these values only update when different.
 
   void readMagneticField() {
@@ -71,7 +72,7 @@ class TrackSensor {
     else // The color is different from the one in the previous step
     {
       lastMeasuredColor = classifiedColor;
-    }    
+    }
   }
 
   void onNewColorDetected() {
@@ -95,13 +96,15 @@ class TrackSensor {
         logger.Logf("Detected reverse signal!");
         colorSignalCallback(SIGNAL_REVERSE);
       }
-    }    
+    }
+
+    colorChangedCallback(currentDetectedColor);
   }
-  
+
   public:
 
   TrackSensor()
-  {    
+  {
     colorSensor = new ColorSensor(PIN_COLOR_SENSOR_LED);
     colorSensor->onMeasurement([](uint8_t color) {
       trackSensor->colorMeasurement(color);
@@ -110,11 +113,11 @@ class TrackSensor {
     // Initialize buffer with COLOR_WOOD
     for(uint8_t i = 0; i < COLOR_BUFFER_SIZE; i++) {
       lastColorMeasurements.push(COLOR_WOOD);
-    }    
+    }
   }
 
   void Loop()
-  {    
+  {
     colorSensor->Loop();
   }
 
@@ -131,9 +134,14 @@ class TrackSensor {
     return result;
   }
 
-  void onColorSignalDetected(void (*_callback) (uint8_t color))
-  {		
-    this->colorSignalCallback = _callback;	
+  void onColorChangeDetected(void (*_callback) (uint8_t color))
+  {
+    this->colorChangedCallback = _callback;
+  }
+
+  void onColorSignalDetected(void (*_callback) (uint8_t signal))
+  {
+    this->colorSignalCallback = _callback;
   }
 };
 #endif

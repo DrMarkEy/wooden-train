@@ -26,7 +26,7 @@ class TrainConnection extends BLEConnection {
     this.colorReadingCharacteristic = await service.getCharacteristic(UUIDS.train.colorReading);
     this.operationModeCharacteristic = await service.getCharacteristic(UUIDS.train.operationMode);
 
-    //await this.colorReadingCharacteristic.startNotifications();
+    await this.colorReadingCharacteristic.startNotifications();
 
     this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', this.colorReadingReceived);
 

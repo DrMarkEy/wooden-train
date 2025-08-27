@@ -101,7 +101,7 @@ public:
             BLUETOOTH_CHARACTERISTIC_OPERATION_MODE_UUID,
             NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY
         );
-        pColorReadingChar->setCallbacks(this);
+        pOperationModeChar->setCallbacks(this);
 
         // Set initial values
         uint8_t zeroSpeed = 0;
@@ -141,9 +141,9 @@ public:
     void onColorChanged(void (*callback)(uint8_t*, size_t)) { colorCallback = callback; }
 
     // Set sensor color and notify
-    void setSensorColor(uint8_t color[4]) {
+    void setSensorColor(uint8_t color[1]) {
         if (pColorReadingChar) {
-            pColorReadingChar->setValue(color, 4);
+            pColorReadingChar->setValue(color, 1);
             pColorReadingChar->notify();
         }
     }
