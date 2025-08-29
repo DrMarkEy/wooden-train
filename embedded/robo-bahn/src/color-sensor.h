@@ -128,6 +128,9 @@ class ColorSensor {
   ColorSensor(uint8_t ledPin)
   {
     colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_1X);
+    r_acc = 0;
+    g_acc = 0;
+    b_acc = 0;
 
     // Initialize color sensor
     if (colorSensor->begin()) {

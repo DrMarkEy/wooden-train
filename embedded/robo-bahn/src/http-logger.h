@@ -25,12 +25,16 @@ class Logger {
   public:
 
   Logger() {
-    
+
   }
 
   void Setup() {
     Serial.begin(SERIAL_BAUD_RATE);
     loggingQueue = xQueueCreate(LOGGING_QUEUE_LENGTH, sizeof(String*));
+    if (loggingQueue == NULL) {
+      Serial.println("Failed to create logging queue!");
+      while (1) { vTaskDelay(1000 / portTICK_PERIOD_MS); } // Halt execution
+    }
 
     xTaskCreatePinnedToCore(
       LoggerTaskFunction,
@@ -42,7 +46,7 @@ class Logger {
       1 // Core affinity
     );
   }
-  
+
   void setWifiConnector(IWifiLogger* _wifiConnector) {
     this->wifiConnector = _wifiConnector;
   }
@@ -59,7 +63,7 @@ class Logger {
 
     if(xQueueSend(loggingQueue, (void*) &heapString, 10) != pdTRUE) {
       //Serial.println("Queue Full!"); // Absurd using serial here...
-    }    
+    }
   }
 
   void LogDuration(String msg, void (*runnable) ()) {
@@ -94,11 +98,11 @@ class Logger {
     if (buffer != temp) {
         free(buffer);
         //delete[] buffer;
-    }    
+    }
   }
 
   void LogBuffer(byte* buffer, int len) {
-    Serial.write(buffer, len);    
+    Serial.write(buffer, len);
   }
 
 } extern logger;
@@ -109,11 +113,11 @@ static void LoggerTaskFunction(void* parameter) {
     if(xQueueReceive(loggingQueue, (void*) &heapString, 20) == pdTRUE) {
       String stackString = *heapString;
       Serial.print(stackString);
-      
+
       if(logger.getWifiConnector() != NULL) {
         logger.getWifiConnector()->sendHttpLog(stackString);
       }
-      
+
       delete heapString;
     }
     vTaskDelay(20 / portTICK_PERIOD_MS); //Waiting happens already in the receive function ??

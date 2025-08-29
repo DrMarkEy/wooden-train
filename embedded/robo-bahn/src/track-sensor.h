@@ -122,12 +122,13 @@ class TrackSensor {
   }
 
   uint8_t resetMeasurementCount() {
-    String str = "";
+    // TODO: Use this for debugging the detected color sequence
+    /*String str = "";
     for(uint8_t i = 0; i < COLOR_BUFFER_SIZE; i++) {
       str += String(lastColorMeasurements[i]);
       str += " ";
     }
-    logger.Log(str);
+    logger.Log(str);*/
 
     uint8_t result = measurementCounter;
     measurementCounter = 0;
