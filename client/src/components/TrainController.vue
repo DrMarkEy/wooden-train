@@ -14,12 +14,20 @@
       <button :class="{'press-button': true, 'pressed': pressedA}" id="buttonA" @click="pressButtonA">
         <img :src="getImage(selectionA)"/>
       </button>
-            
+
       <button :class="{'press-button': true, 'pressed': pressedB}" id="buttonB" @click="pressButtonB">
         <img :src="getImage(selectionB)"/>
       </button>
 
-      <button @click="requestColorReading">TEST</button>
+      <div :class="{'state-view': true, 'viewA': true, 'pressed': pressedB}">
+        {{ sensorColorCode }}
+      </div>
+
+      <div :class="{'state-view': true, 'viewB': true, 'pressed': pressedB}">
+        B
+      </div>
+
+      <button @click="readOperationMode">TEST</button>
 
       <input class="speed-slider" type="range" v-model="speed" min="0" max="127"/>
 
@@ -34,9 +42,9 @@
       </div>
     </div>
   </template>
-  
+
   <script>
-  
+
   let MODE_COUNT = 6;
   let MIN_ANGLE = -45;
   let MAX_ANGLE = 225;
@@ -57,14 +65,14 @@
 
     props: ['index', 'ledColor', 'selectionA', 'selectionB', 'connection'],
 
-    mounted: function() {      
+    mounted: function() {
       this.$midi.addController(this.index, this.handleMidiCommand);
     },
 
     unmounted: function() {
       this.$midi.removeController(this.index);
     },
-  
+
     data: function() {
       return {speed: 0, pressedA: false, pressedB: false};
     },
@@ -84,7 +92,15 @@
         if(this.connection !== undefined && this.connection.device !== undefined) {
           return this.connection.device.name.replace("Baureihe ", "");
         }
-        
+
+        return "";
+      },
+
+      sensorColorCode: function() {
+        if(this.connection !== undefined && this.connection.colorSensor !== undefined) {
+          return this.connection.colorSensor.colorCode;
+        }
+
         return "";
       },
 
@@ -92,7 +108,7 @@
         get: function() {
           return this.ledColor;
         },
-        
+
         set: function(val) {
           this.$emit('change-color', val);
           let cols = hexToRgb(val);
@@ -110,7 +126,7 @@
         }
       }
     },
-  
+
     methods: {
       handleMidiCommand: function(command, value) {
         switch(command) {
@@ -119,32 +135,32 @@
           break;
 
           case 'knob':
-            this.mSelectionA = Math.round(value / 127  * (MODE_COUNT - 1));          
+            this.mSelectionA = Math.round(value / 127  * (MODE_COUNT - 1));
           break;
 
           case 'buttonA':
             if(value > 64) {
-              this.pressedA = true;              
+              this.pressedA = true;
               this.pressButtonA();
             }
             else {
-              this.pressedA = false;              
+              this.pressedA = false;
             }
           break;
 
           case 'buttonB':
             if(value > 64) {
-              this.pressedB = true;          
-              this.pressButtonB();    
+              this.pressedB = true;
+              this.pressButtonB();
             }
             else {
-              this.pressedB = false;              
+              this.pressedB = false;
             }
           break;
         }
       },
 
-      pressButtonA: function() {        
+      pressButtonA: function() {
         // TODO: Send different commands, depending on mSelectionA
         this.connection.sendCommand(TRAIN_COMMAND.WHISTLE);
       },
@@ -153,8 +169,8 @@
         this.connection.sendCommand(TRAIN_COMMAND.REVERSE);
       },
 
-      requestColorReading: function() {
-        this.connection.requestColorReading();
+      readOperationMode: function() {
+        this.connection.readOperationMode();
       },
 
       removeController: function() {
@@ -178,17 +194,17 @@
           return 'https://cdn1.iconfinder.com/data/icons/systemui-vol-2/21/reverse-256.png';
         }
       }
-      
+
     }
   }
   </script>
-  
+
   <style lang="scss">
   .train-controller {
     position: relative;
-    background-color: cornflowerblue; 
+    background-color: cornflowerblue;
     width: 100px;
-    height: 280px;
+    height: 325px;
 
     margin: 5px;
     border-style: solid;
@@ -196,7 +212,7 @@
     border-width: 1px;
     box-shadow: 0px 0px 3px #666;
 
-    
+
     .remove-button
     {
       color: red;
@@ -234,28 +250,28 @@
       border-width: 2px;
       border-color: #777;
       box-shadow: 3px 3px 4px #555;
-      user-select: none;      
+      user-select: none;
       cursor: pointer;
 
       .turn-button
-      {        
+      {
         width: 40px;
         height: 40px;
 
         .label
-        {                
+        {
           position: absolute;
           left: 0px;
           top: 4px;
-          font-size: 25px;        
+          font-size: 25px;
         }
       }
     }
-    
+
 
     .press-button
     {
-      position: absolute;      
+      position: absolute;
       left: 15px;
       width: 40px;
       height: 40px;
@@ -287,13 +303,13 @@
         box-shadow: inset 0px 0px 2px #555;
       }
     }
-    
+
     .speed-slider
     {
       position: absolute;
       width: 160px;
       right: -56px;
-      top: 140px;      
+      top: 140px;
       transform: rotate(270deg);
 
       accent-color: #eee;
@@ -302,14 +318,14 @@
     .bottom-line
     {
       position: absolute;
-      bottom: 8px;     
+      bottom: 8px;
       display: flex;
-      width: 100%; 
+      width: 100%;
       height: 20px;
-      
+
       .color-picker
       {
-        width: 18px;        
+        width: 18px;
         margin-left: 8px;
         margin-right: 8px;
         border-style: solid;
@@ -317,7 +333,7 @@
         border-color: #444;
         border-radius: 3px;
         box-shadow: 1px 1px 1px #666;
-        user-select: none;        
+        user-select: none;
 
         input
         {
@@ -344,9 +360,36 @@
         flex: 1 1 auto;
         margin-right: 8px;
         user-select: none;
-        
+
+      }
+    }
+
+    .state-view
+    {
+      background-color: #eee;
+      width: 40px;
+      height: 40px;
+      border-radius: 3px;
+
+      border-style: solid;
+      border-width: 1px;
+      border-color: #888;
+
+      box-shadow: inset 1px 1px 6px #666;
+      user-select: none;
+      cursor: pointer;
+
+      position: absolute;
+      bottom: 40px;
+      left: 6px;
+
+      &.viewA {
+        left: 6px;
+      }
+
+      &.viewB {
+        left: 53px;
       }
     }
   }
   </style>
-  
