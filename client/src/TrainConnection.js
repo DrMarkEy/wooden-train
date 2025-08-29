@@ -1,4 +1,5 @@
 import BLEConnection from './BLEConnection.js';
+import Vue from 'vue';
 
 import {UUIDS} from './Enums.js';
 
@@ -9,10 +10,24 @@ let TRAIN_COMMAND = {
   WHISTLE: 6
 };
 
+let OPERATION_MODE = {
+
+};
+
 
 class TrainConnection extends BLEConnection {
   constructor(device, server) {
     super(device, server);
+
+    // Ensure Vue is properly imported and used for reactivity
+    this.colorSensor = Vue.observable({
+      colorCode: -1,
+      color: 'transparent'
+    });
+
+    // Bind event handlers
+    this.colorReadingReceived = this.colorReadingReceived.bind(this);
+    this.operationModeChanged = this.operationModeChanged.bind(this);
   }
 
   async setup() {
@@ -27,7 +42,6 @@ class TrainConnection extends BLEConnection {
     this.operationModeCharacteristic = await service.getCharacteristic(UUIDS.train.operationMode);
 
     await this.colorReadingCharacteristic.startNotifications();
-
     this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', this.colorReadingReceived);
 
     await this.operationModeCharacteristic.startNotifications();
@@ -153,12 +167,13 @@ class TrainConnection extends BLEConnection {
 
   colorReadingReceived(e)
   {
-    console.log("Received color reading!", e);
+    this.colorSensor.colorCode = e.target.value.getUint8(0);
+    console.log("Received color reading!", e.target.value.getUint8(0));
   }
 
   operationModeChanged(e)
   {
-    console.log("Operation mode changed!", e);
+    console.log("Operation mode changed!", e.target.value.getUint8(0));
   }
 }
 
