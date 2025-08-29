@@ -42,14 +42,19 @@ void setup() {
       if(buttonController.isReversed()) {
         engine->setDirection(false);
         engine->setSpeed(255);
+
+        bluetooth.setOperationMode(3);
       }
       else {
         engine->setDirection(true);
         engine->setSpeed(255);
+
+        bluetooth.setOperationMode(4);
       }
     }
     else {
       engine->setSpeed(0);
+      bluetooth.setOperationMode(13);
     }
   });
 
