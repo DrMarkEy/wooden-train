@@ -19,10 +19,13 @@ class TrainConnection extends BLEConnection {
   constructor(device, server) {
     super(device, server);
 
-    // Ensure Vue is properly imported and used for reactivity
     this.colorSensor = Vue.observable({
       colorCode: -1,
       color: 'transparent'
+    });
+
+    this.operation = Vue.observable({
+      mode: -1
     });
 
     // Bind event handlers
@@ -168,12 +171,11 @@ class TrainConnection extends BLEConnection {
   colorReadingReceived(e)
   {
     this.colorSensor.colorCode = e.target.value.getUint8(0);
-    console.log("Received color reading!", e.target.value.getUint8(0));
   }
 
   operationModeChanged(e)
   {
-    console.log("Operation mode changed!", e.target.value.getUint8(0));
+    this.operation.mode = e.target.value.getUint8(0);
   }
 }
 

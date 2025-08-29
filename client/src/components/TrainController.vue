@@ -19,12 +19,12 @@
         <img :src="getImage(selectionB)"/>
       </button>
 
-      <div :class="{'state-view': true, 'viewA': true, 'pressed': pressedB}">
-        {{ sensorColorCode }}
+      <div :class="{'state-view': true, 'viewA': true, 'pressed': pressedB}" :style="{'background-color': sensorColor}">
+
       </div>
 
       <div :class="{'state-view': true, 'viewB': true, 'pressed': pressedB}">
-        B
+        {{ operationMode }}
       </div>
 
       <button @click="readOperationMode">TEST</button>
@@ -96,12 +96,34 @@
         return "";
       },
 
+      operationMode: function() {
+        if(this.connection !== undefined && this.connection.operation !== undefined) {
+          return this.connection.operation.mode;
+        }
+
+        return -1;
+      },
+
       sensorColorCode: function() {
         if(this.connection !== undefined && this.connection.colorSensor !== undefined) {
           return this.connection.colorSensor.colorCode;
         }
 
         return "";
+      },
+
+      sensorColor: function() {
+        switch(this.sensorColorCode) {
+          case -1: return 'transparent';
+          case 0: return 'saddlebrown'; // COLOR_WOOD
+          case 1: return 'black';       // COLOR_BLACK
+          case 2: return 'white';       // COLOR_WHITE
+          case 3: return 'red';         // COLOR_RED
+          case 4: return 'yellow';      // COLOR_YELLOW
+          case 5: return 'green';       // COLOR_GREEN
+          case 6: return 'blue';        // COLOR_BLUE
+          case 7: return 'magenta';     // COLOR_MAGENTA
+        }
       },
 
       mLedColor: {
@@ -367,9 +389,9 @@
     .state-view
     {
       background-color: #eee;
-      width: 40px;
-      height: 40px;
-      border-radius: 3px;
+      width: 32px;
+      height: 32px;
+      border-radius: 30px;
 
       border-style: solid;
       border-width: 1px;
@@ -381,14 +403,14 @@
 
       position: absolute;
       bottom: 40px;
-      left: 6px;
 
       &.viewA {
-        left: 6px;
+        left: 10px;
       }
 
       &.viewB {
-        left: 53px;
+        left: 55px;
+        border-radius: 10px;
       }
     }
   }
