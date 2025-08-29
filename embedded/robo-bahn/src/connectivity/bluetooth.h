@@ -27,12 +27,12 @@ static void userCommandCallback(UserCommand* command);
 
 class ServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
-    ESP_LOGI(TAG, "BLE client address %s connected.", connInfo.getAddress().toString().c_str());
+    Serial.printf("BLE client address %s connected.", connInfo.getAddress().toString().c_str());
     connectCallback();
   }
 
-  void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) {
-    ESP_LOGI(TAG, "BLE client address %s disconnected.", connInfo.getAddress().toString().c_str());
+  void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
+    Serial.printf("BLE client address %s disconnected.", connInfo.getAddress().toString().c_str());
     disconnectCallback();
   }
 };
@@ -40,7 +40,7 @@ class ServerCallbacks : public NimBLEServerCallbacks {
 
 class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
   void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
-    ESP_LOGI(TAG, "Client sent write request to characteristic %s", pCharacteristic->getUUID().toString().c_str());
+    Serial.printf("Client sent write request to characteristic %s", pCharacteristic->getUUID().toString().c_str());
     NimBLEAttValue value = pCharacteristic->getValue();
 
     uint8_t buffer[value.length() - 1];
@@ -52,7 +52,7 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
   }
 };
 
-class BluetoothConnector : public NimBLECharacteristicCallbacks, public NimBLEServerCallbacks {
+class BluetoothConnector : public NimBLECharacteristicCallbacks {
 public:
     BluetoothConnector() {}
 
@@ -121,7 +121,7 @@ public:
 
         pService->start();
 
-        NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
+        pAdvertising = NimBLEDevice::getAdvertising();
         pAdvertising->addServiceUUID(BLUETOOTH_SERVICE_MAIN_UUID);
 
         // Set name also in scanResponseData
@@ -175,7 +175,7 @@ public:
 protected:
     // NimBLECharacteristicCallbacks overrides
     void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
-        ESP_LOGI(TAG, "Client sent write request to characteristic %s", pCharacteristic->getUUID().toString().c_str());
+        Serial.printf("Client sent write request to characteristic %s", pCharacteristic->getUUID().toString().c_str());
 
         std::string uuid = pCharacteristic->getUUID().toString();
         std::string value = pCharacteristic->getValue();
@@ -221,16 +221,19 @@ public:
         if(connectionCallback != nullptr) {
             connectionCallback(BLUETOOTH_CONNECTION_TERMINATED);
         }
-        pAdvertising->start();
+        if (pAdvertising) {
+            pAdvertising->start();
+        }
     }
 
+  // Placeholder for handling received UserCommand objects.
   void onCommandReceived(UserCommand* userCommand) {
 
   }
 
 
 private:
-    NimBLEAdvertising *pAdvertising;
+    NimBLEAdvertising *pAdvertising = nullptr;
 
     uint8_t pOperationMode[1];
 
