@@ -8,6 +8,14 @@
 #include <http-logger.h>
 #include <track-sensor.h>
 
+#define OPERATION_MODE_STOPPED 1
+#define OPERATION_MODE_DRIVING 2
+#define OPERATION_MODE_DRIVING_REVERSE 3
+#define OPERATION_MODE_CALLING_AT_STATION 4
+#define OPERATION_MODE_STOPPED_AT_SIGNAL 5
+
+uint8_t operationMode = OPERATION_MODE_STOPPED;
+
 Logger logger;
 
 BluetoothConnector bluetooth;
@@ -43,18 +51,23 @@ void setup() {
         engine->setDirection(false);
         engine->setSpeed(255);
 
-        bluetooth.setOperationMode(3);
+        operationMode = OPERATION_MODE_DRIVING_REVERSE;
+        bluetooth.setOperationMode(operationMode);
       }
       else {
         engine->setDirection(true);
         engine->setSpeed(255);
 
-        bluetooth.setOperationMode(4);
+        operationMode = OPERATION_MODE_DRIVING;
+        bluetooth.setOperationMode(operationMode);
       }
     }
     else {
       engine->setSpeed(0);
       bluetooth.setOperationMode(13);
+
+      operationMode = OPERATION_MODE_STOPPED;
+      bluetooth.setOperationMode(operationMode);
     }
   });
 
@@ -125,7 +138,6 @@ void setup() {
   lights->setGlobalColor(255, 0, 0);*/
 
   soundPlayer.playSound(1);
-  bluetooth.setOperationMode(2);
 }
 
 
