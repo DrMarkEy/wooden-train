@@ -115,7 +115,7 @@
       sensorColor: function() {
         switch(this.sensorColorCode) {
           case -1: return 'transparent';
-          case 0: return 'saddlebrown'; // COLOR_WOOD
+          case 0: return 'burlywood'; // COLOR_WOOD
           case 1: return 'black';       // COLOR_BLACK
           case 2: return 'white';       // COLOR_WHITE
           case 3: return 'red';         // COLOR_RED
