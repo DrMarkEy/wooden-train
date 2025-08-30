@@ -1,14 +1,14 @@
 <template>
   <div id="app">
     <img alt="Logo" id="logo" src="./assets/logo.webp">
-    
+
     <div class="controller-panel">
       <controller v-for="(c, i) in controllers" :key="i" :index="i" :type="c.type" :connection="c.connection" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeTrainController(i)"/>
 
       <div class="empty-controller">
         <div class="circle" @click="searchBluetoothDevice">
           <div class="inner">+</div>
-        </div>        
+        </div>
       </div>
     </div>
   </div>
@@ -48,16 +48,16 @@ export default {
     searchBluetoothDevice: async function() {
       let connection = await TrainConnection.searchDevice(this.controllers.map(cont => cont.connection));
 
-      if(connection !== undefined) {        
+      if(connection !== undefined) {
         this.addTrainController(connection);
 
         setTimeout(function(){
           connection.setup();
         }, 10);
-      }      
+      }
     },
 
-    addTrainController: function(trainConnection) {                  
+    addTrainController: function(trainConnection) {
       let index = this.controllers.length;
       this.controllers.push({
         type: 'train',
@@ -66,14 +66,14 @@ export default {
         selectionB: 1,
         connection: trainConnection
       });
- 
+
       let thi = this;
       trainConnection.setOnConnectionClosedListener(function() {
         thi.removeTrainController(index);
       });
     },
-    
-    removeTrainController: function(index) {      
+
+    removeTrainController: function(index) {
       this.controllers.splice(index, 1);
     },
   }
@@ -82,17 +82,17 @@ export default {
 
 <style lang="scss">
 
-html {  
+html {
   background-color: #888;
 }
 
-#app {  
+#app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;  
+  margin-top: 60px;
 }
 
 .controller-panel
@@ -100,7 +100,7 @@ html {
   position: absolute;
   bottom: 0px;
   right: 0px;
-  left: 0px;  
+  left: 0px;
   display: flex;
   margin: 10px;
   background-color: #ddd;
@@ -115,7 +115,7 @@ html {
   {
     position: relative;
     width: 100px;
-    height: 275px;
+    height: 320px;
     border-style: dotted;
     border-width: 3px;
     border-color: #aaa;
@@ -134,11 +134,11 @@ html {
       border-style: dashed;
       border-width: 2px;
       border-color: #999;
-      
+
       .inner
       {
         font-size: 24px;
-        color: #999;          
+        color: #999;
         margin-top: 5px;
       }
 
@@ -150,7 +150,7 @@ html {
         border-color: #333;
         box-shadow: 1px 1px 2px #666;
 
-        .inner 
+        .inner
         {
           color:#333;
         }
@@ -161,6 +161,6 @@ html {
 
 #logo
 {
-  width: 500px;  
+  width: 500px;
 }
 </style>
