@@ -44,12 +44,18 @@ class TrainConnection extends BLEConnection {
     this.colorReadingCharacteristic = await service.getCharacteristic(UUIDS.train.colorReading);
     this.operationModeCharacteristic = await service.getCharacteristic(UUIDS.train.operationMode);
 
+    let thi = this;
     await this.colorReadingCharacteristic.startNotifications();
-    this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', this.colorReadingReceived);
+    this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
+      thi.colorReadingReceived(e.target.value);
+    });
+    this.colorReadingReceived(await this.colorReadingCharacteristic.readValue());
 
     await this.operationModeCharacteristic.startNotifications();
-    this.operationModeCharacteristic.addEventListener('characteristicvaluechanged', this.operationModeChanged);
-
+    this.operationModeCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
+      thi.operationModeChanged(e.target.value);
+    });
+    this.operationModeChanged(await this.operationModeCharacteristic.readValue());
 
     this.engineCharacteristicLock = false;
     this.requestedEngineSpeed = 0;
@@ -168,14 +174,14 @@ class TrainConnection extends BLEConnection {
     }
   }
 
-  colorReadingReceived(e)
+  colorReadingReceived(value)
   {
-    this.colorSensor.colorCode = e.target.value.getUint8(0);
+    this.colorSensor.colorCode = value.getUint8(0);
   }
 
-  operationModeChanged(e)
+  operationModeChanged(value)
   {
-    this.operation.mode = e.target.value.getUint8(0);
+    this.operation.mode = value.getUint8(0);
   }
 }
 
