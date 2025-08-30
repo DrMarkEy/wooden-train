@@ -19,6 +19,10 @@
         <img :src="getImage(selectionB)"/>
       </button>
 
+      <button v-if="stopped" :class="{'press-button': true, 'pressed': pressedC}" id="buttonBAlt" @click="pressResumeButton">
+        <img :src="getImage(-1)"/>
+      </button>
+
       <div :class="{'state-view': true, 'viewA': true, 'pressed': pressedB}" :style="{'background-color': sensorColor}">
 
       </div>
@@ -26,8 +30,6 @@
       <div :class="{'state-view': true, 'viewB': true, 'pressed': pressedB}">
         {{ operationMode }}
       </div>
-
-      <button @click="readOperationMode">TEST</button>
 
       <input class="speed-slider" type="range" v-model="speed" min="0" max="127"/>
 
@@ -39,6 +41,10 @@
         <div class="device-name">
           {{ name }}
         </div>
+      </div>
+
+      <div class="stopped-overlay" v-if="stopped">
+        <div class="stopped-text"><!--STOPPED--></div>
       </div>
     </div>
   </template>
@@ -126,6 +132,10 @@
         }
       },
 
+      stopped: function() {
+        return this.operationMode === 1;
+      },
+
       mLedColor: {
         get: function() {
           return this.ledColor;
@@ -191,8 +201,8 @@
         this.connection.sendCommand(TRAIN_COMMAND.REVERSE);
       },
 
-      readOperationMode: function() {
-        this.connection.readOperationMode();
+      pressResumeButton: function() {
+        this.connection.sendCommand(TRAIN_COMMAND.START);
       },
 
       removeController: function() {
@@ -209,6 +219,10 @@
       },
 
       getImage: function(idx) {
+        if(idx === -1) {
+          return 'https://cdn4.iconfinder.com/data/icons/iconset-addictive-flavour/png/button_green_play.png';
+        }
+
         if(idx % 2 == 0) {
           return 'https://www.creativefabrica.com/wp-content/uploads/2022/01/28/1643383088/Whistle-580x386.jpg';
         }
@@ -320,6 +334,12 @@
         top:180px;
       }
 
+      &#buttonBAlt
+      {
+        top:180px;
+        z-index: 11;
+      }
+
       &:active, &.pressed
       {
         box-shadow: inset 0px 0px 2px #555;
@@ -411,6 +431,28 @@
       &.viewB {
         left: 55px;
         border-radius: 10px;
+      }
+    }
+
+    .stopped-overlay {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(200, 200, 200, 0.7);
+      z-index: 10;
+
+      .stopped-text {
+        position: absolute;
+        top: calc(50% - 10px);
+        left: 0px;
+        width: 100%;
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        color: #444;
+        user-select: none;
       }
     }
   }

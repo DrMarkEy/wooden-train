@@ -12,7 +12,7 @@
 #define OPERATION_MODE_DRIVING 2
 #define OPERATION_MODE_DRIVING_REVERSE 3
 #define OPERATION_MODE_CALLING_AT_STATION 4
-#define OPERATION_MODE_STOPPED_AT_SIGNAL 5
+//#define OPERATION_MODE_STOPPED_AT_SIGNAL 5 -> Use STOPPED
 
 uint8_t operationMode = OPERATION_MODE_STOPPED;
 
@@ -76,6 +76,12 @@ void setup() {
     uint8_t speed = array[0];
     engine->setSpeed(speed);
     logger.Log("Set speed "+String(speed));
+
+    if(speed > 0) {
+      bluetooth.setOperationMode(OPERATION_MODE_DRIVING);
+    }
+    else
+      bluetooth.setOperationMode(OPERATION_MODE_STOPPED);
   });
 
   bluetooth.onColorChanged([](uint8_t* array, size_t len){
@@ -99,7 +105,29 @@ void setup() {
       engine->setDirection(!engine->getDirection());
       delay(100);
       engine->setSpeed(oldSpeed);
+
+      // Switch operation mode
+      if(operationMode == OPERATION_MODE_DRIVING) {
+        operationMode = OPERATION_MODE_DRIVING_REVERSE;
+      }
+      else if(operationMode == OPERATION_MODE_DRIVING_REVERSE) {
+        operationMode = OPERATION_MODE_DRIVING;
+      }
+      bluetooth.setOperationMode(operationMode);
     }
+    else if(buffer[0] == BLUETOOTH_COMMAND_START) {
+      if(engine->getDirection()) {
+        operationMode = OPERATION_MODE_DRIVING;
+        bluetooth.setOperationMode(operationMode);
+      }
+      else {
+        operationMode = OPERATION_MODE_DRIVING_REVERSE;
+        bluetooth.setOperationMode(operationMode);
+      }
+
+      engine->setSpeed(255); // TODO: Take speed from bluetooth
+    }
+
   });
 
 
@@ -137,6 +165,7 @@ void setup() {
   lights = new Lights();
   lights->setGlobalColor(255, 0, 0);*/
 
+  bluetooth.setOperationMode(operationMode);
   soundPlayer.playSound(1);
 }
 
