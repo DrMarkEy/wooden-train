@@ -11,17 +11,9 @@
         </div>
       </div>
 
-      <button :class="{'press-button': true, 'pressed': pressedA}" id="buttonA" @click="pressButtonA">
-        <img :src="COMMANDS[selectionA].icon"/>
-      </button>
-
-      <button v-if="!stopped" :class="{'press-button': true, 'pressed': pressedB}" id="buttonB" @click="pressReverseButton">
-        <img :src="COMMAND_REVERSE.icon"/>
-      </button>
-
-      <button v-if="stopped" :class="{'press-button': true, 'pressed': pressedB}" id="buttonBAlt" @click="pressResumeButton">
-        <img :src="COMMAND_PLAY.icon"/>
-      </button>
+      <press-button id="buttonA" ref="buttonA" :command="COMMANDS[selectionA]" :pressed="pressedA" :connection="connection"/>
+      <press-button v-if="!stopped" ref="buttonB" id="buttonB" :command="COMMAND_REVERSE" :pressed="pressedB" :connection="connection"/>
+      <press-button v-if="stopped" ref="buttonB" id="buttonBAlt" :command="COMMAND_PLAY" :pressed="pressedB" :connection="connection"/>
 
       <div :class="{'state-view': true, 'viewA': true, 'pressed': pressedB}" :style="{'background-color': sensorColor}">
 
@@ -56,6 +48,7 @@
 
   import {TRAIN_COMMAND} from '../TrainConnection.js';
   import {OPERATION_MODE} from '../TrainConnection.js';
+  import PressButton from './PressButton.vue';
 
   function hexToRgb(hex) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -99,6 +92,10 @@
     name: 'train-controller',
 
     props: ['index', 'ledColor', 'selectionA', 'connection'],
+
+    components: {
+      PressButton
+    },
 
     mounted: function() {
       this.$midi.addController(this.index, this.handleMidiCommand);
@@ -222,7 +219,7 @@
           case 'buttonA':
             if(value > 64) {
               this.pressedA = true;
-              this.pressButtonA();
+              this.$refs.buttonA.press();
             }
             else {
               this.pressedA = false;
@@ -232,25 +229,13 @@
           case 'buttonB':
             if(value > 64) {
               this.pressedB = true;
-              this.pressButtonB();
+              this.$refs.buttonB.press();
             }
             else {
               this.pressedB = false;
             }
           break;
         }
-      },
-
-      pressButtonA: function() {
-        this.connection.sendCommand(COMMANDS[this.selectionA].command);
-      },
-
-      pressReverseButton: function() {
-        this.connection.sendCommand(TRAIN_COMMAND.REVERSE);
-      },
-
-      pressResumeButton: function() {
-        this.connection.sendCommand(TRAIN_COMMAND.START);
       },
 
       removeController: function() {
@@ -358,26 +343,27 @@
         width: 30px;
       }
 
-      &#buttonA
-      {
-        top:90px;
-      }
-
-      &#buttonB
-      {
-        top:180px;
-      }
-
-      &#buttonBAlt
-      {
-        top:180px;
-        z-index: 11;
-      }
 
       &:active, &.pressed
       {
         box-shadow: inset 0px 0px 2px #555;
       }
+    }
+
+    #buttonA
+    {
+      top:90px;
+    }
+
+    #buttonB
+    {
+      top:180px;
+    }
+
+    #buttonBAlt
+    {
+      top:180px;
+      z-index: 11;
     }
 
     .speed-slider
