@@ -76,12 +76,6 @@ void setup() {
     uint8_t speed = array[0];
     engine->setSpeed(speed);
     logger.Log("Set speed "+String(speed));
-
-    if(speed > 0) {
-      bluetooth.setOperationMode(OPERATION_MODE_DRIVING);
-    }
-    else
-      bluetooth.setOperationMode(OPERATION_MODE_STOPPED);
   });
 
   bluetooth.onColorChanged([](uint8_t* array, size_t len){
@@ -125,7 +119,13 @@ void setup() {
         bluetooth.setOperationMode(operationMode);
       }
 
-      engine->setSpeed(255); // TODO: Take speed from bluetooth
+      engine->setSpeed(bluetooth.getSpeed());
+    }
+    else if(buffer[0] == BLUETOOTH_COMMAND_STOP) {
+      operationMode = OPERATION_MODE_STOPPED;
+      bluetooth.setOperationMode(operationMode);
+
+      engine->setSpeed(0);
     }
 
   });

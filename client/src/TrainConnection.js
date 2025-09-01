@@ -11,7 +11,10 @@ let TRAIN_COMMAND = {
 };
 
 let OPERATION_MODE = {
-
+  STOPPED: 1,
+  DRIVING: 2,
+  DRIVING_REVERSE: 3,
+  CALLING_AT_STATION: 4
 };
 
 
@@ -186,4 +189,4 @@ class TrainConnection extends BLEConnection {
 }
 
 export default TrainConnection;
-export {TRAIN_COMMAND};
+export {TRAIN_COMMAND, OPERATION_MODE};

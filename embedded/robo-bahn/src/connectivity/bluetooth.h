@@ -162,6 +162,14 @@ public:
         if (pSpeedChar) pSpeedChar->setValue(&speed, 1);
     }
 
+    // Get speed value
+    uint8_t getSpeed() {
+        if (pSpeedChar)
+            return pSpeedChar->getValue().getValue()[0];
+
+        return 0;
+    }
+
     // Set light color value
     void setLightColor(uint8_t* color, size_t len) {
         if (pLightColorChar) pLightColorChar->setValue(color, len);

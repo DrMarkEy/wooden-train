@@ -12,22 +12,22 @@
       </div>
 
       <button :class="{'press-button': true, 'pressed': pressedA}" id="buttonA" @click="pressButtonA">
-        <img :src="getImage(selectionA)"/>
+        <img :src="COMMANDS[selectionA].icon"/>
       </button>
 
-      <button :class="{'press-button': true, 'pressed': pressedB}" id="buttonB" @click="pressButtonB">
-        <img :src="getImage(selectionB)"/>
+      <button v-if="!stopped" :class="{'press-button': true, 'pressed': pressedB}" id="buttonB" @click="pressReverseButton">
+        <img :src="COMMAND_REVERSE.icon"/>
       </button>
 
-      <button v-if="stopped" :class="{'press-button': true, 'pressed': pressedC}" id="buttonBAlt" @click="pressResumeButton">
-        <img :src="getImage(-1)"/>
+      <button v-if="stopped" :class="{'press-button': true, 'pressed': pressedB}" id="buttonBAlt" @click="pressResumeButton">
+        <img :src="COMMAND_PLAY.icon"/>
       </button>
 
       <div :class="{'state-view': true, 'viewA': true, 'pressed': pressedB}" :style="{'background-color': sensorColor}">
 
       </div>
 
-      <div :class="{'state-view': true, 'viewB': true, 'pressed': pressedB}">
+      <div :class="{'state-view': true, 'viewB': true}">
         {{ operationMode }}
       </div>
 
@@ -51,11 +51,11 @@
 
   <script>
 
-  let MODE_COUNT = 6;
   let MIN_ANGLE = -45;
   let MAX_ANGLE = 225;
 
   import {TRAIN_COMMAND} from '../TrainConnection.js';
+  import {OPERATION_MODE} from '../TrainConnection.js';
 
   function hexToRgb(hex) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -66,10 +66,39 @@
     } : null;
   }
 
+  let COMMAND_PLAY = {
+      command: TRAIN_COMMAND.START,
+      icon: require('../assets/play.png')
+  };
+
+  let COMMAND_REVERSE = {
+      command: TRAIN_COMMAND.REVERSE,
+      icon: require('../assets/reverse.png')
+  };
+
+  let COMMANDS = {
+    "0": {
+      command: TRAIN_COMMAND.WHISTLE,
+      icon: require('../assets/whistle.png')
+    },
+    "1": {
+      command: TRAIN_COMMAND.TOGGLE_COLOR_DETECTION,
+      icon: require('../assets/color.png')
+    },
+    "2": {
+      command: TRAIN_COMMAND.STOP,
+      icon: require('../assets/stop.png')
+    },
+    "3": {
+      command: TRAIN_COMMAND.ACCIDENT_LIGHTS,
+      icon: require('../assets/alert.png')
+    }
+  };
+
   export default {
     name: 'train-controller',
 
-    props: ['index', 'ledColor', 'selectionA', 'selectionB', 'connection'],
+    props: ['index', 'ledColor', 'selectionA', 'connection'],
 
     mounted: function() {
       this.$midi.addController(this.index, this.handleMidiCommand);
@@ -90,8 +119,28 @@
     },
 
     computed: {
+      COMMANDS() {
+        return COMMANDS;
+      },
+
+      COMMAND_PLAY() {
+        return COMMAND_PLAY;
+      },
+
+      COMMAND_REVERSE() {
+        return COMMAND_REVERSE;
+      },
+
+      OPERATION_MODE() {
+        return OPERATION_MODE;
+      },
+
+      modeCount: function() {
+        return Object.keys(COMMANDS).length;
+      },
+
       rotationAngle: function() {
-        return (MAX_ANGLE - MIN_ANGLE) / (MODE_COUNT - 1) * this.selectionA + MIN_ANGLE;
+        return (MAX_ANGLE - MIN_ANGLE) / (this.modeCount - 1) * this.selectionA + MIN_ANGLE;
       },
 
       name: function() {
@@ -133,7 +182,7 @@
       },
 
       stopped: function() {
-        return this.operationMode === 1;
+        return this.operationMode === OPERATION_MODE.STOPPED;
       },
 
       mLedColor: {
@@ -167,7 +216,7 @@
           break;
 
           case 'knob':
-            this.mSelectionA = Math.round(value / 127  * (MODE_COUNT - 1));
+            this.mSelectionA = Math.round(value / 127  * (this.modeCount - 1));
           break;
 
           case 'buttonA':
@@ -193,11 +242,10 @@
       },
 
       pressButtonA: function() {
-        // TODO: Send different commands, depending on mSelectionA
-        this.connection.sendCommand(TRAIN_COMMAND.WHISTLE);
+        this.connection.sendCommand(COMMANDS[this.selectionA].command);
       },
 
-      pressButtonB: function() {
+      pressReverseButton: function() {
         this.connection.sendCommand(TRAIN_COMMAND.REVERSE);
       },
 
@@ -210,27 +258,13 @@
       },
 
       nextMode: function() {
-        if(this.mSelectionA < MODE_COUNT - 1) {
+        if(this.mSelectionA < this.modeCount - 1) {
           this.mSelectionA++;
         }
         else {
           this.mSelectionA = 0;
         }
-      },
-
-      getImage: function(idx) {
-        if(idx === -1) {
-          return 'https://cdn4.iconfinder.com/data/icons/iconset-addictive-flavour/png/button_green_play.png';
-        }
-
-        if(idx % 2 == 0) {
-          return 'https://www.creativefabrica.com/wp-content/uploads/2022/01/28/1643383088/Whistle-580x386.jpg';
-        }
-        else {
-          return 'https://cdn1.iconfinder.com/data/icons/systemui-vol-2/21/reverse-256.png';
-        }
       }
-
     }
   }
   </script>
