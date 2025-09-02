@@ -101,7 +101,9 @@
       this.$midi.addController(this.index, this.handleMidiCommand);
     },
 
-    unmounted: function() {
+    beforeDestroy: function() {
+      // TODO: Move this up to Controller
+      this.connection.disconnect();
       this.$midi.removeController(this.index);
     },
 
@@ -235,11 +237,15 @@
               this.pressedB = false;
             }
           break;
+
+          default:
+            console.log("Unknown command "+command);
+          break;
         }
       },
 
       removeController: function() {
-        this.connection.disconnect();
+        this.$emit('remove');
       },
 
       nextMode: function() {

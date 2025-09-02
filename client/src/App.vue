@@ -3,7 +3,7 @@
     <img alt="Logo" id="logo" src="./assets/logo.webp">
 
     <div class="controller-panel">
-      <controller v-for="(c, i) in controllers" :key="c.connection.identifier()" :index="i" :type="c.type" :connection="c.connection" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel"/>
+      <controller v-for="(c, i) in controllers" :key="c.connection.identifier()" :index="i" :type="c.type" :connection="c.connection" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeController(i)"/>
 
       <div class="empty-controller">
         <div class="circle" @click="searchBluetoothDevice">
@@ -74,7 +74,8 @@ export default {
       });
     },
 
-    removeTrainController: function(index) {
+    removeController: function(index) {
+      console.log("Removing controller", index);
       this.controllers.splice(index, 1);
     },
   }

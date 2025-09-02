@@ -63,7 +63,7 @@ class BLEConnection {
   }
 
   onConnectionClosed() {
-    console.log('Connection lost.', this);
+    console.log('Connection closed.', this);
 
     try {
       this.server.disconnect();

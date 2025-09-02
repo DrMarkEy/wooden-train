@@ -1,33 +1,36 @@
 <template>
   <div v-if="type === 'train'">
-    <train-controller v-if="connection.isConnected()" :connection="connection" :index="index" :ledColor="ledColor" @change-color="$emit('change-color', $event)" :selectionA="selectionA" @change-selection-a="$emit('change-selection-a', $event)" :selectionB="selectionB" @change-selection-b="$emit('change-selection-a', $event)"/>
+    <train-controller v-if="connection.isConnected()" :connection="connection" :index="index" :ledColor="ledColor" @change-color="$emit('change-color', $event)" :selectionA="selectionA" @change-selection-a="$emit('change-selection-a', $event)" :selectionB="selectionB" @change-selection-b="$emit('change-selection-a', $event)" @remove="$emit('remove', $event)"/>
     <div class="loading-controller" v-else>
       CONNECTING
        <!-- TODO: Loading screen wird nicht angezeigt... -->
     </div>
   </div>
 </template>
-  
+
 <script>
   import TrainController from './TrainController.vue';
-  
+
   export default {
     name: 'controller',
 
+    beforeDestroy: function() {
+
+    },
 
     components: {
-      TrainController,    
+      TrainController,
     },
 
     props: ['index', 'ledColor', 'selectionA', 'selectionB', 'type', 'connection'],
   }
 </script>
-  
+
 <style lang="scss">
   .loading-controller
   {
     position: relative;
-    background-color: cornflowerblue; 
+    background-color: cornflowerblue;
     width: 100px;
     height: 280px;
 
@@ -38,4 +41,3 @@
     box-shadow: 0px 0px 3px #666;
   }
 </style>
-  
