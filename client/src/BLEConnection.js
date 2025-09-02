@@ -3,7 +3,7 @@ import TrainConnection from './TrainConnection.js';
 
 class BLEConnection {
   static async searchDevice(connectedDevices) {
-      
+
       try
       {
 
@@ -16,8 +16,8 @@ class BLEConnection {
           filters: [{ services: [UUIDS.train.service] }], // TODO: Add signal, switch and station services
           exclusionFilters: exclusionFilters
         });
-     
-        let server = await device.gatt.connect();    
+
+        let server = await device.gatt.connect();
 
         let services = await server.getPrimaryServices();
         let type = services[0].uuid;
@@ -26,23 +26,24 @@ class BLEConnection {
             return new TrainConnection(device, server);
 
           // TODO: Add other connection types
-        }        
+        }
 
         return;
-      }    
+      }
       catch(ex)
       {
         return;
-      }              
+      }
   }
 
   constructor(device, server) {
     this.device = device;
     this.server = server;
-    this.connected = false;    
-        
+    this.connected = false;
+
     let thi = this;
-    this.device.addEventListener('gattserverdisconnected', () => this.onConnectionClosed.apply(thi)); 
+    this._onDisconnected = () => this.onConnectionClosed.apply(thi);
+    this.device.addEventListener('gattserverdisconnected', this._onDisconnected);
     setTimeout(this.connectionCheck, 500);
   }
 
@@ -53,8 +54,8 @@ class BLEConnection {
   connectionCheck() {
     if(this.server !== undefined && this.server.connected === false)
     {
-      this.onConnectionClosed();  
-    }      
+      this.onConnectionClosed();
+    }
     else
     {
       setTimeout(this.connectionCheck, 500);
@@ -63,15 +64,17 @@ class BLEConnection {
 
   onConnectionClosed() {
     console.log('Connection lost.', this);
-    
+
     try {
       this.server.disconnect();
     }
     catch(ex) {}
 
+    this.device.removeEventListener('gattserverdisconnected', this._onDisconnected);
+
     this.device = undefined;
-    this.server = undefined;    
-    
+    this.server = undefined;
+
     if(this.onConnectionClosedListener !== undefined) {
       this.onConnectionClosedListener();
     }
@@ -83,6 +86,16 @@ class BLEConnection {
 
   isConnected() {
     return this.connected;
+  }
+
+  disconnect() {
+    if(this.server !== undefined && this.server.connected) {
+      this.server.disconnect();
+    }
+  }
+
+  identifier() {
+    return this.device.id;
   }
 }
 
