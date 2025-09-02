@@ -3,7 +3,7 @@
     <img alt="Logo" id="logo" src="./assets/logo.webp">
 
     <div class="controller-panel">
-      <controller v-for="(c, i) in controllers" :key="i" :index="i" :type="c.type" :connection="c.connection" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeTrainController(i)"/>
+      <controller v-for="(c, i) in controllers" :key="c.connection.identifier()" :index="i" :type="c.type" :connection="c.connection" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel"/>
 
       <div class="empty-controller">
         <div class="circle" @click="searchBluetoothDevice">
@@ -58,7 +58,6 @@ export default {
     },
 
     addTrainController: function(trainConnection) {
-      let index = this.controllers.length;
       this.controllers.push({
         type: 'train',
         ledColor: nextColor(this.controllers.length),
@@ -69,7 +68,9 @@ export default {
 
       let thi = this;
       trainConnection.setOnConnectionClosedListener(function() {
-        thi.removeTrainController(index);
+          // Finde den aktuellen Index dieses Controllers
+          const idx = thi.controllers.findIndex(c => c.connection === trainConnection);
+          if(idx !== -1) thi.removeTrainController(idx);
       });
     },
 
