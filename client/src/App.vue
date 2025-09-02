@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <img alt="Logo" id="logo" src="./assets/logo.webp">
+    <track-layout/>
 
     <div class="controller-panel">
       <controller v-for="(c, i) in controllers" :key="c.connection.identifier()" :index="i" :type="c.type" :connection="c.connection" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeController(i)"/>
@@ -11,13 +11,14 @@
 </template>
 
 <script>
-
+import TrackLayout from './components/layout/track-layout.vue';
 import Controller from './components/Controller.vue';
 import EmptyController from './components/EmptyController.vue';
 
 export default {
   name: 'App',
   components: {
+    TrackLayout,
     Controller,
     EmptyController
   },
