@@ -35,7 +35,7 @@
     },
 
     mounted: function() {
-      //this.$midi.addController(this.index, this.handleMidiCommand);
+      this.$midi.setSearchNewDeviceCallback(this.searchBluetoothDevice);
     },
 
     data: function() {
@@ -63,42 +63,6 @@
           selectionB: 1,
           connection: trainConnection
         });
-      },
-
-      handleMidiCommand: function(command, value) {
-        switch(command) {
-          case 'slider':
-            this.speed = value;
-          break;
-
-          case 'knob':
-            this.mSelectionA = Math.round(value / 127  * (this.modeCount - 1));
-          break;
-
-          case 'buttonA':
-            if(value > 64) {
-              this.pressedA = true;
-              this.$refs.buttonA.press();
-            }
-            else {
-              this.pressedA = false;
-            }
-          break;
-
-          case 'buttonB':
-            if(value > 64) {
-              this.pressedB = true;
-              this.$refs.buttonB.press();
-            }
-            else {
-              this.pressedB = false;
-            }
-          break;
-
-          default:
-            console.log("Unknown command "+command);
-          break;
-        }
       }
     }
   }

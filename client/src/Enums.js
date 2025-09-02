@@ -102,4 +102,8 @@ let CONFIG = {
   SPEED_STEPS: 5
 };
 
-export {UUIDS, MIDI_CONTROLS, CONFIG, MIDI_IDS};
+function isButtonB(buttonId) {
+  return buttonId >= 33 && buttonId <= 41;
+}
+
+export {UUIDS, MIDI_CONTROLS, CONFIG, MIDI_IDS, isButtonB};

@@ -1,16 +1,16 @@
 import Vue from 'vue';
-import {MIDI_CONTROLS} from './Enums.js';
-import {MIDI_IDS} from './Enums.js';
+import {MIDI_CONTROLS, MIDI_IDS, isButtonB} from './Enums.js';
 
 let mdp = new Vue({
-  data: function() 
+  data: function()
   {
-    return {       
-      available: false, 
-      listeners: {}
+    return {
+      available: false,
+      listeners: {},
+      searchNewDeviceCallback: undefined
     };
   },
-  
+
   created: function() {
     if (navigator.requestMIDIAccess) {
       navigator.requestMIDIAccess({
@@ -18,10 +18,14 @@ let mdp = new Vue({
       }).then(this.onMIDISuccess, this.onMIDIFailure);
     } else {
       console.warn("No MIDI support in your browser");
-    }    
+    }
   },
-  
-  methods: {          
+
+  methods: {
+    setSearchNewDeviceCallback: function(callback) {
+      this.searchNewDeviceCallback = callback;
+    },
+
     onMIDISuccess: function(midi) {
       if(midi.inputs.size > 0) {
         this.available = true;
@@ -41,7 +45,7 @@ let mdp = new Vue({
       for (var input = allInputs.next(); input && !input.done; input = allInputs.next()) {
         // when a MIDI value is received call the onMIDIMessage function
         input.value.onmidimessage = this.handleMidiMessage;
-      }      
+      }
     },
 
     handleMidiMessage: function(msg) {
@@ -52,15 +56,16 @@ let mdp = new Vue({
           this.listeners[button](msg.data[2]);
         }
 
-/*        if(msg.data[1] == MIDI_CONTROLS.speed1) {
-          if(this.speedListeners[0]!== undefined) {
-            this.speedListeners[0](msg.data[2] / MIDI_CONTROLS.MAX_VALUE);
-          }          
-        }*/
-      } 
-      
-      
-      //console.log(msg.data); 
+        else if(isButtonB(button) && msg.data[2] == 127) {
+          if(this.searchNewDeviceCallback !== undefined) {
+            console.log("Searching for new device!");
+            this.searchNewDeviceCallback(); // Note: This does NOT work because midi commands are not a user gesture... :-(
+          }
+        }
+      }
+
+
+      //console.log(msg.data);
     },
 
     onMIDIFailure: function() {
@@ -68,8 +73,8 @@ let mdp = new Vue({
     },
 
     addController: function(index, listener) {
-      let controls = MIDI_IDS[index];  
-      
+      let controls = MIDI_IDS[index];
+
       for(let key in controls) {
         let id = controls[key];
         this.listeners[id] = function(val) {
@@ -79,8 +84,8 @@ let mdp = new Vue({
     },
 
     removeController: function(index) {
-      let controls = MIDI_IDS[index];  
-      
+      let controls = MIDI_IDS[index];
+
       for(let key in controls) {
         let id = controls[key];
         delete this.listeners[id];
@@ -92,8 +97,8 @@ let mdp = new Vue({
 
 //Export as vue-plugin
 const MidiPlugin = {
-    install(Vue) {              
-        Vue.prototype.$midi = mdp;        
+    install(Vue) {
+        Vue.prototype.$midi = mdp;
     },
 };
 export default MidiPlugin;
