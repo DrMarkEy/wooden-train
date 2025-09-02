@@ -239,7 +239,7 @@
       },
 
       removeController: function() {
-        this.$emit('remove');
+        this.connection.disconnect();
       },
 
       nextMode: function() {
