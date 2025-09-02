@@ -1,7 +1,8 @@
 <template>
     <div class="track-layout">
       <general-track :model="piece" v-for="(piece, index) in trackPieces" :key="index"/>
-      <button @click="addTrackPiece">ADD</button>
+      <button @click="addShortStraight">Add Short Straight</button>
+      <button @click="addRightCurve">Add Right Curve</button>
     </div>
   </template>
 
@@ -24,7 +25,7 @@
     },
 
     data: function() {
-      return {trackPieces: [new ShortStraightTrack(buildMatrix(100, 0, 20))]};
+      return {trackPieces: [new ShortStraightTrack(buildMatrix(100, 0, -20))]};
     },
 
     computed: {
@@ -32,20 +33,14 @@
     },
 
     methods: {
-      addTrackPiece: function() {
-        //let matrix = this.$refs.firstPiece.getMatrix();
-        //let translation = getTranslation(matrix);
-        //let angle = getRotationAngle(matrix);
+      addShortStraight: function() {
         let lastTrackPiece = this.trackPieces[this.trackPieces.length-1];
-
         this.trackPieces.push(new ShortStraightTrack(lastTrackPiece.getDestination()));
-        /*{
-          type: 'short-straight',
-          x: this.trackPieces[this.trackPieces.length-1].x,
-          y: this.trackPieces[this.trackPieces.length-1].y + 120,
-          angle: this.trackPieces[this.trackPieces.length-1].angle
-        });*/
+      },
 
+      addRightCurve: function() {
+        let lastTrackPiece = this.trackPieces[this.trackPieces.length-1];
+        this.trackPieces.push(new CurveRight(lastTrackPiece.getDestination()));
       }
     }
   }

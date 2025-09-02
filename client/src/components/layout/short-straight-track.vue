@@ -11,7 +11,7 @@
   import { ShortStraightTrack } from './straight-track';
 
   export default {
-    name: 'short-track-layout',
+    name: 'short-straight-track',
 
     props: ['model'],
 
@@ -30,22 +30,14 @@
         let originPosition = this.model.getOriginPosition();
         let originAngle = this.model.getOriginRotation();
 
-        console.log('origin', this.model, originPosition, originAngle);
-
         return {
           'background-color': 'white',
-          'transform': 'scale(' + this.scale + ', ' + this.scale + ') rotate(' + (-originAngle) + 'deg)',
+          'transform': 'scale(' + this.scale + ', ' + this.scale + ') rotate(' + (originAngle) + 'deg)',
           'top': (originPosition.y + this.scale/2) + 'px',
           'left': (originPosition.x) + 'px',
         };
       }
-    },
-
-    /*methods: {
-      getMatrix() {
-        return matrixMultiply(translate(this.x, this.y), matrixMultiply(rotate(-this.angle), straight(1)));
-      }
-    }*/
+    }
   }
   </script>
 

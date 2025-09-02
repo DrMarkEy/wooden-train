@@ -1,7 +1,7 @@
 import { Track } from './track';
 
 function straight(length) {
-  return [[1, 0, length], [0, 1, 0], [0, 0, 1]];
+  return [[1, 0, 0], [0, 1, length], [0, 0, 1]];
 }
 
 class StraightTrack extends Track {

@@ -1,5 +1,5 @@
 <template>
-    <svg class="short-straight-track" :style="style" width="1px" height="1px" >
+    <svg class="curved-track" :style="style" width="1px" height="1px" >
         <path fill="none" stroke="red" stroke-width="0.35" d="M0.5,0 L0.5, 1" />
     </svg>
 </template>
@@ -11,19 +11,15 @@
   import { CurveRight } from './curved-track';
 
   export default {
-    name: 'short-track-layout',
+    name: 'curved-track',
 
-    props: ['x', 'y', 'angle'],
+    props: ['model'],
 
     components: {
 
     },
 
     computed: {
-      model() {
-        return new CurveRight(buildMatrix(this.x, this.y, this.angle));
-      },
-
       scale() {
         return 100;
       },
@@ -34,23 +30,17 @@
 
         return {
           'background-color': 'white',
-          'transform': 'scale(' + this.scale + ', ' + this.scale + ') rotate(' + (-originAngle) + 'deg)',
+          'transform': 'scale(' + this.scale + ', ' + this.scale + ') rotate(' + (originAngle) + 'deg)',
           'top': (originPosition.y + this.scale/2) + 'px',
           'left': (originPosition.x) + 'px',
         };
       }
     },
-
-    methods: {
-      getMatrix() {
-        return matrixMultiply(translate(this.x, this.y), matrixMultiply(rotate(-this.angle), straight(1)));
-      }
-    }
   }
   </script>
 
   <style lang="scss">
-  .short-straight-track {
+  .curved-track {
     position: absolute;
   }
   </style>
