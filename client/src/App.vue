@@ -5,11 +5,7 @@
     <div class="controller-panel">
       <controller v-for="(c, i) in controllers" :key="c.connection.identifier()" :index="i" :type="c.type" :connection="c.connection" :ledColor="c.ledColor" @change-color="val => c.ledColor = val" :selectionA="c.selectionA" @change-selection-a="sel => c.selectionA = sel" :selectionB="c.selectionB" @change-selection-b="sel => c.selectionB = sel" @remove="removeController(i)"/>
 
-      <div class="empty-controller">
-        <div class="circle" @click="searchBluetoothDevice">
-          <div class="inner">+</div>
-        </div>
-      </div>
+      <empty-controller :existing-controllers="controllers" @add-controller="addController"/>
     </div>
   </div>
 </template>
@@ -17,27 +13,13 @@
 <script>
 
 import Controller from './components/Controller.vue';
-
-import TrainConnection from './TrainConnection.js';
-
-function nextColor(index) {
-  switch(index) {
-    case 0: return '#ff0000';
-    case 1: return '#00ff00';
-    case 2: return '#0000ff';
-    case 3: return '#ffff00';
-    case 4: return '#00ffff';
-    case 5: return '#ff00ff';
-    case 6: return '#ff8800';
-    case 7: return '#ffffff';
-    case 8: return '#5382ee';
-  }
-}
+import EmptyController from './components/EmptyController.vue';
 
 export default {
   name: 'App',
   components: {
-    Controller
+    Controller,
+    EmptyController
   },
 
   data: function() {
@@ -45,32 +27,14 @@ export default {
   },
 
   methods: {
-    searchBluetoothDevice: async function() {
-      let connection = await TrainConnection.searchDevice(this.controllers.map(cont => cont.connection));
-
-      if(connection !== undefined) {
-        this.addTrainController(connection);
-
-        setTimeout(function(){
-          connection.setup();
-        }, 10);
-      }
-    },
-
-    addTrainController: function(trainConnection) {
-      this.controllers.push({
-        type: 'train',
-        ledColor: nextColor(this.controllers.length),
-        selectionA: 0,
-        selectionB: 1,
-        connection: trainConnection
-      });
+    addController: function(controller) {
+      this.controllers.push(controller);
 
       let thi = this;
-      trainConnection.setOnConnectionClosedListener(function() {
+      controller.connection.setOnConnectionClosedListener(function() {
           // Finde den aktuellen Index dieses Controllers
-          const idx = thi.controllers.findIndex(c => c.connection === trainConnection);
-          if(idx !== -1) thi.removeTrainController(idx);
+          const idx = thi.controllers.findIndex(c => c.connection === controller.connection);
+          if(idx !== -1) thi.removeController(idx);
       });
     },
 
@@ -112,53 +76,6 @@ html {
   border-radius: 12px;
   padding: 10px;
   box-shadow: 4px 4px 6px #444;
-
-  .empty-controller
-  {
-    position: relative;
-    width: 100px;
-    height: 320px;
-    border-style: dotted;
-    border-width: 3px;
-    border-color: #aaa;
-    background-color: #ccc;
-    margin: 5px;
-
-    .circle
-    {
-      left: calc(50% - 20px);
-      top: calc(50% - 20px);
-      position: absolute;
-      background-color: #ccc;
-      width: 40px;
-      height: 40px;
-      border-radius: 40px;
-      border-style: dashed;
-      border-width: 2px;
-      border-color: #999;
-
-      .inner
-      {
-        font-size: 24px;
-        color: #999;
-        margin-top: 5px;
-      }
-
-      &:hover
-      {
-        background-color: cornflowerblue;
-        cursor: pointer;
-        border-style: solid;
-        border-color: #333;
-        box-shadow: 1px 1px 2px #666;
-
-        .inner
-        {
-          color:#333;
-        }
-      }
-    }
-  }
 }
 
 #logo

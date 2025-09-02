@@ -1,7 +1,7 @@
 <template>
   <div v-if="type === 'train'">
-    <train-controller v-if="connection.isConnected()" :connection="connection" :index="index" :ledColor="ledColor" @change-color="$emit('change-color', $event)" :selectionA="selectionA" @change-selection-a="$emit('change-selection-a', $event)" :selectionB="selectionB" @change-selection-b="$emit('change-selection-a', $event)" @remove="$emit('remove', $event)"/>
-    <div class="loading-controller" v-else>
+    <train-controller v-if="connection.isConnected()" ref="implementation" :connection="connection" :index="index" :ledColor="ledColor" @change-color="$emit('change-color', $event)" :selectionA="selectionA" @change-selection-a="$emit('change-selection-a', $event)" :selectionB="selectionB" @change-selection-b="$emit('change-selection-a', $event)" @remove="$emit('remove', $event)"/>
+    <div class="loading-controller" v-else ref="implementation">
       CONNECTING
        <!-- TODO: Loading screen wird nicht angezeigt... -->
     </div>
