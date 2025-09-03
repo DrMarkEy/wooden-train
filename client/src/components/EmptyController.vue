@@ -1,9 +1,15 @@
 <template>
-    <div class="empty-controller">
+  <div class="empty-controller-container">
+    <div :class="{'empty-controller': true, 'waiting-for-space': showOverlay}">
         <div class="circle" @click="searchBluetoothDevice">
           <div class="inner">+</div>
         </div>
     </div>
+
+    <div class="waiting-for-space-overlay" v-if="showOverlay" @click="stopWaitingForSpace">
+          Leertaste zum Hinzufügen eines Controllers drücken
+    </div>
+  </div>
 </template>
 
 <script>
@@ -35,11 +41,17 @@
     },
 
     mounted: function() {
-      this.$midi.setSearchNewDeviceCallback(this.searchBluetoothDevice);
+      this.$midi.setSearchNewDeviceCallback(this.waitForSpace, this.stopWaitingForSpace);
+
+      window.addEventListener('keydown', (event) => {
+        if(event.code === 'Space') {
+          this.handleSpaceKey();
+        }
+      });
     },
 
     data: function() {
-      return {};
+      return {showOverlay: false};
     },
 
     methods: {
@@ -52,6 +64,21 @@
           setTimeout(function(){
             connection.setup();
           }, 10);
+        }
+      },
+
+      waitForSpace: function() {
+        this.showOverlay = true;
+      },
+
+      stopWaitingForSpace: function() {
+        this.showOverlay = false;
+      },
+
+      handleSpaceKey: function() {
+        if(this.showOverlay) {
+          this.showOverlay = false;
+          this.searchBluetoothDevice();
         }
       },
 
@@ -69,6 +96,11 @@
   </script>
 
   <style lang="scss">
+
+  .empty-controller-container {
+    position: relative;
+  }
+
   .empty-controller
   {
     position: relative;
@@ -79,6 +111,24 @@
     border-color: #aaa;
     background-color: #ccc;
     margin: 5px;
+
+    &.waiting-for-space {
+      border-color: cornflowerblue;
+      z-index: 100;
+      background-color: #eee;
+
+      .circle {
+        background-color: cornflowerblue;
+        border-style: solid;
+        border-color: #333;
+        box-shadow: inset 1px 1px 2px #666;
+
+        .inner
+        {
+          display:none
+        }
+      }
+    }
 
     .circle
     {
@@ -115,4 +165,21 @@
       }
     }
   }
+
+   .waiting-for-space-overlay {
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(200, 200, 200, 0.8);
+      color: #444;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: bold;
+      user-select: none;
+    }
   </style>

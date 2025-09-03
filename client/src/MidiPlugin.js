@@ -7,7 +7,8 @@ let mdp = new Vue({
     return {
       available: false,
       listeners: {},
-      searchNewDeviceCallback: undefined
+      searchNewDeviceCallback: undefined,
+      stopSearchingNewDeviceCallback: undefined
     };
   },
 
@@ -22,8 +23,9 @@ let mdp = new Vue({
   },
 
   methods: {
-    setSearchNewDeviceCallback: function(callback) {
+    setSearchNewDeviceCallback: function(callback, stopCallback) {
       this.searchNewDeviceCallback = callback;
+      this.stopSearchingNewDeviceCallback = stopCallback;
     },
 
     onMIDISuccess: function(midi) {
@@ -56,10 +58,15 @@ let mdp = new Vue({
           this.listeners[button](msg.data[2]);
         }
 
-        else if(isButtonB(button) && msg.data[2] == 127) {
+        else if(isButtonB(button)) {
           if(this.searchNewDeviceCallback !== undefined) {
-            console.log("Searching for new device!");
-            this.searchNewDeviceCallback(); // Note: This does NOT work because midi commands are not a user gesture... :-(
+            if(msg.data[2] == 127) {
+              this.searchNewDeviceCallback(); // Note: This does only work if the callback does not directly call an API that requires a user gesture
+              //  as midi commands do not count as a user gesture... :-(
+            }
+            else {
+              this.stopSearchingNewDeviceCallback();
+            }
           }
         }
       }
