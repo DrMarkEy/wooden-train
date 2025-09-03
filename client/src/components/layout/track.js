@@ -18,6 +18,10 @@ class Track {
     return this.transformation;
   }
 
+  getTransformationRotation() {
+    return getRotationAngle(this.transformation);
+  }
+
   getDestination() {
     return matrixMultiply(this.origin, this.transformation);
   }

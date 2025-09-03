@@ -1,15 +1,16 @@
 <template>
     <div class="track-layout">
       <general-track :model="piece" v-for="(piece, index) in trackPieces" :key="index"/>
-      <button @click="addShortStraight">Add Short Straight</button>
-      <button @click="addRightCurve">Add Right Curve</button>
+      <button @click="addLeftCurve">⬅️</button>
+      <button @click="addShortStraight">⬆️</button>
+      <button @click="addRightCurve">➡️</button>
     </div>
   </template>
 
   <script>
   import generalTrack from './general-track.vue';
   import { ShortStraightTrack } from './straight-track';
-  import { CurveRight } from './curved-track';
+  import { CurveRight, CurveLeft } from './curved-track';
 
   import { buildMatrix } from './matrices';
 
@@ -25,7 +26,7 @@
     },
 
     data: function() {
-      return {trackPieces: [new ShortStraightTrack(buildMatrix(100, 0, -20))]};
+      return {trackPieces: [new ShortStraightTrack(buildMatrix(100, 0, -22.5))]};
     },
 
     computed: {
@@ -41,6 +42,11 @@
       addRightCurve: function() {
         let lastTrackPiece = this.trackPieces[this.trackPieces.length-1];
         this.trackPieces.push(new CurveRight(lastTrackPiece.getDestination()));
+      },
+
+      addLeftCurve: function() {
+        let lastTrackPiece = this.trackPieces[this.trackPieces.length-1];
+        this.trackPieces.push(new CurveLeft(lastTrackPiece.getDestination()));
       }
     }
   }

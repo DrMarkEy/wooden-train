@@ -6,10 +6,6 @@
 
   <script>
 
-  import { matrixMultiply, translate, rotate, buildMatrix } from './matrices';
-
-  import { ShortStraightTrack } from './straight-track';
-
   export default {
     name: 'short-straight-track',
 
@@ -31,7 +27,6 @@
         let originAngle = this.model.getOriginRotation();
 
         return {
-          'background-color': 'white',
           'transform': 'scale(' + this.scale + ', ' + this.scale + ') rotate(' + (originAngle) + 'deg)',
           'top': (originPosition.y + this.scale/2) + 'px',
           'left': (originPosition.x) + 'px',

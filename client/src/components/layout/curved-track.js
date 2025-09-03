@@ -1,9 +1,14 @@
 import { Track } from './track';
-function curveRight() {
-  let sq2 = Math.sqrt(2);
-  let x = 2 * sq2 / (1 + sq2);
+import { matrixMultiply, rotate, translate } from './matrices';
 
-  return [[1/sq2, -1/sq2, x*(1 + 1/sq2)], [1/sq2, 1/sq2, x/sq2], [0, 0, 1]];
+const scaleFactor = 100;
+
+function curveRight() {
+  return matrixMultiply(rotate(45 * Math.PI / 180), translate(0, scaleFactor));
+}
+
+function curveLeft() {
+  return matrixMultiply(rotate(-45 * Math.PI / 180), translate(0, scaleFactor));
 }
 
 class CurveRight extends Track {
@@ -12,5 +17,11 @@ class CurveRight extends Track {
   }
 };
 
+class CurveLeft extends Track {
+  constructor(origin, length) {
+    super('curve', origin, curveLeft(length));
+  }
+};
 
-export { CurveRight };
+
+export { CurveRight, CurveLeft };

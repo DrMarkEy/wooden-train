@@ -1,18 +1,21 @@
 import { Track } from './track';
+import { translate } from './matrices';
+
+const scaleFactor = 100;
 
 function straight(length) {
-  return [[1, 0, 0], [0, 1, length], [0, 0, 1]];
+  return translate(0, length);
 }
 
 class StraightTrack extends Track {
   constructor(origin, length) {
-    super('straight', origin, straight(length));
+    super('straight', origin, straight(length * scaleFactor));
   }
 };
 
 class ShortStraightTrack extends StraightTrack {
   constructor(origin) {
-    super(origin, 100);
+    super(origin, 1);
   }
 };
 
