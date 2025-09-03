@@ -2,7 +2,7 @@
   <div v-if="type === 'train'">
     <train-controller v-if="connection.isConnected()" ref="implementation" :connection="connection" :index="index" :ledColor="ledColor" @change-color="$emit('change-color', $event)" :selectionA="selectionA" @change-selection-a="$emit('change-selection-a', $event)" :selectionB="selectionB" @change-selection-b="$emit('change-selection-a', $event)" @remove="$emit('remove', $event)"/>
     <div class="loading-controller" v-else ref="implementation">
-      CONNECTING
+      <img src="../assets/loading.svg" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px;"/>
        <!-- TODO: Loading screen wird nicht angezeigt... -->
     </div>
   </div>
