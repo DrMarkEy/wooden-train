@@ -44,21 +44,20 @@ class TrainConnection extends BLEConnection {
     this.engineSpeedCharacteristic = await service.getCharacteristic(UUIDS.train.engineSpeed);
     this.lightColorCharacteristic = await service.getCharacteristic(UUIDS.train.lightColor);
     this.commandCharacteristic = await service.getCharacteristic(UUIDS.train.command);
-    this.colorReadingCharacteristic = await service.getCharacteristic(UUIDS.train.colorReading);
-    this.operationModeCharacteristic = await service.getCharacteristic(UUIDS.train.operationMode);
+    this.stateCharacteristic = await service.getCharacteristic(UUIDS.train.state);
 
     let thi = this;
-    await this.colorReadingCharacteristic.startNotifications();
+    /*await this.colorReadingCharacteristic.startNotifications();
     this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
       thi.colorReadingReceived(e.target.value);
     });
-    this.colorReadingReceived(await this.colorReadingCharacteristic.readValue());
+    this.colorReadingReceived(await this.colorReadingCharacteristic.readValue());*/
 
-    await this.operationModeCharacteristic.startNotifications();
-    this.operationModeCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
+    await this.stateCharacteristic.startNotifications();
+    this.stateCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
       thi.operationModeChanged(e.target.value);
     });
-    this.operationModeChanged(await this.operationModeCharacteristic.readValue());
+    this.operationModeChanged(await this.stateCharacteristic.readValue());
 
     this.engineCharacteristicLock = false;
     this.requestedEngineSpeed = 0;
@@ -153,7 +152,7 @@ class TrainConnection extends BLEConnection {
     }
   }
 
-  async requestColorReading() {
+  /*async requestColorReading() {
     try
     {
       let result = await this.colorReadingCharacteristic.readValue();
@@ -163,13 +162,13 @@ class TrainConnection extends BLEConnection {
     {
       console.error("Error reading sensor color!");
     }
-  }
+  }*/
 
-  async readOperationMode() {
+  async readState() {
     try
     {
-      let result = await this.operationModeCharacteristic.readValue();
-      console.log('operation mode', result.getUint8());
+      let result = await this.stateCharacteristic.readValue();
+      console.log('state characteristic', result.getUint8());
     }
     catch(ex)
     {
