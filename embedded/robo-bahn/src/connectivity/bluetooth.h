@@ -21,7 +21,7 @@
 #define BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID   "c8d7e25c-3447-11ee-be56-0242ac120002"
 #define BLUETOOTH_CHARACTERISTIC_STATE_UUID         "522df05c-fd6c-49cd-8fb7-ea6beb9018f1"
 
-static void stateChangedCallback();
+static void stateChangedCallback(uint8_t changedState);
 static void connectCallback();
 static void disconnectCallback();
 static void userCommandCallback(UserCommand* command);
@@ -59,7 +59,7 @@ public:
 
     void Setup(VehicleState* vehicleState_) {
         vehicleState = vehicleState_;
-        vehicleState->setOnStateChangedCallback(stateChangedCallback);
+        vehicleState->addOnStateChangedCallback(stateChangedCallback);
 
         // Disable authentication stuff for better performance
         NimBLEDevice::setSecurityAuth(false);
@@ -135,21 +135,21 @@ public:
 
     // Register a callback for command characteristic
     void onCommand(void (*callback)(uint8_t*, size_t)) { commandCallback = callback; }
-    void onSpeedChanged(void (*callback)(uint8_t*, size_t)) { speedCallback = callback; }
     void onColorChanged(void (*callback)(uint8_t*, size_t)) { colorCallback = callback; }
 
-    // Set speed value
-    void setSpeed(uint8_t speed) {
+    // Update speed value
+    void updateSpeed() {
+        uint8_t speed = vehicleState->getEngineSpeed();
         if (pSpeedChar) pSpeedChar->setValue(&speed, 1);
     }
 
     // Get speed value
-    uint8_t getSpeed() {
+    /*uint8_t getSpeed() {
         if (pSpeedChar)
             return pSpeedChar->getValue().getValue()[0];
 
         return 0;
-    }
+    }*/
 
     // Set light color value
     void setLightColor(uint8_t* color, size_t len) {
@@ -180,8 +180,8 @@ protected:
 
 
 
-        } else if (uuid == BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID && speedCallback) {
-            speedCallback((uint8_t*)value.data(), value.length());
+        } else if (uuid == BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID) {
+            this->vehicleState->setEngineSpeed((uint8_t) value[0]);
         } else if (uuid == BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID && colorCallback) {
             colorCallback((uint8_t*)value.data(), value.length());
         }
@@ -227,15 +227,19 @@ private:
     NimBLECharacteristic *pStateChar = nullptr;
 
     void (*commandCallback)(uint8_t*, size_t) = nullptr;
-    void (*speedCallback)(uint8_t*, size_t) = nullptr;
     void (*colorCallback)(uint8_t*, size_t) = nullptr;
     void (*connectionCallback)(uint8_t event) = nullptr;
 };
 
 extern BluetoothConnector bluetooth;
 
-void stateChangedCallback() {
-  bluetooth.sendState();
+void stateChangedCallback(uint8_t changedState) {
+    if(changedState == VEHICLE_STATE_ENGINE_SPEED) {
+        bluetooth.updateSpeed();
+    }
+    else {
+        bluetooth.sendState();
+    }
 }
 
 void connectCallback() {
