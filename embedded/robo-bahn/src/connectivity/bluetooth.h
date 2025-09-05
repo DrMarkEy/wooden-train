@@ -10,17 +10,18 @@
 #include <http-logger.h>
 #include <config.h>
 #include <user-command.hpp>
+#include <vehicle-state.hpp>
 
 #define BLUETOOTH_COMMAND_COUNT 7
 
 // UUIDs as strings for NimBLE
-#define BLUETOOTH_SERVICE_MAIN_UUID            "566804f6-368b-44a4-a375-ce8789eb1dd8"
+#define BLUETOOTH_SERVICE_MAIN_UUID                 "566804f6-368b-44a4-a375-ce8789eb1dd8"
 #define BLUETOOTH_CHARACTERISTIC_MOTOR_SPEED_UUID   "c045fb9c-3447-11ee-be56-0242ac120002"
 #define BLUETOOTH_CHARACTERISTIC_COMMAND_UUID       "3804213f-d6ad-458e-977c-4f9f1b9f6b9a"
 #define BLUETOOTH_CHARACTERISTIC_LIGHT_COLOR_UUID   "c8d7e25c-3447-11ee-be56-0242ac120002"
-#define BLUETOOTH_CHARACTERISTIC_COLOR_READING_UUID "45cfdad3-4f02-4e5c-aa16-1c513dc76a3c"
-#define BLUETOOTH_CHARACTERISTIC_OPERATION_MODE_UUID "522df05c-fd6c-49cd-8fb7-ea6beb9018f1"
+#define BLUETOOTH_CHARACTERISTIC_STATE_UUID         "522df05c-fd6c-49cd-8fb7-ea6beb9018f1"
 
+static void stateChangedCallback();
 static void connectCallback();
 static void disconnectCallback();
 static void userCommandCallback(UserCommand* command);
@@ -56,7 +57,10 @@ class BluetoothConnector : public NimBLECharacteristicCallbacks {
 public:
     BluetoothConnector() {}
 
-    void Setup() {
+    void Setup(VehicleState* vehicleState_) {
+        vehicleState = vehicleState_;
+        vehicleState->setOnStateChangedCallback(stateChangedCallback);
+
         // Disable authentication stuff for better performance
         NimBLEDevice::setSecurityAuth(false);
 
@@ -89,19 +93,12 @@ public:
         );
         pCommandChar->setCallbacks(this);
 
-        // Color reading characteristic (with notify)
-        pColorReadingChar = pService->createCharacteristic(
-            BLUETOOTH_CHARACTERISTIC_COLOR_READING_UUID,
-            NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY
+        // State characteristic (with notify)
+        pStateChar = pService->createCharacteristic(
+            BLUETOOTH_CHARACTERISTIC_STATE_UUID,
+            NIMBLE_PROPERTY::READ /*| NIMBLE_PROPERTY::WRITE*/ | NIMBLE_PROPERTY::NOTIFY
         );
-        pColorReadingChar->setCallbacks(this);
-
-        // Operation mode characteristic (with notify)
-        pOperationModeChar = pService->createCharacteristic(
-            BLUETOOTH_CHARACTERISTIC_OPERATION_MODE_UUID,
-            NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY
-        );
-        pOperationModeChar->setCallbacks(this);
+        pStateChar->setCallbacks(this);
 
         // Set initial values
         uint8_t zeroSpeed = 0;
@@ -113,11 +110,7 @@ public:
         uint8_t zeroCommand = 0;
         pCommandChar->setValue(&zeroCommand, 1);
 
-        uint8_t zeroReading[4] = {0};
-        pColorReadingChar->setValue(zeroReading, 4);
-
-        pOperationMode[0] = 23;
-        pOperationModeChar->setValue(pOperationMode, 1);
+        sendState();
 
         pService->start();
 
@@ -135,27 +128,15 @@ public:
         logger.Log("Bluetooth initialization finished!");
     }
 
+    void sendState() {
+        pStateChar->setValue(vehicleState->getState(), VEHICLE_STATE_SIZE);
+        pStateChar->notify();
+    }
+
     // Register a callback for command characteristic
     void onCommand(void (*callback)(uint8_t*, size_t)) { commandCallback = callback; }
     void onSpeedChanged(void (*callback)(uint8_t*, size_t)) { speedCallback = callback; }
     void onColorChanged(void (*callback)(uint8_t*, size_t)) { colorCallback = callback; }
-
-    // Set sensor color and notify
-    void setSensorColor(uint8_t color[1]) {
-        if (pColorReadingChar) {
-            pColorReadingChar->setValue(color, 1);
-            pColorReadingChar->notify();
-        }
-    }
-
-    // Set operation mode and notify
-    void setOperationMode(uint8_t operationMode) {
-        if (pOperationModeChar) {
-            pOperationMode[0] = operationMode;
-            pOperationModeChar->setValue(pOperationMode, 1);
-            pOperationModeChar->notify();
-        }
-    }
 
     // Set speed value
     void setSpeed(uint8_t speed) {
@@ -174,11 +155,6 @@ public:
     void setLightColor(uint8_t* color, size_t len) {
         if (pLightColorChar) pLightColorChar->setValue(color, len);
     }
-
-    // Set command value
-    /*void setCommand(uint8_t command) {
-        if (pCommandChar) pCommandChar->setValue(&command, 1);
-    }*/
 
 protected:
     // NimBLECharacteristicCallbacks overrides
@@ -243,13 +219,12 @@ public:
 private:
     NimBLEAdvertising *pAdvertising = nullptr;
 
-    uint8_t pOperationMode[1];
+    VehicleState* vehicleState = nullptr;
 
     NimBLECharacteristic *pSpeedChar = nullptr;
     NimBLECharacteristic *pLightColorChar = nullptr;
     NimBLECharacteristic *pCommandChar = nullptr;
-    NimBLECharacteristic *pColorReadingChar = nullptr;
-    NimBLECharacteristic *pOperationModeChar = nullptr;
+    NimBLECharacteristic *pStateChar = nullptr;
 
     void (*commandCallback)(uint8_t*, size_t) = nullptr;
     void (*speedCallback)(uint8_t*, size_t) = nullptr;
@@ -258,6 +233,10 @@ private:
 };
 
 extern BluetoothConnector bluetooth;
+
+void stateChangedCallback() {
+  bluetooth.sendState();
+}
 
 void connectCallback() {
   bluetooth.onClientConnect();

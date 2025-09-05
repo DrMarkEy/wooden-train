@@ -7,14 +7,8 @@
 #include <connectivity/bluetooth.h>
 #include <http-logger.h>
 #include <track-sensor.h>
-
-#define OPERATION_MODE_STOPPED 1
-#define OPERATION_MODE_DRIVING 2
-#define OPERATION_MODE_DRIVING_REVERSE 3
-#define OPERATION_MODE_CALLING_AT_STATION 4
+#include <vehicle-state.hpp>
 //#define OPERATION_MODE_STOPPED_AT_SIGNAL 5 -> Use STOPPED
-
-uint8_t operationMode = OPERATION_MODE_STOPPED;
 
 Logger logger;
 
@@ -26,8 +20,7 @@ ButtonController buttonController;
 SoundPlayer soundPlayer;
 //Lights* lights;
 TrackSensor* trackSensor;
-
-uint8_t lastDetectedSensorColor[1];
+VehicleState vehicleState;
 
 void setup() {
   logger.Setup();
@@ -48,30 +41,27 @@ void setup() {
 
     if(engine->getSpeed() == 0) {
       if(buttonController.isReversed()) {
-        engine->setDirection(false);
         engine->setSpeed(255);
 
-        operationMode = OPERATION_MODE_DRIVING_REVERSE;
-        bluetooth.setOperationMode(operationMode);
+        vehicleState.setOperationMode(OPERATION_MODE_DRIVING);
+        vehicleState.setDrivingDirection(DRIVING_DIRECTION_REVERSE);
+        engine->setDirection(false);
       }
       else {
-        engine->setDirection(true);
         engine->setSpeed(255);
 
-        operationMode = OPERATION_MODE_DRIVING;
-        bluetooth.setOperationMode(operationMode);
+        vehicleState.setOperationMode(OPERATION_MODE_DRIVING);
+        vehicleState.setDrivingDirection(DRIVING_DIRECTION_FORWARD);
+        engine->setDirection(true);
       }
     }
     else {
       engine->setSpeed(0);
-      bluetooth.setOperationMode(13);
-
-      operationMode = OPERATION_MODE_STOPPED;
-      bluetooth.setOperationMode(operationMode);
+      vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
     }
   });
 
-  bluetooth.Setup();
+  bluetooth.Setup(&vehicleState);
   bluetooth.onSpeedChanged([](uint8_t* array, size_t len){
     uint8_t speed = array[0];
     engine->setSpeed(speed);
@@ -101,29 +91,25 @@ void setup() {
       engine->setSpeed(oldSpeed);
 
       // Switch operation mode
-      if(operationMode == OPERATION_MODE_DRIVING) {
-        operationMode = OPERATION_MODE_DRIVING_REVERSE;
+      if(vehicleState.getDrivingDirection() == DRIVING_DIRECTION_FORWARD) {
+        vehicleState.setDrivingDirection(DRIVING_DIRECTION_REVERSE);
       }
-      else if(operationMode == OPERATION_MODE_DRIVING_REVERSE) {
-        operationMode = OPERATION_MODE_DRIVING;
+      else {
+        vehicleState.setDrivingDirection(DRIVING_DIRECTION_FORWARD);
       }
-      bluetooth.setOperationMode(operationMode);
     }
     else if(buffer[0] == BLUETOOTH_COMMAND_START) {
       if(engine->getDirection()) {
-        operationMode = OPERATION_MODE_DRIVING;
-        bluetooth.setOperationMode(operationMode);
+        vehicleState.setOperationMode(OPERATION_MODE_DRIVING);
       }
       else {
-        operationMode = OPERATION_MODE_DRIVING_REVERSE;
-        bluetooth.setOperationMode(operationMode);
+        vehicleState.setOperationMode(OPERATION_MODE_DRIVING);
       }
 
       engine->setSpeed(bluetooth.getSpeed());
     }
     else if(buffer[0] == BLUETOOTH_COMMAND_STOP) {
-      operationMode = OPERATION_MODE_STOPPED;
-      bluetooth.setOperationMode(operationMode);
+      vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
 
       engine->setSpeed(0);
     }
@@ -133,8 +119,7 @@ void setup() {
 
   trackSensor = new TrackSensor();
   trackSensor->onColorChangeDetected([](uint8_t color) {
-    lastDetectedSensorColor[0] = {color};
-    bluetooth.setSensorColor(lastDetectedSensorColor);
+    vehicleState.setLastReadColor(color);
   });
 
   trackSensor->onColorSignalDetected([](uint8_t signal) {
@@ -165,7 +150,9 @@ void setup() {
   lights = new Lights();
   lights->setGlobalColor(255, 0, 0);*/
 
-  bluetooth.setOperationMode(operationMode);
+  vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
+  vehicleState.setDrivingDirection(DRIVING_DIRECTION_FORWARD);
+  vehicleState.setColorSensorEnabled(true);
   soundPlayer.playSound(1);
 }
 
