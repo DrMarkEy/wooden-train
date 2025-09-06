@@ -22,18 +22,15 @@ class TrainConnection extends BLEConnection {
   constructor(device, server) {
     super(device, server);
 
-    this.colorSensor = Vue.observable({
-      colorCode: -1,
-      color: 'transparent'
-    });
-
-    this.operation = Vue.observable({
-      mode: -1
+    this.state = Vue.observable({
+      operationMode: OPERATION_MODE.STOPPED,
+      drivingDirection: 0,
+      colorSensorEnabled: true,
+      lastReadColor: -1
     });
 
     // Bind event handlers
-    this.colorReadingReceived = this.colorReadingReceived.bind(this);
-    this.operationModeChanged = this.operationModeChanged.bind(this);
+    this.stateChanged = this.stateChanged.bind(this);
   }
 
   async setup() {
@@ -47,17 +44,11 @@ class TrainConnection extends BLEConnection {
     this.stateCharacteristic = await service.getCharacteristic(UUIDS.train.state);
 
     let thi = this;
-    /*await this.colorReadingCharacteristic.startNotifications();
-    this.colorReadingCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
-      thi.colorReadingReceived(e.target.value);
-    });
-    this.colorReadingReceived(await this.colorReadingCharacteristic.readValue());*/
-
     await this.stateCharacteristic.startNotifications();
     this.stateCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
-      thi.operationModeChanged(e.target.value);
+      thi.stateChanged(e.target.value);
     });
-    this.operationModeChanged(await this.stateCharacteristic.readValue());
+    this.stateChanged(await this.stateCharacteristic.readValue());
 
     this.engineCharacteristicLock = false;
     this.requestedEngineSpeed = 0;
@@ -152,38 +143,12 @@ class TrainConnection extends BLEConnection {
     }
   }
 
-  /*async requestColorReading() {
-    try
-    {
-      let result = await this.colorReadingCharacteristic.readValue();
-      console.log('color', [result.getUint8(),result.getUint8(),result.getUint8(),result.getUint8()]);
-    }
-    catch(ex)
-    {
-      console.error("Error reading sensor color!");
-    }
-  }*/
-
-  async readState() {
-    try
-    {
-      let result = await this.stateCharacteristic.readValue();
-      console.log('state characteristic', result.getUint8());
-    }
-    catch(ex)
-    {
-      console.error("Error reading operation mode!");
-    }
-  }
-
-  colorReadingReceived(value)
+  stateChanged(value)
   {
-    this.colorSensor.colorCode = value.getUint8(0);
-  }
-
-  operationModeChanged(value)
-  {
-    this.operation.mode = value.getUint8(0);
+    this.state.operationMode = value.getUint8(0);
+    this.state.drivingDirection = value.getUint8(1);
+    this.state.colorSensorEnabled = (value.getUint8(2) != 0);
+    this.state.lastReadColor = value.getUint8(3);
   }
 }
 

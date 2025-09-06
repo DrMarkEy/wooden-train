@@ -151,16 +151,16 @@
       },
 
       operationMode: function() {
-        if(this.connection !== undefined && this.connection.operation !== undefined) {
-          return this.connection.operation.mode;
+        if(this.connection !== undefined && this.connection.state !== undefined) {
+          return this.connection.state.operationMode;
         }
 
         return -1;
       },
 
       sensorColorCode: function() {
-        if(this.connection !== undefined && this.connection.colorSensor !== undefined) {
-          return this.connection.colorSensor.colorCode;
+        if(this.connection !== undefined && this.connection.state !== undefined) {
+          return this.connection.state.lastReadColor;
         }
 
         return "";
