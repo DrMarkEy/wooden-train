@@ -64,7 +64,6 @@ void setup() {
 
   buttonController.Setup();
   buttonController.onButtonPressed([]() {
-    // Always switch between stopped and driving mode
     if(vehicleState.getOperationMode() == OPERATION_MODE_STOPPED) {
       vehicleState.setOperationMode(OPERATION_MODE_DRIVING);
     }
@@ -147,6 +146,7 @@ void setup() {
   lights = new Lights();
   lights->setGlobalColor(255, 0, 0);*/
 
+  // Set initial vehicle state
   vehicleState.setEngineSpeed(255);
   vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
 
@@ -158,6 +158,8 @@ void setup() {
   }
 
   vehicleState.setColorSensorEnabled(true);
+
+  // Play startup sound
   soundPlayer.playSound(1);
 }
 
