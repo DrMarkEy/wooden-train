@@ -41,7 +41,6 @@ class ServerCallbacks : public NimBLEServerCallbacks {
 
 class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
   void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
-    Serial.printf("Client sent write request to characteristic %s", pCharacteristic->getUUID().toString().c_str());
     NimBLEAttValue value = pCharacteristic->getValue();
 
     uint8_t buffer[value.length() - 1];
