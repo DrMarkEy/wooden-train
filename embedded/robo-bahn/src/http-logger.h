@@ -6,6 +6,7 @@
 #include <config.h>
 
 //#define ENABLE_LOG_DURATION
+#define USE_SERIAL_LOGGING_ONLY // Disable Wifi logging
 
 #define LOGGING_QUEUE_LENGTH 50
 static QueueHandle_t loggingQueue;
@@ -30,6 +31,9 @@ class Logger {
 
   void Setup() {
     Serial.begin(SERIAL_BAUD_RATE);
+
+    #ifndef USE_SERIAL_LOGGING_ONLY
+
     loggingQueue = xQueueCreate(LOGGING_QUEUE_LENGTH, sizeof(String*));
     if (loggingQueue == NULL) {
       Serial.println("Failed to create logging queue!");
@@ -45,6 +49,8 @@ class Logger {
       NULL,
       1 // Core affinity
     );
+
+    #endif
   }
 
   void setWifiConnector(IWifiLogger* _wifiConnector) {
@@ -57,13 +63,18 @@ class Logger {
 
 
   void Log(String str) {
+    #ifndef USE_SERIAL_LOGGING_ONLY
 
-//Serial.println(str);
+    //Serial.println(str);
     String* heapString = new String(str);
 
     if(xQueueSend(loggingQueue, (void*) &heapString, 10) != pdTRUE) {
       //Serial.println("Queue Full!"); // Absurd using serial here...
     }
+
+    #else
+    Serial.print(str);
+    #endif
   }
 
   void LogDuration(String msg, void (*runnable) ()) {
@@ -102,6 +113,7 @@ class Logger {
   }
 
   void LogBuffer(byte* buffer, int len) {
+    // TODO: Http logging
     Serial.write(buffer, len);
   }
 
