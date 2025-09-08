@@ -67,13 +67,6 @@ void setup() {
     // Always switch between stopped and driving mode
     if(vehicleState.getOperationMode() == OPERATION_MODE_STOPPED) {
       vehicleState.setOperationMode(OPERATION_MODE_DRIVING);
-
-      if(buttonController.isReversed()) {
-        vehicleState.setDrivingDirection(DRIVING_DIRECTION_REVERSE);
-      }
-      else {
-        vehicleState.setDrivingDirection(DRIVING_DIRECTION_FORWARD);
-      }
     }
     else {
       vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
@@ -156,7 +149,14 @@ void setup() {
 
   vehicleState.setEngineSpeed(255);
   vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
-  vehicleState.setDrivingDirection(DRIVING_DIRECTION_FORWARD);
+
+  if(buttonController.isReversed()) {
+    vehicleState.setDrivingDirection(DRIVING_DIRECTION_REVERSE);
+  }
+  else {
+    vehicleState.setDrivingDirection(DRIVING_DIRECTION_FORWARD);
+  }
+
   vehicleState.setColorSensorEnabled(true);
   soundPlayer.playSound(1);
 }
