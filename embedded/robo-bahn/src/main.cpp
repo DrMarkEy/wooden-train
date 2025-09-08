@@ -174,6 +174,6 @@ void loop() {
   if(millis() - countTimer > 1000) {
     countTimer = millis();
     uint8_t measurements = trackSensor->resetMeasurementCount();
-    logger.Logf("Measured %d colors", measurements);
+    //logger.Logf("Measured %d colors in 1s", measurements);
   }
 }
