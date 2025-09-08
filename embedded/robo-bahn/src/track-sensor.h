@@ -43,14 +43,18 @@ class TrackSensor {
   uint8_t previouslyDetectedColor = COLOR_IRRELEVANT;
   // Note: previouslyDetectedColor is always different from currentDetectedColor, as these values only update when different.
 
+  uint64_t counter = 0;
   void readMagneticField() {
 
-    // Hall-Sensor-Test
-    /*logger.Log("Left: ");
-    logger.Log(analogRead(2));
+    if(counter >= 10000) {
+      // Hall-Sensor-Test
+      logger.Logf("Left: %d\n", analogRead(PIN_MAGNET_SENSOR_LEFT));
+      logger.Logf("Right: %d\n\n", analogRead(PIN_MAGNET_SENSOR_RIGHT));
 
-    logger.Log("Right: ");
-    logger.Log(analogRead(15));*/
+      counter = 0;
+    }
+
+    counter++;
   }
 
   void colorMeasurement(uint8_t classifiedColor) {
@@ -119,6 +123,7 @@ class TrackSensor {
   void Loop()
   {
     colorSensor->Loop();
+    readMagneticField();
   }
 
   void enableColorSensor() {

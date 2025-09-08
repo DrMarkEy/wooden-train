@@ -14,6 +14,8 @@
 #define PIN_PUSH_BUTTON 34
 #define PIN_COLOR_SENSOR_LED 4
 //#define PIN_COLOR_SENSOR_INTERRUPT 36
+#define PIN_MAGNET_SENSOR_RIGHT 32
+#define PIN_MAGNET_SENSOR_LEFT 33
 
 #define DEFAULT_WIFI_SSID "Kosmische Hintergrundstrahlung"
 #define DEFAULT_WIFI_PASSWORD "sheldoncooper"
