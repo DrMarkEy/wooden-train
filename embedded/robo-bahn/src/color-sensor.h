@@ -61,6 +61,8 @@ class ColorSensor {
   long nextBrokenUpdate = 0;
   uint16_t r_acc, g_acc, b_acc;
   uint8_t integrationCycle = 0;
+  uint8_t ledPin;
+  bool enabledFlag = false;
 
   void readColor(uint16_t* r, uint16_t* g, uint16_t* b) {
     uint16_t c;
@@ -125,7 +127,7 @@ class ColorSensor {
 
   public:
 
-  ColorSensor(uint8_t ledPin)
+  ColorSensor(uint8_t ledPin_): ledPin(ledPin_)
   {
     colorSensor = new Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_1X);
     r_acc = 0;
@@ -138,7 +140,7 @@ class ColorSensor {
 
       // Turn on COLOR-SENSOR LED
       pinMode(ledPin, OUTPUT);
-      digitalWrite(ledPin, true);
+      digitalWrite(ledPin, false);
 
       working = true;
 
@@ -149,7 +151,19 @@ class ColorSensor {
     }
   }
 
+  void enable() {
+    enabledFlag = true;
+    digitalWrite(ledPin, true);
+  }
+
+  void disable() {
+    enabledFlag = false;
+    digitalWrite(ledPin, false);
+  }
+
   void Loop() {
+    if(!enabledFlag)
+      return;
 
     if(!working) {
       if(millis() > nextBrokenUpdate) {

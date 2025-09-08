@@ -75,7 +75,7 @@
       icon: require('../assets/whistle.png')
     },
     "1": {
-      command: TRAIN_COMMAND.TOGGLE_COLOR_DETECTION,
+      command: TRAIN_COMMAND.TOGGLE_COLOR_SENSOR,
       icon: require('../assets/color.png')
     },
     "2": {

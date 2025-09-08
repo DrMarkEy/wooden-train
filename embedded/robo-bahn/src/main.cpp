@@ -48,6 +48,18 @@ void setup() {
         engine->setSpeed(vehicleState.getEngineSpeed());
       }
     }
+
+    // Activate / deactivate color sensor
+    if(changedState == VEHICLE_STATE_COLOR_SENSOR_ENABLED || changedState == VEHICLE_STATE_OPERATION_MODE) {
+      if(vehicleState.isColorSensorEnabled() && vehicleState.getOperationMode() != OPERATION_MODE_STOPPED) {
+        trackSensor->enableColorSensor();
+        logger.Log("Color sensor enabled");
+      }
+      else {
+        trackSensor->disableColorSensor();
+        logger.Log("Color sensor disabled");
+      }
+    }
   });
 
   buttonController.Setup();
@@ -95,6 +107,10 @@ void setup() {
     }
     else if(buffer[0] == BLUETOOTH_COMMAND_STOP) {
       vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
+    }
+    else if (buffer[0] == BLUETOOTH_COMMAND_TOGGLE_COLOR_SENSOR) {
+      bool enabled = vehicleState.isColorSensorEnabled();
+      vehicleState.setColorSensorEnabled(!enabled);
     }
   });
 

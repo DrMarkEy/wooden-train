@@ -121,6 +121,14 @@ class TrackSensor {
     colorSensor->Loop();
   }
 
+  void enableColorSensor() {
+    colorSensor->enable();
+  }
+
+  void disableColorSensor() {
+    colorSensor->disable();
+  }
+
   uint8_t resetMeasurementCount() {
     // TODO: Use this for debugging the detected color sequence
     /*String str = "";
