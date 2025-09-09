@@ -75,14 +75,13 @@ void setup() {
   bluetooth.Setup(&vehicleState);
   bluetooth.onCommand([](uint8_t* buffer, size_t bufferSize)
   {
-
-    if(buffer[0] == BLUETOOTH_COMMAND_WHISTLE)
-    {
+    switch (buffer[0]) {
+      case BLUETOOTH_COMMAND_WHISTLE:
       logger.Log("Whistle!");
       soundPlayer.playSound(SOUND_WHISTLE);
-    }
-    else if(buffer[0] == BLUETOOTH_COMMAND_REVERSE)
-    {
+      break;
+
+      case BLUETOOTH_COMMAND_REVERSE:
       engine->stop();
       delay(100);
 
@@ -93,22 +92,27 @@ void setup() {
       else {
         vehicleState.setDrivingDirection(DRIVING_DIRECTION_FORWARD);
       }
-    }
-    else if(buffer[0] == BLUETOOTH_COMMAND_START) {
+      break;
+
+      case BLUETOOTH_COMMAND_START:
       vehicleState.setOperationMode(OPERATION_MODE_DRIVING);
-    }
-    else if(buffer[0] == BLUETOOTH_COMMAND_STOP) {
+      break;
+
+      case BLUETOOTH_COMMAND_STOP:
       vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
-    }
-    else if (buffer[0] == BLUETOOTH_COMMAND_TOGGLE_COLOR_SENSOR) {
+      break;
+
+      case BLUETOOTH_COMMAND_TOGGLE_COLOR_SENSOR: {
       bool enabled = vehicleState.isColorSensorEnabled();
       vehicleState.setColorSensorEnabled(!enabled);
-    }
-    else if (buffer[0] == BLUETOTH_COMMAND_ACCIDENT) {
+      break;
+      }
+
+      case BLUETOTH_COMMAND_ACCIDENT:
       vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
       soundPlayer.playSound(SOUND_ACCIDENT);
-
       // TODO: Flashing lights
+      break;
     }
   });
 
