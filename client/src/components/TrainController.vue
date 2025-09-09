@@ -15,12 +15,8 @@
       <press-button v-if="!stopped" ref="buttonB" id="buttonB" :command="COMMAND_REVERSE" :pressed="pressedB" :connection="connection"/>
       <press-button v-if="stopped" ref="buttonB" id="buttonBAlt" :command="COMMAND_PLAY" :pressed="pressedB" :connection="connection"/>
 
-      <div :class="{'state-view': true, 'viewA': true, 'pressed': pressedB}" :style="{'background-color': sensorColor}">
+      <div :class="{'state-view': true, 'viewA': true, 'pressed': pressedB}" :style="colorSensorStyle">
 
-      </div>
-
-      <div :class="{'state-view': true, 'viewB': true}">
-        {{ operationMode }}
       </div>
 
       <input class="speed-slider" type="range" v-model="speed" min="0" max="127"/>
@@ -99,6 +95,7 @@
 
     mounted: function() {
       this.$midi.addController(this.index, this.handleMidiCommand);
+      this.speed = 0;
     },
 
     beforeDestroy: function() {
@@ -108,7 +105,7 @@
     },
 
     data: function() {
-      return {speed: 0, pressedA: false, pressedB: false};
+      return {speed: 255, pressedA: false, pressedB: false};
     },
 
     watch: {
@@ -158,6 +155,14 @@
         return -1;
       },
 
+      colorSensorEnabled: function() {
+        if(this.connection !== undefined && this.connection.state !== undefined) {
+          return this.connection.state.colorSensorEnabled;
+        }
+
+        return false;
+      },
+
       sensorColorCode: function() {
         if(this.connection !== undefined && this.connection.state !== undefined) {
           return this.connection.state.lastReadColor;
@@ -177,6 +182,22 @@
           case 5: return 'green';       // COLOR_GREEN
           case 6: return 'blue';        // COLOR_BLUE
           case 7: return 'magenta';     // COLOR_MAGENTA
+        }
+      },
+
+      colorSensorStyle: function() {
+        if(this.colorSensorEnabled) {
+          return {
+            'background-color': this.sensorColor,
+            'background-image': "none",
+          };
+        }
+        else {
+          return {
+            'background-color': 'transparent',
+            'background-size': 'cover',
+            'background-position': 'center'
+          };
         }
       },
 
@@ -265,7 +286,7 @@
     position: relative;
     background-color: cornflowerblue;
     width: 100px;
-    height: 325px;
+    height: 280px;
 
     margin: 5px;
     border-style: solid;
@@ -434,10 +455,10 @@
 
     .state-view
     {
-      background-color: #eee;
+      background-image: url('../assets/shutters.svg');
       width: 32px;
       height: 32px;
-      border-radius: 30px;
+      border-radius: 12px;
 
       border-style: solid;
       border-width: 1px;
@@ -448,16 +469,9 @@
       cursor: pointer;
 
       position: absolute;
-      bottom: 40px;
+      top: 53px;
 
-      &.viewA {
-        left: 10px;
-      }
-
-      &.viewB {
-        left: 55px;
-        border-radius: 10px;
-      }
+      left:18px;
     }
 
     .stopped-overlay {

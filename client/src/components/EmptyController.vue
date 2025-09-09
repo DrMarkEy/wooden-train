@@ -105,7 +105,7 @@
   {
     position: relative;
     width: 100px;
-    height: 320px;
+    height: 275px;
     border-style: dotted;
     border-width: 3px;
     border-color: #aaa;
