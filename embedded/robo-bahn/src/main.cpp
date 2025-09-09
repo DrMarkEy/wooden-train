@@ -104,6 +104,12 @@ void setup() {
       bool enabled = vehicleState.isColorSensorEnabled();
       vehicleState.setColorSensorEnabled(!enabled);
     }
+    else if (buffer[0] == BLUETOTH_COMMAND_ACCIDENT) {
+      vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
+      soundPlayer.playSound(SOUND_ACCIDENT);
+
+      // TODO: Flashing lights
+    }
   });
 
   bluetooth.onColorChanged([](uint8_t* array, size_t len){

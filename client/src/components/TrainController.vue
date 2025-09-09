@@ -83,7 +83,7 @@
       icon: require('../assets/stop.png')
     },
     "3": {
-      command: TRAIN_COMMAND.ACCIDENT_LIGHTS,
+      command: TRAIN_COMMAND.ACCIDENT,
       icon: require('../assets/alert.png')
     }
   };
