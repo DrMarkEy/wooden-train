@@ -8,14 +8,20 @@
 #include <Arduino.h>
 #include <config.h>
 
+#define SOUND_STARTUP 1
+#define SOUND_WHISTLE 2
+#define SOUND_ACCIDENT 3
+
 // A note that plays with the specified pitch and length, followed by the specified pause
 struct Note {
-  int pitch;  
+  int pitch;
   int duration;
   int pause;
 };
 
-static const Note MELODY_DEPARTURE_SIGNAL[2] = {{.pitch = 1440, .duration = 300, .pause = 200}, {.pitch = 1440, .duration = 700, .pause = 0}};
+static const Note MELODY_STARTUP[3] = {{.pitch = 1440, .duration = 120, .pause = 100}, {.pitch = 1440, .duration = 120, .pause = 100}, {.pitch = 1440, .duration = 120, .pause = 0}};
+static const Note MELODY_WHISTLE[2] = {{.pitch = 1440, .duration = 300, .pause = 200}, {.pitch = 1440, .duration = 700, .pause = 0}};
+static const Note MELODY_ACCIDENT[1] = {{.pitch = 1440, .duration = 1500, .pause = 0}};
 
 static void SoundTaskFunction (void* parameter);
 
@@ -30,20 +36,30 @@ class SoundPlayer {
 
   SoundPlayer()
   {
-     
+
   }
 
-  void playSound(int sound) 
+  void playSound(int sound)
   {
     currentPosition = 0;
 
     switch(sound) {
-      case 1:      
-      currentMelody = MELODY_DEPARTURE_SIGNAL;          
-      melodyLength = sizeof(MELODY_DEPARTURE_SIGNAL) / sizeof(Note);
+      case SOUND_STARTUP:
+      currentMelody = MELODY_STARTUP;
+      melodyLength = sizeof(MELODY_STARTUP) / sizeof(Note);
       break;
-    }    
-    
+
+      case SOUND_WHISTLE:
+      currentMelody = MELODY_WHISTLE;
+      melodyLength = sizeof(MELODY_WHISTLE) / sizeof(Note);
+      break;
+
+      case SOUND_ACCIDENT:
+      currentMelody = MELODY_ACCIDENT;
+      melodyLength = sizeof(MELODY_ACCIDENT) / sizeof(Note);
+      break;
+    }
+
     xTaskCreatePinnedToCore(
       SoundTaskFunction,
       "Play sound",
@@ -67,20 +83,20 @@ class SoundPlayer {
       logger.Log("melody length:");
       logger.Log(melodyLength);*/
 
-      Note currentNote = currentMelody[currentPosition];      
+      Note currentNote = currentMelody[currentPosition];
 
 /*      logger.Log("Current note:");
       logger.Log(currentNote.pitch);
       logger.Log(currentNote.duration);
       logger.Log(currentNote.pause);*/
       tone(PIN_SPEAKER, currentNote.pitch, currentNote.duration);
-      
+
       // Wait for the duration of the note + pause
       vTaskDelay(currentNote.duration / portTICK_PERIOD_MS);
 
       if(currentNote.pause > 0)
         vTaskDelay(currentNote.pause / portTICK_PERIOD_MS);
-      
+
       currentPosition++;
       if(currentPosition >= melodyLength) {
         //logger.Log("Stopping task!");
@@ -95,8 +111,8 @@ class SoundPlayer {
   }
 } extern soundPlayer;
 
-static void SoundTaskFunction (void* parameter) {  
-  while(1) {    
+static void SoundTaskFunction (void* parameter) {
+  while(1) {
     if(!soundPlayer.continueMelody()) {
       vTaskDelete(NULL);
     }

@@ -79,7 +79,7 @@ void setup() {
     if(buffer[0] == BLUETOOTH_COMMAND_WHISTLE)
     {
       logger.Log("Whistle!");
-      soundPlayer.playSound(1);
+      soundPlayer.playSound(SOUND_WHISTLE);
     }
     else if(buffer[0] == BLUETOOTH_COMMAND_REVERSE)
     {
@@ -129,7 +129,7 @@ void setup() {
       engine->setSpeed(oldSpeed);
     }
     else if(signal == SIGNAL_HONK) {
-      soundPlayer.playSound(1);
+      soundPlayer.playSound(SOUND_WHISTLE);
     }
     else if(signal == SIGNAL_REVERSE) {
       vehicleState.setDrivingDirection(1 - vehicleState.getDrivingDirection());
@@ -160,7 +160,7 @@ void setup() {
   vehicleState.setColorSensorEnabled(true);
 
   // Play startup sound
-  soundPlayer.playSound(1);
+  soundPlayer.playSound(SOUND_STARTUP);
 }
 
 
