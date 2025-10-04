@@ -104,13 +104,13 @@ class Lights
     }
 
     void updateLED(bool* ledDutyCycle, byte ledPin) {
-      if(ledDutyCycle[dutyCyclePosition]) {
+      /*if(ledDutyCycle[dutyCyclePosition]) {
         setPin(ledPin, false); // Inverted logic
       }
       else
       {
         setPin(ledPin, true); // Inverted logic
-      }
+      }*/
     }
 
     void setPin(byte pin, bool state) {
@@ -118,13 +118,13 @@ class Lights
         LED6State = state;
       }
       else {
-        // Set specific byte in shift register data
+        // Set specific bit in shiftRegisterData, pin = 1 means MSB, pin = 8 means LSB
         if(state) {
-          shiftRegisterData = shiftRegisterData | (0b1 << (pin - 1));
+          shiftRegisterData = shiftRegisterData | (0b1 << (8 - pin));
         }
         else
         {
-          shiftRegisterData = shiftRegisterData & ~(0b1 << (pin - 1));
+          shiftRegisterData = shiftRegisterData & ~(0b1 << (8 - pin));
         }
       }
     }
@@ -132,18 +132,24 @@ class Lights
     void iterateDutyCycle() {
       // Set LED colors
       if(dutyCyclePosition % 3 == 0) {
+        Serial.println("R");
+
         // Light red LEDs
         setPin(PIN_R, true);
         setPin(PIN_G, false);
         setPin(PIN_B, false);
       }
       else if(dutyCyclePosition % 3 == 1) {
+        Serial.println("G");
+
         // Light green LEDs
         setPin(PIN_R, false);
         setPin(PIN_G, true);
         setPin(PIN_B, false);
       }
       else {
+        Serial.println("B");
+
         // Light blue LEDs
         setPin(PIN_R, false);
         setPin(PIN_G, false);
@@ -158,10 +164,14 @@ class Lights
       updateLED(led5, 5);
       updateLED(led6, 6);
 
+      // Print shiftRegisterData
+      Serial.println("Shift register data: " + String(shiftRegisterData, BIN));
+
       shiftOutData();
 
       dutyCyclePosition ++;
       if(dutyCyclePosition >= DUTY_CYCLE_LENGTH) {
+        Serial.println("Restarting duty cycle");
         dutyCyclePosition = 0;
       }
     }
@@ -214,8 +224,6 @@ class Lights
     */
    void setGlobalColor(byte red, byte green, byte blue) {
 
-      Serial.println("Shift-Register test ready!");
-
       setColorForLED(led1, red, green, blue);
       setColorForLED(led2, red, green, blue);
       setColorForLED(led3, red, green, blue);
@@ -224,6 +232,18 @@ class Lights
       setColorForLED(led6, red, green, blue);
 
       printDutyCycles();
+   }
+
+      /**
+    * Sets a global color for all LEDs. Each color component is given on a brightness scale from 0-4.
+    */
+   void setLed1Color(byte red, byte green, byte blue) {
+      setColorForLED(led3, red, green, blue);
+
+      printDutyCycles();
+/*
+      shiftRegisterData = 0b00100000;
+      shiftOutData();*/
    }
 
    void setRailwayColorScheme(boolean forward) {

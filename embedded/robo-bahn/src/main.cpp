@@ -28,7 +28,7 @@ void setup() {
 
   lights = new Lights();
 
-  lights->setGlobalColor(BRIGHTNESS_BRIGHT, BRIGHTNESS_DIM, 0);
+  lights->setLed1Color(BRIGHTNESS_BRIGHT, BRIGHTNESS_DIM, 0);
 
   wifi.Run();
 
