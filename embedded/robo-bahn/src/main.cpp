@@ -28,6 +28,22 @@ void setup() {
 
   lights = new Lights();
 
+
+byte i = 0;
+  while(true) {
+    digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
+    shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, i); // Write data
+    digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
+
+    delay(50);
+
+    if(i == 255)
+      i = 0;
+    else
+      i++;
+  }
+
+
   lights->setGlobalColor(255, 0, 0);
 
   wifi.Run();
