@@ -104,13 +104,13 @@ class Lights
     }
 
     void updateLED(bool* ledDutyCycle, byte ledPin) {
-      /*if(ledDutyCycle[dutyCyclePosition]) {
+      if(ledDutyCycle[dutyCyclePosition]) {
         setPin(ledPin, false); // Inverted logic
       }
       else
       {
         setPin(ledPin, true); // Inverted logic
-      }*/
+      }
     }
 
     void setPin(byte pin, bool state) {
@@ -132,7 +132,7 @@ class Lights
     void iterateDutyCycle() {
       // Set LED colors
       if(dutyCyclePosition % 3 == 0) {
-        Serial.println("R");
+        //Serial.println("R");
 
         // Light red LEDs
         setPin(PIN_R, true);
@@ -140,7 +140,7 @@ class Lights
         setPin(PIN_B, false);
       }
       else if(dutyCyclePosition % 3 == 1) {
-        Serial.println("G");
+        //Serial.println("G");
 
         // Light green LEDs
         setPin(PIN_R, false);
@@ -148,7 +148,7 @@ class Lights
         setPin(PIN_B, false);
       }
       else {
-        Serial.println("B");
+        //Serial.println("B");
 
         // Light blue LEDs
         setPin(PIN_R, false);
@@ -157,21 +157,21 @@ class Lights
       }
 
       // Set individual LEDs
-      updateLED(led1, 1);
-      updateLED(led2, 2);
-      updateLED(led3, 3);
-      updateLED(led4, 4);
-      updateLED(led5, 5);
-      updateLED(led6, 6);
+      updateLED(led1, PIN_LED1);
+      updateLED(led2, PIN_LED2);
+      updateLED(led3, PIN_LED3);
+      updateLED(led4, PIN_LED4);
+      updateLED(led5, PIN_LED5);
+      updateLED(led6, PIN_LED6);
 
       // Print shiftRegisterData
-      Serial.println("Shift register data: " + String(shiftRegisterData, BIN));
+      //Serial.println("Shift register data: " + String(shiftRegisterData, BIN));
 
       shiftOutData();
 
       dutyCyclePosition ++;
       if(dutyCyclePosition >= DUTY_CYCLE_LENGTH) {
-        Serial.println("Restarting duty cycle");
+        //Serial.println("Restarting duty cycle");
         dutyCyclePosition = 0;
       }
     }
@@ -238,7 +238,9 @@ class Lights
     * Sets a global color for all LEDs. Each color component is given on a brightness scale from 0-4.
     */
    void setLed1Color(byte red, byte green, byte blue) {
-      setColorForLED(led3, red, green, blue);
+      setColorForLED(led1, red, green, blue);
+      //setColorForLED(led2, red, green, blue);
+      //setColorForLED(led3, red, green, blue);
 
       printDutyCycles();
 /*
