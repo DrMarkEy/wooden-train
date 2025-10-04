@@ -108,7 +108,8 @@ class Lights
     }
 
     void setPin(byte pin, bool state) {
-      if(pin == PIN_LED6) {
+      Serial.println("Setting pin " + String(pin) + " to state " + String(state));
+      /*if(pin == PIN_LED6) {
         LED6State = state;
       }
       else {
@@ -120,7 +121,7 @@ class Lights
         {
           shiftRegisterData = shiftRegisterData & ~(0b1 << (pin - 1));
         }
-      }
+      }*/
     }
 
     void iterateDutyCycle() {
@@ -162,7 +163,9 @@ class Lights
 
     void shiftOutData() {
      digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
-     shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, shiftRegisterData); // Write data
+     delay(2);
+     shiftOut(PIN_LED_DS, PIN_LED_SH_CP, MSBFIRST, shiftRegisterData); // Write data
+     delay(2);
      digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
     }
 
@@ -187,10 +190,26 @@ class Lights
 
       Serial.println("Shift-Register test ready!");
 
-      shiftRegisterData = 255; // Set all pins to HIGH
+      shiftRegisterData = 0b11100000; // Set all colors to white
       shiftOutData();
 
-      /*setColor(led1, red, green, blue);
+
+
+      byte i = 0;
+  while(true) {
+    digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
+    shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, i); // Write data
+    digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
+
+    delay(50);
+
+    if(i == 255)
+      i = 0;
+    else
+      i++;
+  }
+/*
+      setColor(led1, red, green, blue);
       setColor(led2, red, green, blue);
       setColor(led3, red, green, blue);
       setColor(led4, red, green, blue);
