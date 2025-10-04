@@ -58,7 +58,7 @@ class Lights
     bool led5[DUTY_CYCLE_LENGTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     bool led6[DUTY_CYCLE_LENGTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    byte shiftRegisterData;
+    byte shiftRegisterData = 0;
     bool LED6State;
 
     void setColorForLED(bool* ledDutyCycle, byte brightnessR, byte brightnessG, byte brightnessB) {
