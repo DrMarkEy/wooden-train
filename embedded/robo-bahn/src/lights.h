@@ -20,10 +20,10 @@
 #define BRIGHTNESS_NORMAL 2 // LED on for 2 / 4 of the duty cycle
 #define BRIGHTNESS_BRIGHT 3 // LED on for 4 / 4 of the duty cycle
 
-// TODO: ADJUST PIN NUMBERS
-#define PIN_R 1
+//0bBGR12300
+#define PIN_B 1
 #define PIN_G 2
-#define PIN_B 3
+#define PIN_R 3
 #define PIN_LED1 4
 #define PIN_LED2 5
 #define PIN_LED3 6
@@ -61,7 +61,7 @@ class Lights
     byte shiftRegisterData;
     bool LED6State;
 
-    void setColor(bool* ledDutyCycle, byte brightnessR, byte brightnessG, byte brightnessB) {
+    void setColorForLED(bool* ledDutyCycle, byte brightnessR, byte brightnessG, byte brightnessB) {
       setColorComponent(ledDutyCycle, brightnessR, 0);
       setColorComponent(ledDutyCycle, brightnessG, 1);
       setColorComponent(ledDutyCycle, brightnessB, 2);
@@ -71,30 +71,36 @@ class Lights
       // Initialize all entries for this color to off
       for(byte i = 0; i < DUTY_CYCLE_ITERATIONS; i++) {
         byte actualIndex = i * 3 + colorOffset;
-        Serial.println("Setting index " + String(actualIndex) + " to zero.");
-        //ledDutyCycle[actualIndex] = false;
+        ledDutyCycle[actualIndex] = false;
       }
-/*
+
       switch(brightness) {
         case BRIGHTNESS_OFF:
+          Serial.println("Setting off for color offset " + String(colorOffset));
           // Nothing to do
           break;
 
         case BRIGHTNESS_DIM:
+          Serial.println("Setting dim for color offset " + String(colorOffset));
+
           ledDutyCycle[colorOffset] = true;
           break;
 
         case BRIGHTNESS_NORMAL:
+          Serial.println("Setting normal for color offset " + String(colorOffset));
+
           ledDutyCycle[colorOffset] = true;
           ledDutyCycle[2 * DUTY_CYCLE_ITERATIONS + colorOffset] = true;
           break;
 
         case BRIGHTNESS_BRIGHT:
+          Serial.println("Setting bright for color offset " + String(colorOffset));
+
           for(byte i = 0; i < DUTY_CYCLE_ITERATIONS; i++) {
-            ledDutyCycle[i * DUTY_CYCLE_ITERATIONS + colorOffset] = true;
+            ledDutyCycle[i * 3 + colorOffset] = true;
           }
           break;
-      }*/
+      }
     }
 
     void updateLED(bool* ledDutyCycle, byte ledPin) {
@@ -109,7 +115,7 @@ class Lights
 
     void setPin(byte pin, bool state) {
       Serial.println("Setting pin " + String(pin) + " to state " + String(state));
-      /*if(pin == PIN_LED6) {
+      if(pin == PIN_LED6) {
         LED6State = state;
       }
       else {
@@ -121,7 +127,7 @@ class Lights
         {
           shiftRegisterData = shiftRegisterData & ~(0b1 << (pin - 1));
         }
-      }*/
+      }
     }
 
     void iterateDutyCycle() {
@@ -161,12 +167,33 @@ class Lights
       }
     }
 
+    void printDutyCycle(bool led[DUTY_CYCLE_LENGTH]) {
+      for(byte i = 0; i < DUTY_CYCLE_LENGTH; i++) {
+        Serial.print(led[i] ? "1" : "0");
+      }
+      Serial.println();
+    }
+
+    void printDutyCycles() {
+      Serial.println("Duty cycles:");
+      Serial.print("LED1: ");
+      printDutyCycle(led1);
+      Serial.print("LED2: ");
+      printDutyCycle(led2);
+      Serial.print("LED3: ");
+      printDutyCycle(led3);
+      Serial.print("LED4: ");
+      printDutyCycle(led4);
+      Serial.print("LED5: ");
+      printDutyCycle(led5);
+      Serial.print("LED6: ");
+      printDutyCycle(led6);
+    }
+
     void shiftOutData() {
-     digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
-     delay(2);
-     shiftOut(PIN_LED_DS, PIN_LED_SH_CP, MSBFIRST, shiftRegisterData); // Write data
-     delay(2);
-     digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
+      digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
+      shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, shiftRegisterData); // Write data
+      digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
     }
 
    public:
@@ -190,56 +217,39 @@ class Lights
 
       Serial.println("Shift-Register test ready!");
 
-      shiftRegisterData = 0b11100000; // Set all colors to white
-      shiftOutData();
+      setColorForLED(led1, red, green, blue);
+      setColorForLED(led2, red, green, blue);
+      setColorForLED(led3, red, green, blue);
+      setColorForLED(led4, red, green, blue);
+      setColorForLED(led5, red, green, blue);
+      setColorForLED(led6, red, green, blue);
 
-
-
-      byte i = 0;
-  while(true) {
-    digitalWrite(PIN_LED_ST_CP, LOW);  // drop latch pin to GND
-    shiftOut(PIN_LED_DS, PIN_LED_SH_CP, LSBFIRST, i); // Write data
-    digitalWrite(PIN_LED_ST_CP, HIGH); // Push data to output
-
-    delay(50);
-
-    if(i == 255)
-      i = 0;
-    else
-      i++;
-  }
-/*
-      setColor(led1, red, green, blue);
-      setColor(led2, red, green, blue);
-      setColor(led3, red, green, blue);
-      setColor(led4, red, green, blue);
-      setColor(led5, red, green, blue);
-      setColor(led6, red, green, blue);*/
+      printDutyCycles();
    }
 
    void setRailwayColorScheme(boolean forward) {
      if(forward) {
-       setColor(led1, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
-       setColor(led2, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
-       setColor(led3, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
-       setColor(led4, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
-       setColor(led5, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
-       setColor(led6, BRIGHTNESS_OFF, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
+       setColorForLED(led1, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
+       setColorForLED(led2, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
+       setColorForLED(led3, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
+       setColorForLED(led4, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
+       setColorForLED(led5, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
+       setColorForLED(led6, BRIGHTNESS_OFF, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
      }
      else
      {
-       setColor(led1, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_BRIGHT);
-       setColor(led2, BRIGHTNESS_OFF, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
-       setColor(led3, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
-       setColor(led4, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
-       setColor(led5, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
-       setColor(led6, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
+       setColorForLED(led1, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_BRIGHT);
+       setColorForLED(led2, BRIGHTNESS_OFF, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
+       setColorForLED(led3, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
+       setColorForLED(led4, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
+       setColorForLED(led5, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
+       setColorForLED(led6, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
      }
    }
 
    void Loop() {
     //iterateDutyCycle();
-    //delayMicroseconds(50);
+    delayMicroseconds(50);
    }
 };
 

@@ -28,7 +28,7 @@ void setup() {
 
   lights = new Lights();
 
-  lights->setGlobalColor(255, 0, 0);
+  lights->setGlobalColor(BRIGHTNESS_BRIGHT, BRIGHTNESS_DIM, 0);
 
   wifi.Run();
 
@@ -117,7 +117,7 @@ void setup() {
       soundPlayer.playSound(SOUND_ACCIDENT);
       // TODO: Flashing lights
 
-      lights->setGlobalColor(4, 1, 0);
+      lights->setGlobalColor(BRIGHTNESS_BRIGHT, BRIGHTNESS_DIM, 0);
       break;
     }
   });
@@ -180,9 +180,7 @@ void setup() {
 // the loop function runs over and over again forever
 long countTimer = millis();
 void loop() {
-  /*LOG_DURATION(logger, "Lights", lights->Loop());
-  */
-
+  lights->Loop();
 
   LOG_DURATION(logger, "TrackSensor", trackSensor->Loop());
 
