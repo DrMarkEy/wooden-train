@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <engine.h>
 #include <soundplayer.h>
-//#include <lights.h>
+#include <lights.h>
 #include <buttons.h>
 #include <connectivity/wifi.h>
 #include <connectivity/bluetooth.h>
@@ -17,7 +17,7 @@ WifiConnector wifi;
 Engine* engine;
 ButtonController buttonController;
 SoundPlayer soundPlayer;
-//Lights* lights;
+Lights* lights;
 TrackSensor* trackSensor;
 VehicleState vehicleState;
 
@@ -25,6 +25,10 @@ void setup() {
   logger.Setup();
   logger.Log("Baureihe 101, Version ");
   logger.Log(VERSION_CODE);
+
+  lights = new Lights();
+
+  lights->setGlobalColor(255, 0, 0);
 
   wifi.Run();
 
@@ -112,6 +116,8 @@ void setup() {
       vehicleState.setOperationMode(OPERATION_MODE_STOPPED);
       soundPlayer.playSound(SOUND_ACCIDENT);
       // TODO: Flashing lights
+
+      lights->setGlobalColor(4, 1, 0);
       break;
     }
   });
@@ -152,9 +158,6 @@ void setup() {
     }
 
   });
-  /*
-  lights = new Lights();
-  lights->setGlobalColor(255, 0, 0);*/
 
   // Set initial vehicle state
   vehicleState.setEngineSpeed(255);
