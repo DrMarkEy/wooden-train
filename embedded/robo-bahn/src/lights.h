@@ -114,7 +114,6 @@ class Lights
     }
 
     void setPin(byte pin, bool state) {
-      Serial.println("Setting pin " + String(pin) + " to state " + String(state));
       if(pin == PIN_LED6) {
         LED6State = state;
       }
@@ -248,7 +247,7 @@ class Lights
    }
 
    void Loop() {
-    //iterateDutyCycle();
+    iterateDutyCycle();
     delayMicroseconds(50);
    }
 };
