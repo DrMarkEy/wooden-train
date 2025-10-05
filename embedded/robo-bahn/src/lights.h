@@ -237,15 +237,32 @@ class Lights
       /**
     * Sets a global color for all LEDs. Each color component is given on a brightness scale from 0-4.
     */
-   void setLed1Color(byte red, byte green, byte blue) {
-      setColorForLED(led1, red, green, blue);
-      //setColorForLED(led2, red, green, blue);
-      //setColorForLED(led3, red, green, blue);
+   void setLedXColor(byte x, byte red, byte green, byte blue) {
+    switch(x) {
+      case 1:
+        setColorForLED(led1, red, green, blue);
+        break;
+      case 2:
+        setColorForLED(led2, red, green, blue);
+        break;
+      case 3:
+        setColorForLED(led3, red, green, blue);
+        break;
+      case 4:
+        setColorForLED(led4, red, green, blue);
+        break;
+      case 5:
+        setColorForLED(led5, red, green, blue);
+        break;
+      case 6:
+        setColorForLED(led6, red, green, blue);
+        break;
+      default:
+        Serial.println("Invalid LED number: " + String(x));
+        return;
+     }
 
-      printDutyCycles();
-/*
-      shiftRegisterData = 0b00100000;
-      shiftOutData();*/
+     printDutyCycles();
    }
 
    void setRailwayColorScheme(boolean forward) {
