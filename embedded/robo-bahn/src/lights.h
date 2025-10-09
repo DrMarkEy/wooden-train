@@ -59,7 +59,6 @@ class Lights
     bool led6[DUTY_CYCLE_LENGTH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     byte shiftRegisterData = 0;
-    bool LED6State;
 
     void setColorForLED(bool* ledDutyCycle, byte brightnessR, byte brightnessG, byte brightnessB) {
       setColorComponent(ledDutyCycle, brightnessR, 0);
@@ -115,7 +114,7 @@ class Lights
 
     void setPin(byte pin, bool state) {
       if(pin == PIN_LED6) {
-        LED6State = state;
+        digitalWrite(PIN_LED_BACK_CENTER, state);
       }
       else {
         // Set specific bit in shiftRegisterData, pin = 1 means MSB, pin = 8 means LSB
