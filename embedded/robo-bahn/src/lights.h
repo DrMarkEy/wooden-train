@@ -20,10 +20,11 @@
 #define BRIGHTNESS_NORMAL 2 // LED on for 2 / 4 of the duty cycle
 #define BRIGHTNESS_BRIGHT 3 // LED on for 4 / 4 of the duty cycle
 
-//0bBGR12300
-#define PIN_B 1
+//0bRGB12300
+#define PIN_R 1
 #define PIN_G 2
-#define PIN_R 3
+#define PIN_B 3
+
 #define PIN_LED1 4
 #define PIN_LED2 5
 #define PIN_LED3 6
@@ -275,7 +276,7 @@ class Lights
      }
      else
      {
-       setColorForLED(led1, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_BRIGHT);
+       setColorForLED(led1, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
        setColorForLED(led2, BRIGHTNESS_OFF, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
        setColorForLED(led3, BRIGHTNESS_BRIGHT, BRIGHTNESS_OFF, BRIGHTNESS_OFF);
        setColorForLED(led4, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT, BRIGHTNESS_BRIGHT);
