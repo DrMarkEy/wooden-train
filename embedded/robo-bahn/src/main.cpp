@@ -28,10 +28,8 @@ void setup() {
 
   lights = new Lights();
 
-  lights->setLedXColor(1, BRIGHTNESS_BRIGHT, BRIGHTNESS_DIM, 0);
-  lights->setLedXColor(2, 0, 0, BRIGHTNESS_BRIGHT);
-  lights->setLedXColor(3, BRIGHTNESS_BRIGHT, 0, 0);
-
+  boolean forward = !buttonController.isReversed();
+  lights->setRailwayColorScheme(forward);
 
   wifi.Run();
 
@@ -47,7 +45,10 @@ void setup() {
     if(changedState == VEHICLE_STATE_OPERATION_MODE || changedState == VEHICLE_STATE_DRIVING_DIRECTION || changedState == VEHICLE_STATE_ENGINE_SPEED) {
 
       // Update engine speed and direction
-      engine->setDirection(vehicleState.getDrivingDirection() == DRIVING_DIRECTION_FORWARD);
+      boolean forward = vehicleState.getDrivingDirection() == DRIVING_DIRECTION_FORWARD;
+      engine->setDirection(forward);
+      lights->setRailwayColorScheme(forward);
+
       if(vehicleState.getOperationMode() == OPERATION_MODE_STOPPED) {
         engine->setSpeed(0);
       }
