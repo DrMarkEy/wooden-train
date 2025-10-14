@@ -76,25 +76,25 @@ class Lights
 
       switch(brightness) {
         case BRIGHTNESS_OFF:
-          Serial.println("Setting off for color offset " + String(colorOffset));
+          //Serial.println("Setting off for color offset " + String(colorOffset));
           // Nothing to do
           break;
 
         case BRIGHTNESS_DIM:
-          Serial.println("Setting dim for color offset " + String(colorOffset));
+          //Serial.println("Setting dim for color offset " + String(colorOffset));
 
           ledDutyCycle[colorOffset] = true;
           break;
 
         case BRIGHTNESS_NORMAL:
-          Serial.println("Setting normal for color offset " + String(colorOffset));
+          //Serial.println("Setting normal for color offset " + String(colorOffset));
 
           ledDutyCycle[colorOffset] = true;
           ledDutyCycle[2 * DUTY_CYCLE_ITERATIONS + colorOffset] = true;
           break;
 
         case BRIGHTNESS_BRIGHT:
-          Serial.println("Setting bright for color offset " + String(colorOffset));
+          //Serial.println("Setting bright for color offset " + String(colorOffset));
 
           for(byte i = 0; i < DUTY_CYCLE_ITERATIONS; i++) {
             ledDutyCycle[i * 3 + colorOffset] = true;
